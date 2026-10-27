@@ -15,7 +15,7 @@ window.addTaskField = addTaskField;
 window.removeTaskField = removeTaskField;
 
 // ===== ISI DUA NILAI INI =====
-const API_URL = 'PASTE_URL_WEB_APP_DI_SINI';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyEFA5qGfDKLqIjiG4YdITzuunWR95ER-geZXau0kRwWI65k5ajcHsx7T-Lo38pFH9S/exec';
 const API_TOKEN = '99999999999999999999999999999999999999999999999999';
 
 let globalData = [];
