@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Statistik Jurukur Tanah - Executive</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            accent: '#38bdf8',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-32 opacity-0 transition-all duration-300 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-sky-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Mesej sistem</span>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-dark-card border-b border-dark-border sticky top-0 z-40 backdrop-blur bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-compass-drafting text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-white">GeoSurvey <span class="text-sky-400 font-light">Executive</span></h1>
+                    <p class="text-xs text-slate-400">Sistem Statistik Operasi & Kerja Lapangan</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
+                <button onclick="switchTab('overview')" id="nav-overview" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white shadow transition">Ringkasan & Analisis</button>
+                <button onclick="switchTab('progress')" id="nav-progress" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Progres Fail</button>
+                <button onclick="switchTab('form')" id="nav-form" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Tambah Rekod</button>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="fetchData()" class="px-3 sm:px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium rounded-xl transition flex items-center space-x-2 text-slate-200">
+                    <i class="fa-solid fa-rotate text-sky-400"></i>
+                    <span class="hidden sm:inline">Muat Semula</span>
+                </button>
+                <button onclick="exportCSV()" class="px-3 sm:px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium rounded-xl shadow-lg shadow-sky-600/20 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Eksport CSV</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Mobile Nav Tabs -->
+        <div class="flex md:hidden items-center justify-center space-x-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800 mb-4 overflow-x-auto">
+            <button onclick="switchTab('overview')" id="nav-overview-m" class="px-3 py-2 rounded-lg text-xs font-semibold bg-sky-600 text-white text-center transition whitespace-nowrap">Ringkasan</button>
+            <button onclick="switchTab('progress')" id="nav-progress-m" class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 text-center transition whitespace-nowrap">Progres</button>
+            <button onclick="switchTab('form')" id="nav-form-m" class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 text-center transition whitespace-nowrap">Borang</button>
+        </div>
+
+        <!-- TAB 1: OVERVIEW / STATISTIK UTAMA -->
+        <div id="tab-content-overview" class="space-y-8">
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Total Fail (Unique count) -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-slate-600 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Jumlah Fail Projek</p>
+                            <h3 id="kpi-total-files" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 text-xl">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-slate-400">
+                        <span class="text-emerald-400 font-semibold flex items-center mr-1"><i class="fa-solid fa-circle-check mr-1"></i> No Fail Unik</span> 
+                        <span>(Digabung)</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition"></div>
+                </div>
+
+                <!-- Kategori Terbanyak -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-slate-600 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Kategori Utama</p>
+                            <h3 id="kpi-top-category" class="text-xl font-extrabold text-white mt-2 truncate max-w-[180px]"> - </h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-slate-400">
+                        <span class="text-purple-400 font-semibold mr-1">Rekod Kategori</span> Berbeza
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition"></div>
+                </div>
+
+                <!-- Jurukur Aktif -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-slate-600 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Jumlah Jurukur</p>
+                            <h3 id="kpi-total-surveyors" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-slate-400">
+                        <span class="text-emerald-400 font-semibold mr-1">Team Lapangan</span> Terlibat
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition"></div>
+                </div>
+
+                <!-- Status Kemaskini -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-slate-600 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Status Sambungan</p>
+                            <h3 id="kpi-status" class="text-lg font-bold text-emerald-400 mt-2">Diselaraskan</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-slate-400">
+                        <span id="last-updated" class="text-slate-300 font-medium">Auto-sync aktif</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition"></div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Bar Chart: Projek per Kategori -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-sm lg:col-span-2 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-bold text-base text-white flex items-center">
+                            <i class="fa-solid fa-chart-column text-sky-400 mr-2"></i> Taburan Kerja Mengikut Kategori (Fail Unik)
+                        </h2>
+                        <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">Analisis Operasi</span>
+                    </div>
+                    <div class="relative flex-1 w-full min-h-[260px]">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Doughnut Chart: Beban Tugas Jurukur -->
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-bold text-base text-white flex items-center">
+                            <i class="fa-solid fa-chart-pie text-purple-400 mr-2"></i> Nisbah Jurukur
+                        </h2>
+                        <span class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">Taburan</span>
+                    </div>
+                    <div class="relative flex-1 w-full min-h-[260px] flex items-center justify-center">
+                        <canvas id="surveyorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="bg-dark-card border border-dark-border rounded-2xl shadow-sm overflow-hidden">
+                <!-- Table Header Toolbar -->
+                <div class="p-5 border-b border-dark-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <h2 class="font-bold text-lg text-white">Senarai Fail & Laporan Lapangan</h2>
+                        <span id="record-count" class="text-xs px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">0 Rekod</span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <!-- Search Input -->
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari No File, Surveyor..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+                        <!-- Category Filter Dropdown -->
+                        <select id="categoryFilter" onchange="filterTable()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-sky-500 transition">
+                            <option value="">Semua Kategori</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-dark-border">
+                                <th class="py-4 px-6">No File</th>
+                                <th class="py-4 px-6">Surveyor</th>
+                                <th class="py-4 px-6">Kategori</th>
+                                <th class="py-4 px-6">Target</th>
+                                <th class="py-4 px-6">Unit</th>
+                                <th class="py-4 px-6">Tarikh Mula</th>
+                                <th class="py-4 px-6">Tarikh Siap</th>
+                                <th class="py-4 px-6">Tugas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-slate-800 text-sm text-slate-300">
+                            <tr>
+                                <td colspan="8" class="text-center py-8 text-slate-500">
+                                    <i class="fa-solid fa-spinner fa-spin mr-2 text-sky-400"></i> Memuatkan data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer Status -->
+                <div class="p-4 bg-slate-900/30 border-t border-dark-border flex items-center justify-between text-xs text-slate-400">
+                    <span id="table-info">Menunjukkan semua rekod</span>
+                    <span class="text-slate-500">GeoSurvey Executive v3.5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PROGRES FAIL (FILE PROGRESS TRACKER) -->
+        <div id="tab-content-progress" class="space-y-6 hidden">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-white flex items-center">
+                            <i class="fa-solid fa-bars-progress text-sky-400 mr-2"></i> Status Progres Fail Ukur Tanah
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Pemantauan kemajuan kerja lapangan diasingkan mengikut kategori (Topografi & Utility Mapping bermula 0%).</p>
+                    </div>
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <!-- Kategori Filter Tab untuk Progres -->
+                        <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+                            <button onclick="setProgressCategoryFilter('all')" id="prog-filter-all" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white transition">Semua</button>
+                            <button onclick="setProgressCategoryFilter('Topografi')" id="prog-filter-topo" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Topografi</button>
+                            <button onclick="setProgressCategoryFilter('Utility Mapping')" id="prog-filter-utility" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Utility Mapping</button>
+                        </div>
+                        <div class="relative w-full sm:w-48">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="searchProgressInput" onkeyup="renderProgressCards()" placeholder="Cari No File..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid untuk Semua Kad Progres Fail -->
+                <div id="progressGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Progress cards injected dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: BORANG INPUT MAKLUMAT JURUKUR (FORM PAGE) -->
+        <div id="tab-content-form" class="space-y-6 hidden">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6 sm:p-8 shadow-sm max-w-3xl mx-auto">
+                <div class="mb-6 border-b border-slate-800 pb-4">
+                    <h2 class="font-bold text-xl text-white flex items-center">
+                        <i class="fa-solid fa-file-circle-plus text-sky-400 mr-3"></i> Borang Maklumat Operasi & Kerja Lapangan
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Masukkan butiran fail ukur tanah baharu. Menyokong berbilang surveyor, pelbagai kategori dan tugas lapangan dalam 1 fail yang sama.</p>
+                </div>
+
+                <form id="surveyForm" onsubmit="handleFormSubmit(event)" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <!-- No File -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">No File <span class="text-rose-400">*</span></label>
+                            <input type="text" id="inputNoFile" required placeholder="Cth: SRV-2026-005" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+
+                        <!-- Surveyor (Sokongan berbilang surveyor dynamically) -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Surveyor <span class="text-rose-400">*</span></label>
+                                <button type="button" onclick="addSurveyorField()" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center space-x-1 cursor-pointer">
+                                    <i class="fa-solid fa-plus-circle"></i> <span>Tambah Surveyor</span>
+                                </button>
+                            </div>
+                            <div id="surveyorsContainer" class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <select name="surveyorSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition surveyor-dropdown">
+                                        <option value="" disabled selected>Pilih Surveyor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori & Target & Unit (Multi-Category Rows dengan fungsi tambah kategori) -->
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Kategori & Butiran Kerja <span class="text-rose-400">*</span></label>
+                            <button type="button" onclick="addCategoryRow()" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-plus-circle"></i> <span>Tambah Kategori (Dalam File Sama)</span>
+                            </button>
+                        </div>
+                        
+                        <div id="categoryRowsContainer" class="space-y-3">
+                            <!-- Dynamic category rows injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Tugas Lapangan (Dynamic Task Inputs) -->
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Senarai Tugas Lapangan</label>
+                            <button type="button" onclick="addTaskField()" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-plus-circle"></i> <span>Tambah Tugas</span>
+                            </button>
+                        </div>
+                        <div id="tasksContainer" class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" name="taskInput" placeholder="Cth: Kerja penandaan sempadan tapak" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                        <!-- Tarikh Mula -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Tarikh Mula <span class="text-rose-400">*</span></label>
+                            <input type="date" id="inputTarikhMula" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+
+                        <!-- Tarikh Siap -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Tarikh Siap <span class="text-rose-400">*</span></label>
+                            <input type="date" id="inputTarikhSiap" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex items-center justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('surveyForm').reset(); initCategoryRows(); resetTaskContainer();" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium rounded-xl text-slate-300 transition">
+                            Kosongkan
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium rounded-xl shadow-lg shadow-sky-600/20 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Simpan Rekod & Sync Google Sheets</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-dark-border bg-dark-card py-6 text-center text-xs text-slate-500">
+        <p>&copy; 2026 GeoSurvey System &bull; Pengurusan Operasi & Jurukur Tanah Profesional.</p>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // Ensure all core functions are globally scoped for inline onclick handlers
+        window.switchTab = switchTab;
+        window.fetchData = fetchData;
+        window.exportCSV = exportCSV;
+        window.filterTable = filterTable;
+        window.setProgressCategoryFilter = setProgressCategoryFilter;
+        window.renderProgressCards = renderProgressCards;
+        window.handleFormSubmit = handleFormSubmit;
+        window.addSurveyorField = addSurveyorField;
+        window.addCategoryRow = addCategoryRow;
+        window.removeCategoryRow = removeCategoryRow;
+        window.addTaskField = addTaskField;
+        window.removeTaskField = removeTaskField;
+
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIDKDMhPAYCCtbNw-yxrZSX5EalYC4ke7GDipUYvREPzXDnvPZWRtwFJ-6TRhkcAU/exec';
+        
+        let globalData = [];
+        let uniqueFilesList = [];
+        let globalSurveyorsList = [];
+        const globalCategoriesList = ['Topografi', 'Utility Mapping'];
+        let categoryChartInstance = null;
+        let surveyorChartInstance = null;
+        let activeProgressCategory = 'all';
+
+        // Toast Notification Helper
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMsg.innerText = message;
+            if(type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else if(type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info text-sky-400';
+            }
+
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-32', 'opacity-0');
+            }, 3500);
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            const overviewTab = document.getElementById('tab-content-overview');
+            const progressTab = document.getElementById('tab-content-progress');
+            const formTab = document.getElementById('tab-content-form');
+            
+            const navOverview = document.getElementById('nav-overview');
+            const navProgress = document.getElementById('nav-progress');
+            const navForm = document.getElementById('nav-form');
+            const navOverviewM = document.getElementById('nav-overview-m');
+            const navProgressM = document.getElementById('nav-progress-m');
+            const navFormM = document.getElementById('nav-form-m');
+
+            // Hide all tabs
+            overviewTab.classList.add('hidden');
+            progressTab.classList.add('hidden');
+            formTab.classList.add('hidden');
+
+            // Reset desktop & mobile nav buttons
+            navOverview.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+            navProgress.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+            navForm.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+
+            navOverviewM.className = 'px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 text-center transition whitespace-nowrap';
+            navProgressM.className = 'px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 text-center transition whitespace-nowrap';
+            navFormM.className = 'px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 text-center transition whitespace-nowrap';
+
+            if(tabName === 'overview') {
+                overviewTab.classList.remove('hidden');
+                navOverview.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white shadow transition';
+                navOverviewM.className = 'px-3 py-2 rounded-lg text-xs font-semibold bg-sky-600 text-white text-center transition whitespace-nowrap';
+                if(categoryChartInstance) categoryChartInstance.update();
+                if(surveyorChartInstance) surveyorChartInstance.update();
+            } else if(tabName === 'progress') {
+                progressTab.classList.remove('hidden');
+                navProgress.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white shadow transition';
+                navProgressM.className = 'px-3 py-2 rounded-lg text-xs font-semibold bg-sky-600 text-white text-center transition whitespace-nowrap';
+                renderProgressCards();
+            } else if(tabName === 'form') {
+                formTab.classList.remove('hidden');
+                navForm.className = 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white shadow transition';
+                navFormM.className = 'px-3 py-2 rounded-lg text-xs font-semibold bg-sky-600 text-white text-center transition whitespace-nowrap';
+            }
+        }
+
+        // Fetch Data from Google Apps Script Web App
+        function fetchData() {
+            showToast('Memuat turun data daripada Google Sheets...', 'info');
+            
+            fetch(APPS_SCRIPT_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if(Array.isArray(data)) {
+                        globalData = data.map(row => {
+                            let cleanRow = {};
+                            for (let key in row) {
+                                let cleanKey = key.trim().replace(/^\ufeff/, '');
+                                cleanRow[cleanKey] = row[key] !== undefined && row[key] !== null ? String(row[key]).trim() : '';
+                            }
+                            return cleanRow;
+                        }).filter(row => row['No File'] || row['Surveyor']);
+
+                        processData(globalData);
+                        populateFormDropdowns(globalData);
+                        showToast('Data berjaya dimuat turun!', 'success');
+                    } else {
+                        showToast('Format data tidak sah.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Fetch Error:', err);
+                    showToast('Gagal memuat turun data Google Sheets. Sila pastikan Web App telah di-deploy.', 'error');
+                });
+        }
+
+        // Process data and calculate unique file logic
+        function processData(data) {
+            const uniqueMap = new Map();
+
+            data.forEach(item => {
+                const noFile = (item['No File'] || 'TANPA_NO_FILE').trim();
+                if (!uniqueMap.has(noFile)) {
+                    uniqueMap.set(noFile, { 
+                        ...item, 
+                        _subRecords: [item],
+                        categories: new Set([item['Kategori']].filter(Boolean))
+                    });
+                } else {
+                    const existing = uniqueMap.get(noFile);
+                    existing._subRecords.push(item);
+                    if(item['Kategori']) existing.categories.add(item['Kategori']);
+                }
+            });
+            uniqueFilesList = Array.from(uniqueMap.values());
+            
+            // Update KPI Total Files (Unique count)
+            document.getElementById('kpi-total-files').innerText = uniqueFilesList.length;
+
+            // Update KPI Total Surveyors
+            const uniqueSurveyors = new Set(data.map(item => item['Surveyor']).filter(Boolean));
+            document.getElementById('kpi-total-surveyors').innerText = uniqueSurveyors.size;
+
+            // Calculate Top Category
+            const catCounts = {};
+            uniqueFilesList.forEach(item => {
+                item.categories.forEach(cat => {
+                    catCounts[cat] = (catCounts[cat] || 0) + 1;
+                });
+            });
+
+            let topCat = '-';
+            let maxCount = 0;
+            for(let cat in catCounts) {
+                if(catCounts[cat] > maxCount) {
+                    maxCount = catCounts[cat];
+                    topCat = cat;
+                }
+            }
+            document.getElementById('kpi-top-category').innerText = topCat;
+
+            // Populate Category Filter Dropdown
+            const categoryFilter = document.getElementById('categoryFilter');
+            categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
+            Object.keys(catCounts).forEach(cat => {
+                categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+
+            // Update Form Category Dropdown rows
+            initCategoryRows();
+
+            // Render Table & Charts
+            renderTable(data);
+            renderCharts(data, uniqueFilesList);
+        }
+
+        // Populate Form Dropdowns (Surveyor)
+        function populateFormDropdowns(data) {
+            const surveyorSet = new Set(globalSurveyorsList);
+            // Default surveyor list as requested
+            ['Mangkuk1', 'Mangkuk2', 'Mangkuk3', 'Mangkuk4'].forEach(s => surveyorSet.add(s));
+            
+            data.forEach(item => {
+                if(item['Surveyor']) {
+                    // split if combined with ' & '
+                    item['Surveyor'].split('&').forEach(s => surveyorSet.add(s.trim()));
+                }
+            });
+            globalSurveyorsList = Array.from(surveyorSet).sort();
+            
+            const containers = document.querySelectorAll('.surveyor-dropdown');
+            containers.forEach(select => {
+                let optionsHtml = '<option value="" disabled selected>Pilih Surveyor</option>';
+                globalSurveyorsList.forEach(srv => {
+                    optionsHtml += `<option value="${srv}">${srv}</option>`;
+                });
+                select.innerHTML = optionsHtml;
+            });
+            initCategoryRows();
+        }
+
+        function getCategoryOptionsHtml(selectedVal = '') {
+            let html = '<option value="" disabled selected>Pilih Kategori</option>';
+            globalCategoriesList.forEach(cat => {
+                html += `<option value="${cat}" ${cat === selectedVal ? 'selected' : ''}>${cat}</option>`;
+            });
+            return html;
+        }
+
+        function getUnitOptionsHtml(selectedVal = '') {
+            const units = ['m', 'km', 'eka'];
+            let html = '<option value="" disabled selected>Pilih Unit</option>';
+            units.forEach(u => {
+                html += `<option value="${u}" ${u === selectedVal ? 'selected' : ''}>${u}</option>`;
+            });
+            return html;
+        }
+
+        function initCategoryRows() {
+            const container = document.getElementById('categoryRowsContainer');
+            if(!container) return;
+            if(container.children.length === 0) {
+                addCategoryRow();
+            } else {
+                const selects = container.querySelectorAll('.category-dropdown');
+                selects.forEach(sel => {
+                    const current = sel.value;
+                    sel.innerHTML = getCategoryOptionsHtml(current);
+                });
+                const unitSelects = container.querySelectorAll('.unit-dropdown');
+                unitSelects.forEach(sel => {
+                    const current = sel.value;
+                    sel.innerHTML = getUnitOptionsHtml(current);
+                });
+            }
+        }
+
+        function addCategoryRow(defaultCat = '', defaultTarget = '', defaultUnit = '') {
+            const container = document.getElementById('categoryRowsContainer');
+            if(!container) return;
+            const rowId = 'cat_row_' + Date.now() + Math.random().toString(36).substring(2, 5);
+            const div = document.createElement('div');
+            div.className = 'bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3 relative group';
+            div.id = rowId;
+
+            div.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Kategori</label>
+                        <select name="rowCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition category-dropdown">
+                            ${getCategoryOptionsHtml(defaultCat)}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Target</label>
+                        <input type="text" name="rowTarget" required value="${defaultTarget}" placeholder="Cth: 50" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Unit</label>
+                        <div class="flex items-center space-x-2">
+                            <select name="rowUnit" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition unit-dropdown">
+                                ${getUnitOptionsHtml(defaultUnit)}
+                            </select>
+                            <button type="button" onclick="removeCategoryRow('${rowId}')" class="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl hover:bg-rose-500/20 transition cursor-pointer" title="Buang Kategori">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeCategoryRow(rowId) {
+            const container = document.getElementById('categoryRowsContainer');
+            if(container.children.length <= 1) {
+                showToast('Sekurang-kurangnya satu kategori diperlukan.', 'error');
+                return;
+            }
+            const el = document.getElementById(rowId);
+            if(el) el.remove();
+        }
+
+        // Functions for Tasks Dynamic Inputs
+        function addTaskField() {
+            const container = document.getElementById('tasksContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            div.innerHTML = `
+                <input type="text" name="taskInput" placeholder="Cth: Kerja pengukuran butiran" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                <button type="button" onclick="removeTaskField(this)" class="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl hover:bg-rose-500/20 transition cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeTaskField(buttonElement) {
+            const row = buttonElement.parentElement;
+            if(row) row.remove();
+        }
+
+        function resetTaskContainer() {
+            const container = document.getElementById('tasksContainer');
+            if(!container) return;
+            container.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <input type="text" name="taskInput" placeholder="Cth: Kerja penandaan sempadan tapak" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                </div>
+            `;
+        }
+
+        // Function to dynamically add a new surveyor selection field
+        function addSurveyorField() {
+            const container = document.getElementById('surveyorsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            
+            let optionsHtml = '<option value="" disabled selected>Pilih Surveyor</option>';
+            globalSurveyorsList.forEach(srv => {
+                optionsHtml += `<option value="${srv}">${srv}</option>`;
+            });
+
+            div.innerHTML = `
+                <select name="surveyorSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition surveyor-dropdown">
+                    ${optionsHtml}
+                </select>
+                <button type="button" onclick="this.parentElement.remove()" class="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl hover:bg-rose-500/20 transition cursor-pointer">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Render Data Table
+        function renderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-500">Tiada rekod dijumpai.</td></tr>`;
+                document.getElementById('record-count').innerText = '0 Rekod';
+                document.getElementById('table-info').innerText = 'Menunjukkan 0 daripada 0 rekod';
+                return;
+            }
+
+            data.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/50 transition border-b border-slate-800/60';
+                tr.innerHTML = `
+                    <td class="py-3.5 px-6 font-medium text-white">${item['No File'] || '-'}</td>
+                    <td class="py-3.5 px-6 text-slate-300">${item['Surveyor'] || '-'}</td>
+                    <td class="py-3.5 px-6">
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold ${item['Kategori'] === 'Topografi' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}">
+                            ${item['Kategori'] || '-'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-6 font-semibold text-sky-400">${item['Target'] || '-'}</td>
+                    <td class="py-3.5 px-6 text-slate-400">${item['Unit'] || '-'}</td>
+                    <td class="py-3.5 px-6 text-slate-400">${item['Tarikh Mula'] || '-'}</td>
+                    <td class="py-3.5 px-6 text-slate-400">${item['Tarikh Siap'] || '-'}</td>
+                    <td class="py-3.5 px-6 text-slate-300">${item['Tugas'] || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('record-count').innerText = `${data.length} Rekod`;
+            document.getElementById('table-info').innerText = `Menunjukkan semua ${data.length} rekod aktif`;
+        }
+
+        // Filter Table & Search
+        function filterTable() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const catVal = document.getElementById('categoryFilter').value;
+
+            const filtered = globalData.filter(item => {
+                const noFile = (item['No File'] || '').toLowerCase();
+                const surveyor = (item['Surveyor'] || '').toLowerCase();
+                const kategori = item['Kategori'] || '';
+
+                const matchesSearch = noFile.includes(searchVal) || surveyor.includes(searchVal);
+                const matchesCat = catVal === '' || kategori === catVal;
+
+                return matchesSearch && matchesCat;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Render Charts using Chart.js
+        function renderCharts(data, uniqueFiles) {
+            const catMap = {};
+            uniqueFiles.forEach(item => {
+                item.categories.forEach(cat => {
+                    catMap[cat] = (catMap[cat] || 0) + 1;
+                });
+            });
+
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if(categoryChartInstance) categoryChartInstance.destroy();
+
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(catMap),
+                    datasets: [{
+                        label: 'Bilangan Fail Unik',
+                        data: Object.values(catMap),
+                        backgroundColor: ['#38bdf8', '#c084fc', '#34d399', '#f472b6', '#fbbf24', '#818cf8'],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            const srvMap = {};
+            data.forEach(item => {
+                const srv = item['Surveyor'] || 'Tidak Diketahui';
+                srvMap[srv] = (srvMap[srv] || 0) + 1;
+            });
+
+            const ctxSrv = document.getElementById('surveyorChart').getContext('2d');
+            if(surveyorChartInstance) surveyorChartInstance.destroy();
+
+            surveyorChartInstance = new Chart(ctxSrv, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(srvMap),
+                    datasets: [{
+                        data: Object.values(srvMap),
+                        backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24', '#fb7185'],
+                        borderWidth: 2,
+                        borderColor: '#1e293b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12 }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Progress Category Filter
+        function setProgressCategoryFilter(cat) {
+            activeProgressCategory = cat;
+            const btnAll = document.getElementById('prog-filter-all');
+            const btnTopo = document.getElementById('prog-filter-topo');
+            const btnUtility = document.getElementById('prog-filter-utility');
+
+            btnAll.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold ' + (cat === 'all' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white');
+            btnTopo.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold ' + (cat === 'Topografi' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white');
+            btnUtility.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold ' + (cat === 'Utility Mapping' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white');
+
+            renderProgressCards();
+        }
+
+        // Render Progres Cards (Grouped by No File, with distinct category progress bars in the same card)
+        function renderProgressCards() {
+            const searchInputVal = (document.getElementById('searchProgressInput').value || '').toLowerCase();
+            
+            const filteredFiles = uniqueFilesList.filter(item => {
+                const noFile = (item['No File'] || '').toLowerCase();
+                const surveyors = (item._subRecords || [item]).map(r => (r['Surveyor'] || '').toLowerCase()).join(' ');
+                const categories = Array.from(item.categories || []).join(' ').toLowerCase();
+                
+                const matchesSearch = noFile.includes(searchInputVal) || surveyors.includes(searchInputVal) || categories.includes(searchInputVal);
+                
+                let matchesCategoryFilter = true;
+                if(activeProgressCategory !== 'all') {
+                    matchesCategoryFilter = item.categories.has(activeProgressCategory) || (item._subRecords || []).some(r => (r['Kategori'] || '').toLowerCase() === activeProgressCategory.toLowerCase());
+                }
+
+                return matchesSearch && matchesCategoryFilter;
+            });
+
+            const progressGrid = document.getElementById('progressGrid');
+            progressGrid.innerHTML = '';
+
+            if(filteredFiles.length === 0) {
+                progressGrid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 text-sm">Tiada fail dijumpai untuk paparan progres.</div>`;
+                return;
+            }
+
+            filteredFiles.forEach(item => {
+                progressGrid.appendChild(createProgressCardElement(item));
+            });
+        }
+
+        function createProgressCardElement(item) {
+            const card = document.createElement('div');
+            card.className = 'bg-slate-900/70 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-slate-700 transition shadow-sm';
+            
+            const subRecords = item._subRecords || [item];
+            const allCategories = [...new Set(subRecords.map(r => r['Kategori']).filter(Boolean))];
+            const categoriesList = allCategories.length > 0 ? allCategories.join(' & ') : 'Pelbagai';
+            const surveyorsList = [...new Set(subRecords.map(r => r['Surveyor']).filter(Boolean))].join(', ');
+            
+            let progressSectionsHtml = '';
+
+            const categoryMap = new Map();
+            subRecords.forEach(sub => {
+                const cat = sub['Kategori'] || 'Am';
+                if(!categoryMap.has(cat)) {
+                    categoryMap.set(cat, []);
+                }
+                categoryMap.get(cat).push(sub);
+            });
+
+            categoryMap.forEach((subs, catName) => {
+                let targetSum = subs.reduce((acc, curr) => acc + (parseFloat(curr['Target']) || 0), 0);
+                let unitName = subs[0]['Unit'] || '';
+                let isTopo = catName.toLowerCase() === 'topografi';
+                let isUtility = catName.toLowerCase() === 'utility mapping';
+                
+                let iconClass = isTopo ? 'fa-mountain text-sky-400' : (isUtility ? 'fa-network-wired text-purple-400' : 'fa-layer-group text-emerald-400');
+                let barColor = isTopo ? 'from-sky-500 to-indigo-500' : (isUtility ? 'from-purple-500 to-pink-500' : 'from-emerald-500 to-teal-500');
+                let textColor = isTopo ? 'text-sky-400' : (isUtility ? 'text-purple-400' : 'text-emerald-400');
+
+                progressSectionsHtml += `
+                    <div class="space-y-1.5 pt-2 border-t border-slate-800/60 first:border-t-0 first:pt-0">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="${textColor} font-semibold flex items-center"><i class="fa-solid ${iconClass} mr-1.5"></i> ${catName}</span>
+                            <span class="text-slate-400 font-medium">${targetSum} ${unitName} &bull; <strong class="text-slate-200">0%</strong></span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r ${barColor} h-2 rounded-full w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full border bg-sky-500/10 text-sky-400 border-sky-500/20 font-semibold">${categoriesList}</span>
+                        <h4 class="font-extrabold text-base text-white mt-2">${item['No File'] || 'Tanpa No File'}</h4>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs px-2 py-1 bg-slate-800 text-amber-400 rounded-lg border border-slate-700 font-medium">0% Global</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    ${progressSectionsHtml}
+                </div>
+
+                <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                    <span class="truncate max-w-[180px]" title="${surveyorsList}"><i class="fa-solid fa-user-gear text-slate-500 mr-1.5"></i> ${surveyorsList || '-'}</span>
+                    <span class="text-amber-400"><i class="fa-solid fa-clock mr-1"></i> Menunggu Site</span>
+                </div>
+            `;
+            return card;
+        }
+
+        // Handle Form Submission and Sync to Google Sheets
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const noFile = document.getElementById('inputNoFile').value.trim();
+            const surveyorSelects = document.querySelectorAll('select[name="surveyorSelect"]');
+            const selectedSurveyors = Array.from(surveyorSelects).map(s => s.value).filter(Boolean);
+            const combinedSurveyor = selectedSurveyors.join(' & ');
+
+            const tarikhMula = document.getElementById('inputTarikhMula').value;
+            const tarikhSiap = document.getElementById('inputTarikhSiap').value;
+
+            const taskInputs = document.querySelectorAll('input[name="taskInput"]');
+            const tasksList = Array.from(taskInputs).map(i => i.value.trim()).filter(Boolean);
+            const combinedTasks = tasksList.length > 0 ? tasksList.join(', ') : '-';
+
+            const catRows = document.querySelectorAll('#categoryRowsContainer > div');
+            if(catRows.length === 0) {
+                showToast('Sila masukkan sekurang-kurangnya satu kategori.', 'error');
+                return;
+            }
+
+            showToast('Menghantar data ke Google Sheets...', 'info');
+
+            let promises = [];
+
+            catRows.forEach(row => {
+                const cat = row.querySelector('select[name="rowCategory"]').value;
+                const target = row.querySelector('input[name="rowTarget"]').value.trim();
+                const unit = row.querySelector('select[name="rowUnit"]').value;
+
+                if(cat && target && unit) {
+                    const payload = {
+                        noFile: noFile,
+                        surveyor: combinedSurveyor || '-',
+                        kategori: cat,
+                        target: target,
+                        unit: unit,
+                        tarikhMula: tarikhMula,
+                        tarikhSiap: tarikhSiap,
+                        tugas: combinedTasks
+                    };
+
+                    const promise = fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    promises.push(promise);
+
+                    // Optimistic UI update
+                    globalData.unshift({
+                        'No File': noFile,
+                        'Surveyor': combinedSurveyor || '-',
+                        'Kategori': cat,
+                        'Target': target,
+                        'Unit': unit,
+                        'Tarikh Mula': tarikhMula,
+                        'Tarikh Siap': tarikhSiap,
+                        'Tugas': combinedTasks
+                    });
+                }
+            });
+
+            Promise.all(promises).then(() => {
+                processData(globalData);
+                showToast('Rekod berjaya disimpan & diselaraskan ke Google Sheets!', 'success');
+                document.getElementById('surveyForm').reset();
+                
+                const surveyorContainer = document.getElementById('surveyorsContainer');
+                if(surveyorContainer) {
+                    let optionsHtml = '<option value="" disabled selected>Pilih Surveyor</option>';
+                    globalSurveyorsList.forEach(srv => {
+                        optionsHtml += `<option value="${srv}">${srv}</option>`;
+                    });
+                    surveyorContainer.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <select name="surveyorSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition surveyor-dropdown">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                    `;
+                }
+
+                const catRowsContainer = document.getElementById('categoryRowsContainer');
+                if(catRowsContainer) {
+                    catRowsContainer.innerHTML = '';
+                }
+                initCategoryRows();
+                resetTaskContainer();
+
+                switchTab('overview');
+            }).catch(err => {
+                console.error('Submission Error:', err);
+                showToast('Gagal menghantar data ke Google Sheets.', 'error');
+            });
+        }
+
+        function exportCSV() {
+            if(globalData.length === 0) {
+                showToast('Tiada data untuk dieksport.', 'error');
+                return;
+            }
+
+            const csv = Papa.unparse(globalData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.setAttribute('download', `GeoSurvey_Report_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Laporan CSV berjaya dieksport!', 'success');
+        }
+
+        window.onload = function() {
+            initCategoryRows();
+            fetchData();
+        };
+    </script>
+</body>
+</html>
