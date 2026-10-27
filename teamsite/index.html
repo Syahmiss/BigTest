@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoStat Executive | Dashboard Statistik Kerja Lapangan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../assets/executive-theme.js"></script>
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-dark-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-gold-500 selection:text-black">
+
+    <!-- Top Executive Header -->
+    <header class="bg-dark-800 border-b border-dark-700 sticky top-0 z-50 px-6 py-3.5 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gold-500/10 p-2.5 rounded-xl border border-gold-500/30 text-gold-400 shadow-inner">
+                <i class="fa-solid fa-satellite-dish text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-base font-bold tracking-wide text-white">GeoStat Executive</h1>
+                    <span class="bg-gold-500/20 text-gold-400 text-[10px] font-semibold px-2 py-0.5 rounded border border-gold-500/30">PRO v3.2</span>
+                </div>
+                <p class="text-[11px] text-slate-400">Sistem Pemantauan & Analitik Kerja Lapangan Jurukur Tanah Bersepadu</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:flex flex-col text-right">
+                <span class="text-xs font-semibold text-slate-200" id="currentDateDisplay">Rabu, 28 Okt 2026</span>
+                <span class="text-[10px] text-emerald-400 flex items-center justify-end space-x-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Pangkalan Data Diselaraskan</span>
+                </span>
+            </div>
+            <div class="h-8 w-px bg-dark-700 hidden md:block"></div>
+            <button onclick="openFormModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-all flex items-center space-x-2 shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span class="hidden sm:inline">Tambah Rekod</span>
+            </button>
+            <button onclick="refreshData()" class="px-3.5 py-2 bg-dark-700 hover:bg-dark-600 text-slate-200 rounded-lg text-xs font-medium transition-all flex items-center space-x-2 border border-dark-600 shadow-sm">
+                <i class="fa-solid fa-rotate-right text-gold-400" id="refreshIcon"></i>
+                <span class="hidden sm:inline">Segar Semula</span>
+            </button>
+            <button onclick="exportCSV()" class="px-3.5 py-2 bg-gold-600 hover:bg-gold-500 text-white rounded-lg text-xs font-medium transition-all flex items-center space-x-2 shadow-sm">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden sm:inline">Eksport</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Workspace -->
+    <main class="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
+
+        <!-- KPI Metric Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md relative overflow-hidden group hover:border-gold-500/50 transition-all">
+                <div class="absolute right-3 top-3 text-dark-700 text-3xl group-hover:text-gold-500/10 transition-colors"><i class="fa-solid fa-folder-tree"></i></div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Jumlah Fail (Unique)</p>
+                <h3 id="metricTotal" class="text-2xl font-black text-white mt-1">0</h3>
+                <p class="text-[10px] text-slate-500 mt-2">Rekod keseluruhan lapangan</p>
+            </div>
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+                <div class="absolute right-3 top-3 text-dark-700 text-3xl group-hover:text-emerald-500/10 transition-colors"><i class="fa-solid fa-circle-check"></i></div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Selesai</p>
+                <h3 id="metricSelesai" class="text-2xl font-black text-emerald-400 mt-1">0</h3>
+                <p class="text-[10px] text-emerald-500/80 mt-2" id="pctSelesai">0% daripada jumlah</p>
+            </div>
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md relative overflow-hidden group hover:border-amber-500/50 transition-all">
+                <div class="absolute right-3 top-3 text-dark-700 text-3xl group-hover:text-amber-500/10 transition-colors"><i class="fa-solid fa-person-digging"></i></div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Dalam Proses</p>
+                <h3 id="metricProses" class="text-2xl font-black text-amber-400 mt-1">0</h3>
+                <p class="text-[10px] text-amber-500/80 mt-2">Kerja lapangan aktif</p>
+            </div>
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md relative overflow-hidden group hover:border-rose-500/50 transition-all">
+                <div class="absolute right-3 top-3 text-dark-700 text-3xl group-hover:text-rose-500/10 transition-colors"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Isu / Tertunda</p>
+                <h3 id="metricIsu" class="text-2xl font-black text-rose-400 mt-1">0</h3>
+                <p class="text-[10px] text-rose-500/80 mt-2">Memerlukan perhatian</p>
+            </div>
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md relative overflow-hidden group hover:border-blue-500/50 transition-all sm:col-span-2 lg:col-span-1">
+                <div class="absolute right-3 top-3 text-dark-700 text-3xl group-hover:text-blue-500/10 transition-colors"><i class="fa-solid fa-users-viewfinder"></i></div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Surveyor Aktif</p>
+                <h3 id="metricSurveyor" class="text-2xl font-black text-blue-400 mt-1">0</h3>
+                <p class="text-[10px] text-blue-500/80 mt-2">Pegawai bertugas</p>
+            </div>
+        </div>
+
+        <!-- Analytical Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-dark-800 border border-dark-700 p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300"><i class="fa-solid fa-chart-pie mr-2 text-gold-400"></i>Taburan Kategori Kerja</h2>
+                    <span class="text-[10px] text-slate-500 bg-dark-700 px-2 py-0.5 rounded">Live Metrics</span>
+                </div>
+                <div class="relative h-48 w-full flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-dark-800 border border-dark-700 p-5 rounded-xl shadow-lg flex flex-col justify-between lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300"><i class="fa-solid fa-chart-bar mr-2 text-gold-400"></i>Prestasi Isu / Status Lapangan</h2>
+                    <span class="text-[10px] text-slate-500 bg-dark-700 px-2 py-0.5 rounded">Status Perbandingan</span>
+                </div>
+                <div class="relative h-48 w-full">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Filters & Search Toolbar -->
+        <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="relative w-full md:w-96">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari No Fail, Surveyor, Tugas..." 
+                    class="w-full bg-dark-900 border border-dark-700 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 transition-all shadow-inner">
+            </div>
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                <select id="categoryFilter" onchange="filterTable()" class="bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500">
+                    <option value="">Semua Kategori</option>
+                </select>
+                <select id="statusFilter" onchange="filterTable()" class="bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500">
+                    <option value="">Semua Status Isu</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Isu">Isu / Tertunda</option>
+                </select>
+                <button onclick="resetFilters()" class="px-3 py-2 bg-dark-700 hover:bg-dark-600 text-slate-300 rounded-lg text-xs transition-all border border-dark-600" title="Reset Tapisan">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Data Table -->
+        <div class="bg-dark-800 border border-dark-700 rounded-xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table id="surveyTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-dark-700/80 border-b border-dark-700 text-[11px] uppercase tracking-wider text-slate-300 font-bold">
+                            <th class="py-3.5 px-4">No File</th>
+                            <th class="py-3.5 px-4">Tarikh</th>
+                            <th class="py-3.5 px-4">Masa Mula - Tamat</th>
+                            <th class="py-3.5 px-4">Kategori</th>
+                            <th class="py-3.5 px-4">Surveyor</th>
+                            <th class="py-3.5 px-4">Tugas</th>
+                            <th class="py-3.5 px-4">Kuantiti / Unit</th>
+                            <th class="py-3.5 px-4">Status Isu</th>
+                            <th class="py-3.5 px-4">Jangka Siap (Asal / Semasa)</th>
+                            <th class="py-3.5 px-4">Perancangan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-dark-700/40 text-xs text-slate-300" id="tableBody">
+                        <!-- Dynamic rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table Footer Pagination Info -->
+            <div class="bg-dark-900/70 px-6 py-3.5 border-t border-dark-700 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2">
+                <span id="recordCount">Memaparkan 0 daripada 0 rekod lapangan</span>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-gold-500"></span>
+                    <span class="text-[11px] text-slate-400">GeoStat Enterprise Reporting Engine</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Notifikasi Kustom -->
+    <div id="notificationModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+            <div id="modalIcon" class="w-12 h-12 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center mx-auto text-xl border border-gold-500/30">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="modalTitle" class="text-sm font-bold text-white uppercase tracking-wider">Makluman Sistem</h3>
+            <p id="modalMessage" class="text-xs text-slate-300 leading-relaxed">Mesej sistem di sini.</p>
+            <button onclick="closeModal()" class="w-full py-2 bg-gold-600 hover:bg-gold-500 text-white rounded-lg text-xs font-medium transition-colors">
+                Faham / Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Form Tambah Rekod Kerja Lapangan -->
+    <div id="recordFormModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-dark-800 border border-dark-700 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8">
+            <div class="bg-dark-700/80 px-6 py-4 border-b border-dark-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-gold-500/20 p-2 rounded-lg text-gold-400 border border-gold-500/30">
+                        <i class="fa-solid fa-file-pen text-sm"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">Borang Input Kerja Lapangan Jurukur</h3>
+                </div>
+                <button onclick="closeFormModal()" class="text-slate-400 hover:text-white transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="surveyForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">No File <span class="text-rose-400">*</span></label>
+                        <input type="text" id="inputNoFile" required value="MGK " placeholder="001/26 Mangkuk" 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Tarikh <span class="text-rose-400">*</span></label>
+                        <input type="date" id="inputTarikh" required 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Masa Mula <span class="text-rose-400">*</span></label>
+                        <input type="time" id="inputMasaMula" required 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Masa Tamat <span class="text-rose-400">*</span></label>
+                        <input type="time" id="inputMasaTamat" required 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Kategori <span class="text-rose-400">*</span></label>
+                        <select id="inputKategori" required class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                            <option value="Topografi">Topografi</option>
+                            <option value="Utiliti Mapping">Utiliti Mapping</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Surveyor (Pegawai Bertugas) <span class="text-rose-400">*</span></label>
+                        <select id="inputSurveyor" required class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                            <option value="">Pilih Surveyor</option>
+                            <option value="Mangkuk1">Mangkuk1</option>
+                            <option value="Mangkuk2">Mangkuk2</option>
+                            <option value="Mangkuk3">Mangkuk3</option>
+                            <option value="Mangkuk4">Mangkuk4</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-slate-400 font-semibold">Tugas / Keterangan Kerja <span class="text-rose-400">*</span></label>
+                        <button type="button" onclick="addTugasField()" class="text-[11px] text-gold-400 hover:text-gold-300 flex items-center space-x-1 font-medium bg-dark-700/60 px-2.5 py-1 rounded-md border border-dark-600 transition-colors">
+                            <i class="fa-solid fa-plus"></i><span>Tambah Tugas</span>
+                        </button>
+                    </div>
+                    <div id="tugasContainer" class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" required placeholder="Cth: Ukuran sempadan lot..." 
+                                class="tugas-input w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Kuantiti <span class="text-rose-400">*</span></label>
+                        <input type="text" id="inputKuantiti" required placeholder="Cth: 15" 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Unit <span class="text-rose-400">*</span></label>
+                        <select id="inputUnit" required class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                            <option value="Lot">Lot</option>
+                            <option value="Ekar">Ekar</option>
+                            <option value="M">M</option>
+                            <option value="Unit">Unit</option>
+                            <option value="Stesen">Stesen</option>
+                            <option value="Point">Point</option>
+                            <option value="Blok">Blok</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 font-semibold mb-1">Status Isu <span class="text-rose-400">*</span></label>
+                    <input type="text" id="inputStatus" required placeholder="Cth: Normal / Isu Cuaca / Selesai..." 
+                        class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Jangka Siap Asal <span class="text-rose-400">*</span></label>
+                        <input type="date" id="inputJangkaAsal" required 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Jangka Siap Semasa <span class="text-rose-400">*</span></label>
+                        <input type="date" id="inputJangkaSemasa" required 
+                            class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 font-semibold mb-1">Perancangan Seterusnya</label>
+                    <textarea id="inputPerancangan" rows="2" placeholder="Nota tindakan susulan di lapangan..." 
+                        class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500 resize-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-3 border-t border-dark-700">
+                    <button type="button" onclick="closeFormModal()" class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-slate-300 rounded-lg font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="submitBtn" class="px-5 py-2 bg-gold-600 hover:bg-gold-500 text-white rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                        <span id="submitText">Simpan Rekod Lapangan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9a-RCKPl-TxOUexX7vwjhD_xgN_x9jBRhpDqu0XWlAk0XQrzAUm-V-TtEsXmtuxsE/exec";
+
+        const fallbackData = [
+            ["MGK 001/26", "24/10/2026", "08:30", "13:00", "Topografi", "Mangkuk1", "• Ukuran sempadan lot<• Pemasangan tanda batu bates", "15", "Lot", "Normal", "25/10/2026", "25/10/2026", "Teruskan ke Lot B"],
+            ["MGK 002/26", "25/10/2026", "09:00", "17:00", "Utiliti Mapping", "Mangkuk2", "• Pengesanan paip bawah tanah<• Penandaan stesen radar", "2.5", "M", "Isu Cuaca", "28/10/2026", "30/10/2026", "Tunggu hujan reda"],
+            ["MGK 003/26", "26/10/2026", "08:00", "12:30", "Topografi", "Mangkuk3", "• Ukuran kontur tapak projek", "1.2", "Point", "Selesai", "26/10/2026", "26/10/2026", "Sedia untuk laporan akhir"],
+            ["MGK 004/26", "27/10/2026", "08:30", "16:30", "Utiliti Mapping", "Mangkuk4", "• Ukuran kabel bawah tanah<• Penyelarasan titik rujukan", "48", "Point", "Dalam Proses", "30/10/2026", "02/11/2026", "Semakan pelan utiliti"]
+        ];
+
+        let globalTableData = [];
+        let categoryChartInstance = null;
+        let statusChartInstance = null;
+
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTpEEqM_Z4Yc_70gFgaIcUgFtGAjLlT0d21nbOlo6zmWPpd2Z4Lh4nO_yWy3FeGPkAJ0DvfBe4HLTMk/pub?gid=1315075664&single=true&output=csv";
+        
+        function loadCSVData() {
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('fa-spin');
+            
+            try {
+                const localSaved = localStorage.getItem('geoStatCustomRecords');
+                if (localSaved) {
+                    globalTableData = JSON.parse(localSaved);
+                    processAndRender(globalTableData);
+                    setTimeout(() => icon.classList.remove('fa-spin'), 600);
+                    return;
+                }
+
+                fetch(csvUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Ralat rangkaian sambungan.');
+                        return response.text();
+                    })
+                    .then(csvText => {
+                        parseCSV(csvText);
+                    })
+                    .catch(error => {
+                        console.warn("Menggunakan data fallback atas kekangan CORS jaringan luar.", error);
+                        const localSaved = localStorage.getItem('geoStatCustomRecords');
+                        globalTableData = localSaved ? JSON.parse(localSaved) : fallbackData;
+                        processAndRender(globalTableData);
+                    });
+            } catch (error) {
+                console.warn("Menggunakan data fallback atas kekangan CORS jaringan luar.", error);
+                const localSaved = localStorage.getItem('geoStatCustomRecords');
+                globalTableData = localSaved ? JSON.parse(localSaved) : fallbackData;
+                processAndRender(globalTableData);
+            } finally {
+                setTimeout(() => icon.classList.remove('fa-spin'), 600);
+            }
+        }
+
+        function refreshData() {
+            loadCSVData();
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            let parsed = [];
+            for (let i = 1; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (line) {
+                    let row = line.split(',').map(val => val.trim().replace(/^["']|["']$/g, ''));
+                    if (row.length >= 10) parsed.push(row);
+                }
+            }
+            if (parsed.length > 0) {
+                globalTableData = parsed;
+            } else {
+                globalTableData = fallbackData;
+            }
+            processAndRender(globalTableData);
+        }
+
+        function processAndRender(data) {
+            renderTable(data);
+            updateKPIs(data);
+            populateCategoryDropdown(data);
+            renderCharts(data);
+        }
+
+        function updateKPIs(data) {
+            const uniqueFiles = new Set();
+            let selesai = 0;
+            let proses = 0;
+            let isu = 0;
+            const surveyorSet = new Set();
+
+            data.forEach(row => {
+                const noFile = (row[0] || "").trim();
+                if (noFile) uniqueFiles.add(noFile);
+
+                // Ditegaskan untuk menyemak kolum ke-9 (Status Isu) dengan logik yang lebih inklusif
+                const statusRaw = row[9] !== undefined && row[9] !== null ? String(row[9]).trim() : "";
+                const status = statusRaw.toLowerCase();
+
+                if (status.includes("selesai")) {
+                    selesai++;
+                } else if (status.includes("isu") || status.includes("tertunda") || status.includes("cuaca") || status.includes("lewat") || (status !== "" && !status.includes("normal") && !status.includes("baik"))) {
+                    isu++;
+                } else {
+                    proses++;
+                }
+
+                if (row[5]) surveyorSet.add(row[5].trim());
+            });
+
+            const totalUnique = uniqueFiles.size;
+            const totalRows = data.length;
+
+            document.getElementById('metricTotal').innerText = totalUnique;
+            document.getElementById('metricSelesai').innerText = selesai;
+            document.getElementById('metricProses').innerText = proses;
+            document.getElementById('metricIsu').innerText = isu;
+            document.getElementById('metricSurveyor').innerText = surveyorSet.size;
+
+            const pct = totalRows > 0 ? Math.round((selesai / totalRows) * 100) : 0;
+            document.getElementById('pctSelesai').innerText = `${pct}% daripada jumlah rekod (${totalRows} entri)`;
+        }
+
+        function populateCategoryDropdown(data) {
+            const catFilter = document.getElementById('categoryFilter');
+            const currentVal = catFilter.value;
+            const categories = [...new Set(data.map(row => row[4]).filter(Boolean))];
+            
+            catFilter.innerHTML = '<option value="">Semua Kategori</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                if (cat === currentVal) opt.selected = true;
+                catFilter.appendChild(opt);
+            });
+        }
+
+        function renderCharts(data) {
+            const catCounts = {};
+            data.forEach(row => {
+                const cat = row[4] || 'Lain-lain';
+                catCounts[cat] = (catCounts[cat] || 0) + 1;
+            });
+
+            const catLabels = Object.keys(catCounts);
+            const catValues = Object.values(catCounts);
+
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+            
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        data: catValues,
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                }
+            });
+
+            let selesaiCount = 0, prosesCount = 0, isuCount = 0;
+            data.forEach(row => {
+                const status = (row[9] || "").toLowerCase();
+                if (status.includes("selesai")) selesaiCount++;
+                else if (status.includes("isu") || status.includes("tertunda") || status.includes("cuaca") || status.includes("lewat") || (status !== "" && !status.includes("normal") && !status.includes("baik"))) isuCount++;
+                else prosesCount++;
+            });
+
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            if (statusChartInstance) statusChartInstance.destroy();
+
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'bar',
+                data: {
+                    labels: ['Selesai', 'Dalam Proses', 'Isu / Tertunda'],
+                    datasets: [{
+                        label: 'Bilangan Fail',
+                        data: [selesaiCount, prosesCount, isuCount],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const catVal = document.getElementById('categoryFilter').value.toLowerCase();
+            const statusVal = document.getElementById('statusFilter').value.toLowerCase();
+
+            const filtered = globalTableData.filter(row => {
+                const noFile = (row[0] || "").toLowerCase();
+                const tarikh = (row[1] || "").toLowerCase();
+                const kat = (row[4] || "").toLowerCase();
+                const surveyor = (row[5] || "").toLowerCase();
+                const tugas = (row[6] || "").toLowerCase();
+                const status = (row[9] || "").toLowerCase();
+
+                const matchQuery = noFile.includes(query) || tarikh.includes(query) || surveyor.includes(query) || tugas.includes(query);
+                const matchCat = !catVal || kat === catVal;
+                
+                let matchStatus = true;
+                if (statusVal === 'selesai') matchStatus = status.includes('selesai');
+                else if (statusVal === 'normal') matchStatus = status.includes('normal');
+                else if (statusVal === 'isu') matchStatus = status.includes('isu') || status.includes('tertunda') || status.includes('cuaca') || status.includes('lewat') || (status !== "" && !status.includes('normal'));
+
+                return matchQuery && matchCat && matchStatus;
+            });
+
+            renderTable(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = "";
+            document.getElementById('categoryFilter').value = "";
+            document.getElementById('statusFilter').value = "";
+            renderTable(globalTableData);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = "";
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-500">Tiada rekod data dijumpai.</td></tr>`;
+                document.getElementById('recordCount').innerText = `Memaparkan 0 daripada 0 rekod lapangan`;
+                return;
+            }
+
+            data.forEach((row) => {
+                const status = (row[9] !== undefined && row[9] !== null && String(row[9]).trim() !== "") ? String(row[9]).trim() : "Normal";
+                let statusBadge = "bg-slate-500/10 text-slate-400 border-slate-500/20";
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes("selesai")) {
+                    statusBadge = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                } else if (statusLower.includes("isu") || statusLower.includes("tertunda") || statusLower.includes("cuaca") || statusLower.includes("lewat") || !statusLower.includes("normal")) {
+                    statusBadge = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+                } else if (statusLower.includes("proses")) {
+                    statusBadge = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                } else {
+                    statusBadge = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                }
+
+                let tugasRaw = row[6] || '-';
+                let tugasHtml = '';
+                if (tugasRaw.includes('•') || tugasRaw.includes('<br>')) {
+                    tugasHtml = `<ul class="list-disc list-inside space-y-0.5 text-slate-300">${tugasRaw.split(/•|<br>/).filter(t=>t.trim()).map(t => `<li>${t.trim()}</li>`).join('')}</ul>`;
+                } else {
+                    tugasHtml = `<ul class="list-disc list-inside space-y-0.5 text-slate-300"><li>${tugasRaw}</li></ul>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-dark-700/40 transition-colors border-b border-dark-700/30";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold text-gold-400">${row[0] || '-'}</td>
+                    <td class="py-3 px-4 text-slate-300 font-medium">${row[1] || '-'}</td>
+                    <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">${row[2] || '-'} - ${row[3] || '-'}</td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-1 bg-dark-700 text-slate-200 rounded-md text-[10px] font-semibold tracking-wide border border-dark-600">${row[4] || '-'}</span></td>
+                    <td class="py-3 px-4 font-semibold text-slate-200">${row[5] || '-'}</td>
+                    <td class="py-3 px-4">${tugasHtml}</td>
+                    <td class="py-3 px-4"><span class="font-bold text-white">${row[7] || '-'}</span> <span class="text-slate-400 text-[11px]">${row[8] || ''}</span></td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] border font-medium inline-block ${statusBadge}">${status}</span></td>
+                    <td class="py-3 px-4 text-[11px]">
+                        <div class="line-through text-slate-500">${row[10] || '-'}</div>
+                        <div class="text-slate-200 font-semibold">${row[11] || '-'}</div>
+                    </td>
+                    <td class="py-3 px-4 text-slate-300 text-[11px]">${row[12] || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('recordCount').innerText = `Memaparkan ${data.length} daripada ${globalTableData.length} rekod lapangan`;
+        }
+
+        function openFormModal() {
+            document.getElementById('recordFormModal').classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('recordFormModal').classList.add('hidden');
+        }
+
+        function addTugasField() {
+            const container = document.getElementById('tugasContainer');
+            const div = document.createElement('div');
+            div.className = "flex items-center space-x-2 mt-2";
+            div.innerHTML = `
+                <input type="text" required placeholder="Tugas seterusnya..." 
+                    class="tugas-input w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 hover:text-rose-300 p-2 text-xs">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const formatDate = (dateStr) => {
+                if(!dateStr) return '';
+                const p = dateStr.split('-');
+                return `${p[2]}/${p[1]}/${p[0]}`;
+            };
+
+            const noFile = document.getElementById('inputNoFile').value.trim();
+            const tarikh = formatDate(document.getElementById('inputTarikh').value);
+            const masaMula = document.getElementById('inputMasaMula').value;
+            const masaTamat = document.getElementById('inputMasaTamat').value;
+            const kategori = document.getElementById('inputKategori').value;
+            const surveyor = document.getElementById('inputSurveyor').value.trim();
+            
+            const tugasInputs = document.querySelectorAll('.tugas-input');
+            const tugasList = Array.from(tugasInputs).map(input => input.value.trim()).filter(Boolean);
+            const tugas = tugasList.join(' • ');
+
+            const kuantiti = document.getElementById('inputKuantiti').value.trim();
+            const unit = document.getElementById('inputUnit').value;
+            const statusIsu = document.getElementById('inputStatus').value.trim();
+            const jangkaAsal = formatDate(document.getElementById('inputJangkaAsal').value);
+            const jangkaSemasa = formatDate(document.getElementById('inputJangkaSemasa').value);
+            const perancangan = document.getElementById('inputPerancangan').value.trim() || '-';
+
+            const payload = {
+                noFile, tarikh, masaMula, masaTamat, kategori, surveyor,
+                tugas, kuantiti, unit, statusIsu, jangkaAsal, jangkaSemasa, perancangan
+            };
+
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            submitBtn.disabled = true;
+            submitText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan ke Google Sheet...';
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                const newRow = [noFile, tarikh, masaMula, masaTamat, kategori, surveyor, tugas, kuantiti, unit, statusIsu, jangkaAsal, jangkaSemasa, perancangan];
+                globalTableData.unshift(newRow);
+                localStorage.setItem('geoStatCustomRecords', JSON.stringify(globalTableData));
+
+                processAndRender(globalTableData);
+                closeFormModal();
+                
+                document.getElementById('tugasContainer').innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <input type="text" required placeholder="Cth: Ukuran sempadan lot..." 
+                            class="tugas-input w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-gold-500">
+                    </div>
+                `;
+                showCustomModal("Berjaya Disimpan", `Rekod fail ${noFile} telah berjaya dihantar ke Google Apps Script dan direkodkan.`);
+            }).catch(error => {
+                console.error("Ralat simpan:", error);
+                showCustomModal("Ralat Sambungan", "Gagal menghantar data ke Google Sheet. Sila semak pautan Apps Script URL anda.");
+            }).finally(() => {
+                submitBtn.disabled = false;
+                submitText.innerText = "Simpan Rekod Lapangan";
+            });
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,No File,Tarikh,Masa Mula,Masa Tamat,Kategori,Surveyor,Tugas,Kuantiti,Unit,Status Isu,Jangka Siap Asal,Jangka Siap Semasa,Perancangan\r\n";
+            globalTableData.forEach(row => {
+                csvContent += row.map(e => `"${e || ''}"`).join(",") + "\r\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `laporan_lapangan_jurukur_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showCustomModal(title, message) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('notificationModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').classList.add('hidden');
+        }
+
+        window.onload = loadCSVData;
+    </script>
+</body>
+</html>
