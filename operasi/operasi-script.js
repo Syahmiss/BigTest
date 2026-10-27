@@ -16,7 +16,7 @@ window.removeTaskField = removeTaskField;
 
 // ===== ISI DUA NILAI INI =====
 const API_URL = 'PASTE_URL_WEB_APP_DI_SINI';
-const API_TOKEN = 'PASTE_TOKEN_DI_SINI';
+const API_TOKEN = '99999999999999999999999999999999999999999999999999';
 
 let globalData = [];
 let uniqueFilesList = [];
