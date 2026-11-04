@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Eksekutif Statistik Ukur Tanah</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        exec: {
+                            bg: '#070b14',
+                            surface: '#0f172a',
+                            card: '#131c31',
+                            border: '#1e293b',
+                            gold: '#f59e0b',
+                            accent: '#6366f1',
+                            emerald: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #070b14;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #f1f5f9;
+        }
+
+        /* Buang anak panah (spinner) pada input nombor Kuantiti */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Custom Scrollbar Dark Executive */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Executive Card Glow & Transitions */
+        .exec-card {
+            background: linear-gradient(145deg, rgba(19, 28, 49, 0.92), rgba(15, 23, 42, 0.96));
+            border: 1px solid rgba(51, 65, 85, 0.65);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .exec-card:hover {
+            border-color: rgba(99, 102, 241, 0.45);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(99, 102, 241, 0.08);
+        }
+
+        /* Highlight animasi untuk kad baru */
+        @keyframes pulseGold {
+            0%, 100% { border-color: rgba(245, 158, 11, 0.85); box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
+            50% { border-color: rgba(16, 185, 129, 0.85); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
+        }
+        .new-card-highlight {
+            animation: pulseGold 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- ================= TOP EXECUTIVE NAVBAR ================= -->
+    <nav class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Logo -->
+                <div class="flex items-center gap-3.5 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 border border-amber-400/40">
+                        <i class="fa-solid fa-compass-drafting text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-display font-extrabold text-lg tracking-tight text-white">GEO<span class="text-amber-400">STAT</span></span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">Executive</span>
+                        </div>
+                        <p class="text-xs text-slate-400 hidden sm:block">Sistem Pemantauan Progres & Statistik Ukur Tanah</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/25">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button id="nav-tambah" onclick="switchTab('tambah')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent">
+                        <i class="fa-solid fa-plus-circle text-emerald-400"></i>
+                        <span>Tambah Kerja</span>
+                    </button>
+                    <button id="nav-statistik" onclick="switchTab('statistik')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent">
+                        <i class="fa-solid fa-table-list text-amber-400"></i>
+                        <span class="hidden md:inline">Data Sheet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN CONTAINER ================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================================================================= -->
+        <!-- PAGE 1: DASHBOARD EKSEKUTIF                                       -->
+        <!-- ================================================================= -->
+        <div id="view-dashboard" class="view-section space-y-8">
+
+            <!-- Executive Hero Banner -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/90 to-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl">
+                <div class="absolute -right-10 -top-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute right-20 -bottom-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div class="space-y-2">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-medium text-amber-400">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Integrasi Langsung Google Sheets & Apps Script
+                        </div>
+                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                            Dashboard Eksekutif Progres Kerja Ukur
+                        </h1>
+                        <p class="text-slate-400 text-sm max-w-2xl">
+                            Kad progres dijana secara automatik daripada rekod kerja lapangan manakala peratusan siap diselaraskan secara langsung daripada pangkalan data statistik.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <button onclick="refreshAllData()" id="btnRefresh" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2">
+                            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-indigo-400"></i>
+                            <span>Muat Semula Data</span>
+                        </button>
+                        <button onclick="switchTab('tambah')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Kerja Baru</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards (4 Columns) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Jumlah Fail -->
+                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-indigo-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Jumlah Fail Kerja</p>
+                            <h3 id="statTotalFiles" class="text-3xl font-display font-extrabold text-white mt-2">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-indigo-400"></i>
+                        <span>Kad progres aktif dijana</span>
+                    </p>
+                </div>
+
+                <!-- Purata Progres -->
+                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-emerald-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Purata Peratus Kerja</p>
+                            <h3 id="statAvgProgress" class="text-3xl font-display font-extrabold text-emerald-400 mt-2">0%</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-database text-emerald-400"></i>
+                        <span>Sumber: Sheet Statistik Peratus</span>
+                    </p>
+                </div>
+
+                <!-- Jumlah Kategori -->
+                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-amber-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Aktif</p>
+                            <h3 id="statTotalCategories" class="text-3xl font-display font-extrabold text-amber-400 mt-2">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-tags text-amber-400"></i>
+                        <span id="statTotalTasksText">0 rekod tugasan lapangan</span>
+                    </p>
+                </div>
+
+                <!-- Surveyor Aktif -->
+                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-sky-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Surveyor Terlibat</p>
+                            <h3 id="statTotalSurveyors" class="text-3xl font-display font-extrabold text-sky-400 mt-2">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-users-viewfinder text-sky-400"></i>
+                        <span>Dipetakan mengikut kategori & fail</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- ================= SEKSYEN 1: KAD PROGRES MENGIKUT FAIL ================= -->
+            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800/80 pb-5">
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-6 rounded-full bg-amber-500"></span>
+                            <h2 class="font-display text-lg sm:text-xl font-bold text-white">Kad Progres Mengikut Fail</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Menampilkan kad kerja yang ditambah berserta peratusan siap daripada data statistik.
+                        </p>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                        <select id="filterKategoriSelect" onchange="renderDashboardCards()" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-700/80 text-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                            <option value="ALL">Semua Kategori</option>
+                        </select>
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="searchInput" oninput="renderDashboardCards()" placeholder="Cari No File, Surveyor, Tugas..." class="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid Container for File Progress Cards -->
+                <div id="fileCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div class="col-span-full py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-indigo-400 mb-3"></i>
+                        <p class="text-sm">Memuatkan kad progres fail dan peratusan kerja...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 2: HALAMAN TAMBAH KERJA (DEDICATED PAGE - TIADA OVERLAP)     -->
+        <!-- ================================================================= -->
+        <div id="view-tambah" class="view-section hidden max-w-3xl mx-auto">
+            <div class="exec-card rounded-2xl p-6 sm:p-8 border-t-4 border-t-amber-500">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800 mb-6">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">Pendaftaran Rekod Baru</span>
+                        <h2 class="font-display text-xl sm:text-2xl font-extrabold text-white mt-0.5">Borang Tambah Kerja Lapangan</h2>
+                        <p class="text-xs text-slate-400 mt-1">Data akan dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik.</p>
+                    </div>
+                    <button type="button" onclick="switchTab('dashboard')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Kembali ke Dashboard</span>
+                    </button>
+                </div>
+
+                <form id="fieldWorkForm" onsubmit="submitForm(event)" class="space-y-6">
+                    <!-- Row 1: No File & Tarikh -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                No File <span class="text-amber-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                                    <i class="fa-solid fa-file-signature text-xs"></i>
+                                </span>
+                                <input type="text" id="idFile" required placeholder="Cth: JUPEM/WPKL/2026/01" list="existingFilesList"
+                                    class="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                                <datalist id="existingFilesList"></datalist>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Tarikh Kerja <span class="text-amber-400">*</span>
+                            </label>
+                            <input type="date" id="tarikh" required
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Kategori (Dropdown Pelbagai) & Surveyor (Dropdown Pelbagai) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <!-- Dropdown Pilihan Pelbagai: KATEGORI (Tiada Button Tambah Baru) -->
+                        <div class="relative">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Kategori Kerja (Pilihan Pelbagai) <span class="text-amber-400">*</span>
+                            </label>
+                            <div id="kategoriDropdownToggle" onclick="toggleDropdown('kategori')"
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 hover:border-slate-600 rounded-xl cursor-pointer flex justify-between items-center select-none transition">
+                                <span id="kategoriSelectedText" class="text-slate-400 truncate">Pilih Kategori...</span>
+                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                            </div>
+                            <div id="kategoriDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2.5 max-h-60 overflow-y-auto space-y-1">
+                                <!-- Diisi secara dinamik oleh JS -->
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Pilihan Pelbagai: SURVEYOR (Tiada Button Tambah Baru) -->
+                        <div class="relative">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Surveyor (Pilihan Pelbagai) <span class="text-amber-400">*</span>
+                            </label>
+                            <div id="surveyorDropdownToggle" onclick="toggleDropdown('surveyor')"
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 hover:border-slate-600 rounded-xl cursor-pointer flex justify-between items-center select-none transition">
+                                <span id="surveyorSelectedText" class="text-slate-400 truncate">Pilih Surveyor...</span>
+                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                            </div>
+                            <div id="surveyorDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2.5 max-h-60 overflow-y-auto space-y-1">
+                                <!-- Diisi secara dinamik oleh JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Tugas, Kuantiti (Tanpa Spinner), & Unit (Lot, Ekar, Meter) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Tugas / Deskripsi <span class="text-amber-400">*</span>
+                            </label>
+                            <input type="text" id="tugas" required placeholder="Cth: Cerapan Sempadan"
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Kuantiti <span class="text-amber-400">*</span>
+                            </label>
+                            <input type="number" id="kuantiti" step="any" required placeholder="Masukkan nilai (cth: 15)"
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Unit Ukuran <span class="text-amber-400">*</span>
+                            </label>
+                            <select id="unit" required
+                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                                <option value="" disabled selected class="text-slate-500">Pilih Unit</option>
+                                <option value="Lot">Lot</option>
+                                <option value="Ekar">Ekar</option>
+                                <option value="Meter">Meter</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Jangka Siap -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                            Tarikh Jangka Siap <span class="text-amber-400">*</span>
+                        </label>
+                        <input type="date" id="jangkaSiap" required
+                            class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-end gap-3">
+                        <button type="button" onclick="switchTab('dashboard')"
+                            class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="submitBtn"
+                            class="px-7 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-sm font-extrabold shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Simpan & Jana Kad Progres</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 3: DATA SHEET & JADUAL STATISTIK                             -->
+        <!-- ================================================================= -->
+        <div id="view-statistik" class="view-section hidden space-y-6">
+            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-emerald-400">Sumber URL 2 (Peratus Kerja)</span>
+                        <h2 class="font-display text-lg font-bold text-white">Jadual Statistik & Peratusan Progres</h2>
+                    </div>
+                </div>
+                <div id="statsTableContainer" class="overflow-x-auto">
+                    <p class="text-slate-400 text-sm py-6 text-center">Memuatkan jadual statistik...</p>
+                </div>
+            </div>
+
+            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-indigo-400">Sumber URL 1 (Rekod Kerja Lapangan)</span>
+                        <h2 class="font-display text-lg font-bold text-white">Jadual Rekod Kerja</h2>
+                    </div>
+                </div>
+                <div id="recordsTableContainer" class="overflow-x-auto">
+                    <p class="text-slate-400 text-sm py-6 text-center">Memuatkan jadual rekod kerja...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= CUSTOM NOTIFICATION MODAL ================= -->
+    <div id="notificationModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="exec-card rounded-2xl max-w-md w-full p-6 text-center space-y-4 border border-slate-700">
+            <div id="modalIcon" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl"></div>
+            <h3 id="modalTitle" class="font-display text-lg font-extrabold text-white"></h3>
+            <p id="modalMessage" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+            <div class="pt-2">
+                <button onclick="closeModal()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold transition">
+                    Tutup Makluman
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXCGNQMe1c0_70cJA7AKEXL2fJE84fGDUVrEK13vvhyGjDRu1aGJbDUQVsVDwwSBEp9A/exec";
+
+        // 2. URL CSV 1: Rekod Kerja Lapangan (Sumber Penjanaan Kad Progres & Sasaran Kuantiti)
+        const CSV_REKOD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW5BxrFQw07_bCiTfbARTgXh8qYvbMnLo4Uur7iM6ROw42DMmluHxrxXd3bKxVADyj_dLu_pCoEob8/pub?gid=1800236702&single=true&output=csv";
+
+        // 3. URL CSV 2: Laporan Statistik Surveyor (Sumber Kuantiti Siap & Peratus Progres Bar)
+        const CSV_STAT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
+
+        // Pilihan Asas Kategori & Surveyor (Akan digabungkan secara dinamik dengan data dari CSV)
+        const DEFAULT_KATEGORI = [
+            "Ukur Kadaster",
+            "Ukur Topografi",
+            "Ukur Kejuruteraan",
+            "Ukur Hidrografi",
+            "Ukur Sempadan",
+            "Ukur Strata",
+            "Kerja Hitungan & Pelan"
+        ];
+
+        const DEFAULT_SURVEYORS = [
+            "En. Ahmad",
+            "En. Faizal",
+            "En. Hafiz",
+            "En. Syafiq",
+            "En. Rizwan",
+            "En. Zulkifli"
+        ];
+
+        // State Aplikasi
+        let rawRekodRows = [];
+        let rawStatRows = [];
+        let localAddedRecords = [];
+        let selectedKategoriList = [];
+        let selectedSurveyorList = [];
+        let lastAddedFileId = null;
+
+        // Mulakan Aplikasi
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const tarikhInput = document.getElementById('tarikh');
+            const jangkaInput = document.getElementById('jangkaSiap');
+            if (tarikhInput) tarikhInput.value = today;
+            if (jangkaInput) jangkaInput.value = today;
+
+            // Tutup dropdown apabila klik di luar
+            document.addEventListener('click', (e) => {
+                const katToggle = document.getElementById('kategoriDropdownToggle');
+                const katMenu = document.getElementById('kategoriDropdownMenu');
+                if (katToggle && katMenu && !katToggle.contains(e.target) && !katMenu.contains(e.target)) {
+                    katMenu.classList.add('hidden');
+                }
+
+                const survToggle = document.getElementById('surveyorDropdownToggle');
+                const survMenu = document.getElementById('surveyorDropdownMenu');
+                if (survToggle && survMenu && !survToggle.contains(e.target) && !survMenu.contains(e.target)) {
+                    survMenu.classList.add('hidden');
+                }
+            });
+
+            renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
+            switchTab('dashboard');
+            refreshAllData();
+        });
+
+        // Fungsi Navigasi Halaman (Dashboard, Tambah Kerja, Data Sheet)
+        function switchTab(tabName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            const activeView = document.getElementById(`view-${tabName}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            const navIds = ['dashboard', 'tambah', 'statistik'];
+            navIds.forEach(id => {
+                const btn = document.getElementById(`nav-${id}`);
+                if (!btn) return;
+                if (id === tabName) {
+                    btn.className = "nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/25";
+                } else {
+                    btn.className = "nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent";
+                }
+            });
+        }
+
+        // Bina Menu Dropdown Pelbagai Pilihan (Kategori & Surveyor)
+        function renderDropdownMenus(kategoriOptions, surveyorOptions) {
+            const katMenu = document.getElementById('kategoriDropdownMenu');
+            if (katMenu) {
+                katMenu.innerHTML = kategoriOptions.map(kat => {
+                    const isChecked = selectedKategoriList.includes(kat) ? 'checked' : '';
+                    return `
+                        <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/90 cursor-pointer transition text-xs sm:text-sm text-slate-200">
+                            <input type="checkbox" value="${escapeHtml(kat)}" ${isChecked} onchange="onMultiSelectChange('kategori', this)"
+                                class="w-4 h-4 rounded border-slate-600 bg-slate-950 text-amber-500 focus:ring-amber-500">
+                            <span class="font-medium">${escapeHtml(kat)}</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+
+            const survMenu = document.getElementById('surveyorDropdownMenu');
+            if (survMenu) {
+                survMenu.innerHTML = surveyorOptions.map(surv => {
+                    const isChecked = selectedSurveyorList.includes(surv) ? 'checked' : '';
+                    return `
+                        <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/90 cursor-pointer transition text-xs sm:text-sm text-slate-200">
+                            <input type="checkbox" value="${escapeHtml(surv)}" ${isChecked} onchange="onMultiSelectChange('surveyor', this)"
+                                class="w-4 h-4 rounded border-slate-600 bg-slate-950 text-amber-500 focus:ring-amber-500">
+                            <span class="font-medium">${escapeHtml(surv)}</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+        }
+
+        function toggleDropdown(type) {
+            const menuId = type === 'kategori' ? 'kategoriDropdownMenu' : 'surveyorDropdownMenu';
+            const otherId = type === 'kategori' ? 'surveyorDropdownMenu' : 'kategoriDropdownMenu';
+            document.getElementById(otherId)?.classList.add('hidden');
+            document.getElementById(menuId)?.classList.toggle('hidden');
+        }
+
+        function onMultiSelectChange(type, checkbox) {
+            const val = checkbox.value;
+            if (type === 'kategori') {
+                if (checkbox.checked) {
+                    if (!selectedKategoriList.includes(val)) selectedKategoriList.push(val);
+                } else {
+                    selectedKategoriList = selectedKategoriList.filter(item => item !== val);
+                }
+                const labelEl = document.getElementById('kategoriSelectedText');
+                if (selectedKategoriList.length > 0) {
+                    labelEl.innerText = selectedKategoriList.join(', ');
+                    labelEl.className = 'text-amber-400 font-semibold truncate';
+                } else {
+                    labelEl.innerText = 'Pilih Kategori...';
+                    labelEl.className = 'text-slate-400 truncate';
+                }
+            } else {
+                if (checkbox.checked) {
+                    if (!selectedSurveyorList.includes(val)) selectedSurveyorList.push(val);
+                } else {
+                    selectedSurveyorList = selectedSurveyorList.filter(item => item !== val);
+                }
+                const labelEl = document.getElementById('surveyorSelectedText');
+                if (selectedSurveyorList.length > 0) {
+                    labelEl.innerText = selectedSurveyorList.join(', ');
+                    labelEl.className = 'text-amber-400 font-semibold truncate';
+                } else {
+                    labelEl.innerText = 'Pilih Surveyor...';
+                    labelEl.className = 'text-slate-400 truncate';
+                }
+            }
+        }
+
+        // Muat Turun & Selaraskan Kedua-dua CSV
+        async function refreshAllData() {
+            const icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('fa-spin');
+
+            try {
+                const cacheBuster = `&_t=${Date.now()}`;
+                const [resRekod, resStat] = await Promise.all([
+                    fetch(CSV_REKOD_URL + cacheBuster).then(r => r.ok ? r.text() : ""),
+                    fetch(CSV_STAT_URL + cacheBuster).then(r => r.ok ? r.text() : "")
+                ]);
+
+                rawRekodRows = parseCSV(resRekod);
+                rawStatRows = parseCSV(resStat);
+
+                syncDynamicOptionsAndRender();
+            } catch (err) {
+                console.error("Ralat memuat turun data CSV:", err);
+                syncDynamicOptionsAndRender();
+            } finally {
+                if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 400);
+            }
+        }
+
+        // Parser CSV Pintar (Menyokong koma & baris baharu di dalam tanda petikan "...")
+        function parseCSV(csvText) {
+            if (!csvText || !csvText.trim()) return [];
+            const rows = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const ch = csvText[i];
+                const nextCh = csvText[i + 1];
+
+                if (ch === '"') {
+                    if (inQuotes && nextCh === '"') {
+                        currentCell += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === ',' && !inQuotes) {
+                    currentRow.push(currentCell.trim());
+                    currentCell = '';
+                } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+                    if (ch === '\r' && nextCh === '\n') i++;
+                    currentRow.push(currentCell.trim());
+                    if (currentRow.some(cell => cell !== '')) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentCell = '';
+                } else {
+                    currentCell += ch;
+                }
+            }
+            if (currentCell !== '' || currentRow.length > 0) {
+                currentRow.push(currentCell.trim());
+                if (currentRow.some(cell => cell !== '')) {
+                    rows.push(currentRow);
+                }
+            }
+
+            if (rows.length === 0) return [];
+
+            const firstRow = rows[0].map(h => h.replace(/^"|"$/g, '').trim());
+            const headerKeywords = ['no', 'file', 'fail', 'tarikh', 'surveyor', 'kategori', 'tugas', 'kuantiti', 'unit', 'siap', 'peratus', 'progress', 'progres', '%', 'status', 'kerja', 'nama', 'timestamp', 'masa'];
+            const firstRowText = firstRow.join(' ').toLowerCase();
+            const hasExplicitHeaders = headerKeywords.some(kw => firstRowText.includes(kw));
+
+            const headers = hasExplicitHeaders
+                ? firstRow.map((h, i) => h || `Lajur_${i + 1}`)
+                : firstRow.map((_, i) => `Lajur_${i + 1}`);
+
+            const startIdx = hasExplicitHeaders ? 1 : 0;
+            const result = [];
+
+            for (let r = startIdx; r < rows.length; r++) {
+                const vals = rows[r];
+                if (vals.every(v => !v)) continue;
+                const obj = {
+                    __headers: headers,
+                    __rawValues: vals,
+                    __hasExplicitHeaders: hasExplicitHeaders
+                };
+                headers.forEach((h, idx) => {
+                    obj[h] = vals[idx] !== undefined ? vals[idx].replace(/^"|"$/g, '').trim() : '';
+                });
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // Pengecaman Pintar Nilai (Elak salah papar Tarikh / Kuantiti / Masa sebagai Nama Surveyor atau Kategori)
+        function isLikelyDateOrNumberOrUnit(str) {
+            if (!str) return true;
+            const s = String(str).trim();
+            if (!s) return true;
+            // Semak jika nombor atau peratus sahaja (cth: 100, 45.5%, 0)
+            if (/^-?\d+(\.\d+)?%?$/.test(s)) return true;
+            // Semak jika format tarikh atau timestamp (YYYY-MM-DD, DD/MM/YYYY, atau ada masa HH:MM)
+            if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(s) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/.test(s)) return true;
+            if (/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM|am|pm))?$/.test(s)) return true;
+            // Semak jika unit ukuran tunggal atau nama kolum metadata (Masa Mula, Masa Tamat, Kuantiti, Timestamp)
+            const nonCategoryTerms = [
+                'lot', 'ekar', 'meter', 'm', 'ha', 'hektar', 'unit',
+                'timestamp', 'masa mula', 'masa tamat', 'masa', 'kuantiti', 'qty',
+                'tarikh', 'tarikh mula', 'tarikh siap', 'jangka siap', 'no file', 'no fail', 'surveyor', 'tugas'
+            ];
+            if (nonCategoryTerms.includes(s.toLowerCase())) return true;
+            return false;
+        }
+
+        // Semak sama ada nama kolum ialah kolum metadata (bukan kategori kerja)
+        function isMetadataHeader(headerName) {
+            if (!headerName) return true;
+            const hLower = String(headerName).trim().toLowerCase();
+            const excludedHeaders = [
+                'timestamp', 'masa mula', 'masa tamat', 'masa', 'time', 'start', 'end',
+                'kuantiti', 'qty', 'quantity', 'jumlah', 'total', 'bilangan', 'luas',
+                'no file', 'no fail', 'no. fail', 'no. file', 'id file', 'fail', 'file', 'rujukan',
+                'tarikh', 'date', 'jangka siap', 'siap', 'target', 'due',
+                'surveyor', 'juruukur', 'penyelia', 'petugas', 'pic', 'nama',
+                'status', 'tugas', 'kerja', 'task', 'deskripsi', 'perkara', 'aktiviti',
+                'unit', 'ukuran', 'peratus', 'progress', 'progres', '%', 'catatan', 'remarks', 'nota'
+            ];
+            if (/^lajur_\d+$/i.test(hLower)) return true;
+            return excludedHeaders.some(ex => hLower === ex || hLower.includes(ex));
+        }
+
+        // Fungsi pisahkan nilai pelbagai (Kategori / Surveyor) yang dipisahkan dengan koma, baris baharu, atau titik bertitik
+        function splitMultiValues(rawStr) {
+            if (!rawStr) return [];
+            return String(rawStr)
+                .split(/[,;\n\r|]+|\s+&\s+|\s+dan\s+/i)
+                .map(s => s.replace(/^["'•\-*\s]+|["'\s]+$/g, '').trim())
+                .filter(s => s && !isLikelyDateOrNumberOrUnit(s) && !isMetadataHeader(s));
+        }
+
+        // Normalisasi No File supaya "MGK 001/26", "MGK001/26", dan "mgk 001 / 26" dipadankan dengan tepat
+        function normalizeFileId(idStr) {
+            if (!idStr) return '';
+            return String(idStr)
+                .toUpperCase()
+                .replace(/\s+/g, '')
+                .replace(/^["']+|["']+$/g, '')
+                .trim();
+        }
+
+        // Tambah item ke dalam Set secara Case-Insensitive supaya tiada duplikasi ejaan tetapi kekal semua kategori berbeza
+        function addUniqueCaseInsensitive(targetSet, value) {
+            if (!value) return;
+            const cleanVal = String(value).trim();
+            if (!cleanVal || isLikelyDateOrNumberOrUnit(cleanVal) || isMetadataHeader(cleanVal)) return;
+            const exists = Array.from(targetSet).some(item => item.toLowerCase() === cleanVal.toLowerCase());
+            if (!exists) {
+                targetSet.add(cleanVal);
+            }
+        }
+
+        // Fungsi Sinkronisasi Data, Pilihan Dropdown & Render Semula
+        function syncDynamicOptionsAndRender() {
+            const parsedRekod = extractNormalizedRows(rawRekodRows, 'rekod');
+            const parsedStat = extractNormalizedRows(rawStatRows, 'stat');
+
+            // Kad progres dijana daripada Rekod Kerja (URL 1) + Rekod Baru
+            const combinedRecords = [...localAddedRecords, ...parsedRekod];
+
+            const allKategoriSet = new Set(DEFAULT_KATEGORI);
+            const allSurveyorSet = new Set(DEFAULT_SURVEYORS);
+            const existingFilesSet = new Set();
+            const fileSurveyorBackupMap = {};
+            const fileCategoriesFromStatMap = {};
+            const categoryPercentMap = {};
+            const categorySurveyorBackupMap = {};
+
+            // Kumpul pilihan Kategori, Surveyor & Fail daripada Rekod Kerja (URL 1)
+            combinedRecords.forEach(r => {
+                if (r.idFile) existingFilesSet.add(r.idFile);
+                splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(allKategoriSet, k));
+                splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(allSurveyorSet, s));
+
+                if (r.idFile) {
+                    const fNorm = normalizeFileId(r.idFile);
+                    if (r.surveyor) {
+                        if (!fileSurveyorBackupMap[fNorm]) fileSurveyorBackupMap[fNorm] = new Set();
+                        splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s));
+                    }
+                }
+            });
+
+            // Kumpul maklumat tambahan daripada Laporan Statistik Surveyor (URL 2)
+            parsedStat.forEach(r => {
+                splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(allKategoriSet, k));
+                splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(allSurveyorSet, s));
+
+                if (r.idFile) {
+                    const fNorm = normalizeFileId(r.idFile);
+                    if (r.surveyor) {
+                        if (!fileSurveyorBackupMap[fNorm]) fileSurveyorBackupMap[fNorm] = new Set();
+                        splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s));
+                    }
+                    if (r.kategori) {
+                        if (!fileCategoriesFromStatMap[fNorm]) fileCategoriesFromStatMap[fNorm] = new Set();
+                        splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(fileCategoriesFromStatMap[fNorm], k));
+                    }
+                }
+            });
+
+            window.__processedData = {
+                combinedRecords,
+                parsedRekod: [...localAddedRecords, ...parsedRekod],
+                parsedStat,
+                fileSurveyorBackupMap,
+                fileCategoriesFromStatMap,
+                categoryPercentMap,
+                categorySurveyorBackupMap
+            };
+
+            const datalist = document.getElementById('existingFilesList');
+            if (datalist) {
+                datalist.innerHTML = Array.from(existingFilesSet).map(f => `<option value="${escapeHtml(f)}">`).join('');
+            }
+
+            const filterSelect = document.getElementById('filterKategoriSelect');
+            if (filterSelect) {
+                const currentVal = filterSelect.value;
+                const katArr = Array.from(allKategoriSet).sort();
+                filterSelect.innerHTML = `<option value="ALL">Semua Kategori</option>` + katArr.map(k => `<option value="${escapeHtml(k)}" ${currentVal === k ? 'selected' : ''}>${escapeHtml(k)}</option>`).join('');
+            }
+
+            renderDropdownMenus(Array.from(allKategoriSet).sort(), Array.from(allSurveyorSet).sort());
+
+            renderDashboardCards();
+            renderRawTables();
+        }
+
+        // Ekstrak Medan Secara Pintar daripada Baris CSV (Menyokong Pelbagai Lajur & Sel Bergabung / Merged Rows)
+        function extractNormalizedRows(rows, sourceType = 'rekod') {
+            let lastContext = {
+                idFile: '',
+                tarikh: '',
+                surveyor: '',
+                jangkaSiap: ''
+            };
+
+            const normalizedList = [];
+
+            (rows || []).forEach(row => {
+                const headers = row.__headers || Object.keys(row);
+                const vals = row.__rawValues || headers.map(h => row[h]);
+                const hasHeaders = row.__hasExplicitHeaders !== false;
+
+                const findIndexByHeaderKeywords = (keywords, excludeKeywords = []) => {
+                    if (!hasHeaders) return -1;
+                    for (let i = 0; i < headers.length; i++) {
+                        const hLower = String(headers[i] || '').toLowerCase().trim();
+                        if (excludeKeywords.some(ex => hLower.includes(ex))) continue;
+                        if (keywords.some(kw => hLower === kw || hLower.includes(kw))) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                };
+
+                const findAllValuesByHeaderKeywords = (keywords, excludeKeywords = []) => {
+                    if (!hasHeaders) return [];
+                    const collected = [];
+                    for (let i = 0; i < headers.length; i++) {
+                        const hLower = String(headers[i] || '').toLowerCase().trim();
+                        if (excludeKeywords.some(ex => hLower.includes(ex))) continue;
+                        if (keywords.some(kw => hLower === kw || hLower.includes(kw))) {
+                            const v = (vals[i] || '').trim();
+                            if (v && v.toLowerCase() !== 'false' && v !== '-') {
+                                if (v.toLowerCase() === 'true' || v === '✓' || v === '✔') {
+                                    if (!isMetadataHeader(headers[i])) collected.push(headers[i].trim());
+                                } else {
+                                    collected.push(v);
+                                }
+                            }
+                        }
+                    }
+                    return collected;
+                };
+
+                const fileColIdx = findIndexByHeaderKeywords(['no file', 'no fail', 'no. fail', 'no. file', 'id file', 'no rujukan', 'rujukan', 'fail', 'file'], ['tarikh', 'masa', 'timestamp']);
+                let idFile = fileColIdx !== -1 ? (vals[fileColIdx] || '').trim() : '';
+
+                if (!idFile && vals[0] && !isLikelyDateOrNumberOrUnit(vals[0]) && !isMetadataHeader(vals[0])) {
+                    idFile = vals[0];
+                }
+
+                // Hanya warisi No File untuk rekod kerja jika sel digabungkan (merged cell), JANGAN warisi secara membuta tuli untuk statistik jika baris tiada No File
+                if (idFile) {
+                    lastContext.idFile = idFile;
+                } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
+                    idFile = lastContext.idFile;
+                }
+
+                const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
+                const jangkaColIdx = findIndexByHeaderKeywords(['jangka siap', 'tarikh siap', 'jangka', 'siap', 'target', 'due'], ['masa', 'timestamp']);
+                const tugasColIdx = findIndexByHeaderKeywords(['tugas', 'kerja', 'task', 'aktiviti', 'perkara', 'deskripsi'], ['kategori', 'peratus', 'fail', 'file', 'masa', 'kuantiti']);
+                const qtyColIdx = findIndexByHeaderKeywords(['kuantiti', 'qty', 'quantity', 'jumlah', 'bilangan', 'luas', 'siap'], ['peratus', '%', 'masa', 'timestamp', 'tarikh', 'jangka']);
+                const unitColIdx = findIndexByHeaderKeywords(['unit', 'ukuran'], ['kuantiti', 'masa']);
+                const pctColIdx = findIndexByHeaderKeywords(['peratus', 'progress', 'progres', '%'], ['kuantiti']);
+
+                let tarikh = tarikhColIdx !== -1 ? (vals[tarikhColIdx] || '').trim() : '';
+                let jangkaSiap = jangkaColIdx !== -1 ? (vals[jangkaColIdx] || '').trim() : '';
+                let tugas = tugasColIdx !== -1 ? (vals[tugasColIdx] || '').trim() : '';
+                let rawQty = qtyColIdx !== -1 ? (vals[qtyColIdx] || '').trim() : '';
+                let unit = unitColIdx !== -1 ? (vals[unitColIdx] || '').trim() : '';
+                let rawPct = pctColIdx !== -1 ? (vals[pctColIdx] || '').trim() : '';
+
+                let kategoriValues = findAllValuesByHeaderKeywords(['kategori', 'jenis', 'skop', 'category'], ['masa', 'timestamp', 'kuantiti', 'tarikh', 'surveyor']);
+                let surveyorValues = findAllValuesByHeaderKeywords(['surveyor', 'juruukur', 'nama surveyor', 'penyelia', 'petugas', 'pic', 'nama'], ['fail', 'file', 'kategori', 'masa', 'timestamp', 'kuantiti']);
+
+                if (kategoriValues.length === 0 && !hasHeaders && vals.length >= 4) {
+                    if (!isLikelyDateOrNumberOrUnit(vals[3])) kategoriValues.push(vals[3]);
+                }
+                if (surveyorValues.length === 0 && !hasHeaders && vals.length >= 3) {
+                    if (!isLikelyDateOrNumberOrUnit(vals[2])) surveyorValues.push(vals[2]);
+                }
+
+                const knownColIndices = new Set([fileColIdx, tarikhColIdx, jangkaColIdx, tugasColIdx, qtyColIdx, unitColIdx, pctColIdx]);
+                headers.forEach((h, idx) => {
+                    if (!knownColIndices.has(idx) && !isMetadataHeader(h)) {
+                        const cellVal = (vals[idx] || '').trim();
+                        if (cellVal && cellVal.toLowerCase() !== 'false' && cellVal !== '0' && cellVal !== '-') {
+                            const numVal = parseFloat(cellVal.replace(/[^0-9.-]/g, ''));
+                            if (cellVal.toLowerCase() === 'true' || cellVal === '✓' || cellVal === '✔') {
+                                kategoriValues.push(String(h).trim());
+                            } else if (sourceType === 'stat' && !isNaN(numVal) && numVal > 0 && idFile) {
+                                normalizedList.push({
+                                    idFile: idFile,
+                                    tarikh: tarikh,
+                                    surveyor: surveyorValues.join(', '),
+                                    kategori: String(h).trim(),
+                                    tugas: tugas || String(h).trim(),
+                                    kuantiti: numVal,
+                                    unit: unit,
+                                    jangkaSiap: jangkaSiap,
+                                    peratus: null,
+                                    sourceType: 'stat'
+                                });
+                            } else if (isNaN(numVal) && !isLikelyDateOrNumberOrUnit(cellVal)) {
+                                kategoriValues.push(cellVal);
+                            }
+                        }
+                    }
+                });
+
+                let kategori = kategoriValues.join(', ');
+                let surveyor = surveyorValues.join(', ');
+
+                if (tarikh) lastContext.tarikh = tarikh;
+                else if (lastContext.tarikh) tarikh = lastContext.tarikh;
+
+                if (surveyor) lastContext.surveyor = surveyor;
+                else if (lastContext.surveyor) surveyor = lastContext.surveyor;
+
+                if (jangkaSiap) lastContext.jangkaSiap = jangkaSiap;
+                else if (lastContext.jangkaSiap) jangkaSiap = lastContext.jangkaSiap;
+
+                let numQty = parseFloat(String(rawQty).replace(/[^0-9.-]/g, ''));
+                if (isNaN(numQty)) numQty = 0;
+
+                let parsedPct = null;
+                if (rawPct !== '') {
+                    const pVal = parseFloat(String(rawPct).replace(/[^0-9.-]/g, ''));
+                    if (!isNaN(pVal)) {
+                        parsedPct = (pVal > 0 && pVal <= 1 && !String(rawPct).includes('%') && String(rawPct).includes('.')) ? pVal * 100 : pVal;
+                    }
+                }
+
+                if (parsedPct !== null) {
+                    parsedPct = Math.min(100, Math.max(0, parsedPct));
+                }
+
+                if (idFile || kategori || surveyor || parsedPct !== null || numQty > 0) {
+                    normalizedList.push({
+                        idFile: idFile,
+                        tarikh: tarikh,
+                        surveyor: surveyor,
+                        kategori: kategori,
+                        tugas: tugas,
+                        kuantiti: numQty,
+                        unit: unit,
+                        jangkaSiap: jangkaSiap,
+                        peratus: parsedPct,
+                        sourceType: sourceType
+                    });
+                }
+            });
+
+            return normalizedList;
+        }
+
+        // Fungsi Kira Peratus Progres Kerja dengan Tepat bagi Satu Fail
+        // Mengambil Sasaran Kuantiti dari URL 1 (Rekod) dan Kuantiti Siap dari URL 2 (Laporan Statistik Surveyor)
+        function resolveProgressDetailsForFile(fileKey, kategoriList, rekodTasksForFile) {
+            const { parsedStat } = window.__processedData || {};
+            const fNorm = normalizeFileId(fileKey);
+
+            // 1. Jumlahkan Sasaran Kuantiti daripada URL 1 (Rekod Kerja) untuk fail ini
+            let totalTargetQty = 0;
+            let primaryUnit = '';
+            (rekodTasksForFile || []).forEach(t => {
+                const q = parseFloat(t.kuantiti);
+                if (!isNaN(q) && q > 0) {
+                    totalTargetQty += q;
+                }
+                if (!primaryUnit && t.unit) {
+                    primaryUnit = t.unit;
+                }
+            });
+
+            // 2. Cari semua baris laporan bagi No File ini di dalam URL 2 (Laporan Surveyor)
+            const statRecsForFile = (parsedStat || []).filter(r => {
+                if (!r.idFile) return false;
+                return normalizeFileId(r.idFile) === fNorm;
+            });
+
+            // Jika tiada sebarang laporan dikemas kini oleh surveyor dalam URL 2 untuk fail ini, progres MESTI 0%
+            if (statRecsForFile.length === 0) {
+                return {
+                    percentage: 0,
+                    doneQty: 0,
+                    targetQty: Math.round(totalTargetQty * 100) / 100,
+                    unit: primaryUnit || 'Unit'
+                };
+            }
+
+            // 3. Jumlahkan Kuantiti Siap yang dilaporkan oleh surveyor dalam URL 2 untuk fail ini
+            let totalDoneQty = 0;
+            const statExplicitPcts = [];
+
+            statRecsForFile.forEach(st => {
+                const q = parseFloat(st.kuantiti);
+                if (!isNaN(q) && q > 0) {
+                    totalDoneQty += q;
+                }
+                if (st.peratus !== null && !isNaN(st.peratus) && st.peratus > 0) {
+                    statExplicitPcts.push(st.peratus);
+                }
+                if (!primaryUnit && st.unit) {
+                    primaryUnit = st.unit;
+                }
+            });
+
+            // 4. Kira Peratus Progres berdasarkan nisbah (Kuantiti Siap URL 2 / Kuantiti Sasaran URL 1) * 100
+            let finalPct = 0;
+
+            if (totalTargetQty > 0) {
+                if (totalDoneQty > 0) {
+                    finalPct = (totalDoneQty / totalTargetQty) * 100;
+                } else if (statExplicitPcts.length > 0) {
+                    finalPct = statExplicitPcts.reduce((a, b) => a + b, 0) / statExplicitPcts.length;
+                } else {
+                    finalPct = 0;
+                }
+            } else {
+                // Jika tiada sasaran kuantiti dalam URL 1 tetapi ada peratus eksplisit dalam URL 2
+                if (statExplicitPcts.length > 0) {
+                    finalPct = statExplicitPcts.reduce((a, b) => a + b, 0) / statExplicitPcts.length;
+                } else {
+                    finalPct = 0;
+                }
+            }
+
+            finalPct = Math.min(100, Math.max(0, finalPct));
+
+            return {
+                percentage: Math.round(finalPct * 10) / 10,
+                doneQty: Math.round(totalDoneQty * 100) / 100,
+                targetQty: Math.round(totalTargetQty * 100) / 100,
+                unit: primaryUnit || 'Unit'
+            };
+        }
+
+        // Render Kad Progres Mengikut Fail pada Dashboard
+        function renderDashboardCards() {
+            const container = document.getElementById('fileCardsContainer');
+            if (!container || !window.__processedData) return;
+
+            const { combinedRecords, fileSurveyorBackupMap, fileCategoriesFromStatMap } = window.__processedData;
+            const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const filterKat = document.getElementById('filterKategoriSelect')?.value || 'ALL';
+
+            // Kumpulkan rekod mengikut No File yang telah dinormalisasi supaya "MGK 001/26" & "MGK 001/26 " bergabung dalam 1 kad
+            const fileGroupsMap = new Map();
+
+            combinedRecords.forEach((rec, idx) => {
+                const rawFileId = (rec.idFile || `FAIL-${idx + 1}`).trim();
+                const normKey = normalizeFileId(rawFileId);
+
+                if (!fileGroupsMap.has(normKey)) {
+                    fileGroupsMap.set(normKey, {
+                        normKey: normKey,
+                        idFile: rawFileId,
+                        tarikhMula: rec.tarikh || '-',
+                        jangkaSiap: rec.jangkaSiap || '-',
+                        surveyors: new Set(),
+                        categories: new Set(),
+                        tasks: [],
+                        rekodEntries: [],
+                        quantitiesByUnit: {},
+                        explicitPcts: [],
+                        isNewlyAdded: rec.isNewlyAdded || (lastAddedFileId && normalizeFileId(lastAddedFileId) === normKey)
+                    });
+                }
+
+                const grp = fileGroupsMap.get(normKey);
+                if (rec.tarikh && (grp.tarikhMula === '-' || !grp.tarikhMula)) grp.tarikhMula = rec.tarikh;
+                if (rec.jangkaSiap && (grp.jangkaSiap === '-' || !grp.jangkaSiap)) grp.jangkaSiap = rec.jangkaSiap;
+
+                // Kumpul semua Surveyor daripada kedua-dua sumber
+                splitMultiValues(rec.surveyor).forEach(s => addUniqueCaseInsensitive(grp.surveyors, s));
+
+                // Kumpul semua Kategori daripada setiap baris fail ini (memastikan fail dengan 2+ kategori memaparkan kesemuanya)
+                splitMultiValues(rec.kategori).forEach(k => addUniqueCaseInsensitive(grp.categories, k));
+
+                if (rec.sourceType !== 'stat') {
+                    grp.rekodEntries.push(rec);
+                    if (rec.tugas || rec.kategori) {
+                        grp.tasks.push({
+                            tugas: rec.tugas || rec.kategori,
+                            kategori: rec.kategori,
+                            kuantiti: rec.kuantiti,
+                            unit: rec.unit || 'Unit'
+                        });
+                    }
+                    if (rec.kuantiti > 0) {
+                        const u = rec.unit || 'Unit';
+                        grp.quantitiesByUnit[u] = (grp.quantitiesByUnit[u] || 0) + rec.kuantiti;
+                    }
+                } else if (rec.peratus !== null && !isNaN(rec.peratus)) {
+                    grp.explicitPcts.push(rec.peratus);
+                }
+            });
+
+            let fileGroups = Array.from(fileGroupsMap.values()).map(grp => {
+                const fNorm = grp.normKey;
+
+                // Gabungkan juga mana-mana kategori daripada Sheet Statistik (URL 2) untuk fail ini
+                if (fileCategoriesFromStatMap && fileCategoriesFromStatMap[fNorm]) {
+                    fileCategoriesFromStatMap[fNorm].forEach(k => addUniqueCaseInsensitive(grp.categories, k));
+                }
+
+                // Gabungkan juga surveyor daripada Sheet Statistik (URL 2) jika ada
+                if (fileSurveyorBackupMap && fileSurveyorBackupMap[fNorm]) {
+                    fileSurveyorBackupMap[fNorm].forEach(s => addUniqueCaseInsensitive(grp.surveyors, s));
+                }
+
+                const categoriesArr = Array.from(grp.categories);
+                const surveyorsArr = Array.from(grp.surveyors);
+                const progDetails = resolveProgressDetailsForFile(grp.idFile, categoriesArr, grp.rekodEntries);
+
+                return {
+                    ...grp,
+                    categoriesArr,
+                    surveyorsArr,
+                    progress: progDetails.percentage,
+                    doneQty: progDetails.doneQty,
+                    targetQty: progDetails.targetQty,
+                    primaryUnit: progDetails.unit
+                };
+            });
+
+            // Kemas kini KPI Utama
+            const allSurveyorsGlobal = new Set();
+            const allCategoriesGlobal = new Set();
+            fileGroups.forEach(g => {
+                g.surveyorsArr.forEach(s => allSurveyorsGlobal.add(s));
+                g.categoriesArr.forEach(c => allCategoriesGlobal.add(c));
+            });
+
+            const avgProgressGlobal = fileGroups.length > 0
+                ? Math.round(fileGroups.reduce((sum, g) => sum + g.progress, 0) / fileGroups.length)
+                : 0;
+
+            document.getElementById('statTotalFiles').innerText = fileGroups.length;
+            document.getElementById('statAvgProgress').innerText = `${avgProgressGlobal}%`;
+            document.getElementById('statTotalCategories').innerText = allCategoriesGlobal.size;
+            document.getElementById('statTotalSurveyors').innerText = allSurveyorsGlobal.size;
+            document.getElementById('statTotalTasksText').innerText = `${combinedRecords.length} rekod kerja aktif`;
+
+            // Tapis ikut kategori & carian
+            if (filterKat !== 'ALL') {
+                fileGroups = fileGroups.filter(g => g.categoriesArr.some(c => c.toLowerCase() === filterKat.toLowerCase()));
+            }
+            if (searchQuery) {
+                fileGroups = fileGroups.filter(g =>
+                    g.idFile.toLowerCase().includes(searchQuery) ||
+                    g.surveyorsArr.some(s => s.toLowerCase().includes(searchQuery)) ||
+                    g.categoriesArr.some(c => c.toLowerCase().includes(searchQuery)) ||
+                    g.tasks.some(t => t.tugas.toLowerCase().includes(searchQuery))
+                );
+            }
+
+            if (fileGroups.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-slate-900/50 rounded-2xl border border-slate-800/80 p-6">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-3"></i>
+                        <p class="text-slate-300 font-semibold text-sm">Tiada Kad Progres Dijumpai</p>
+                        <p class="text-slate-500 text-xs mt-1">Sila tambah kerja baru atau ubah kata kunci carian anda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = fileGroups.map(grp => {
+                const rawPct = isNaN(grp.progress) ? 0 : grp.progress;
+                const pct = Math.min(100, Math.max(0, Math.round(rawPct)));
+                const barWidth = pct > 0 ? Math.max(pct, 4) : 0;
+                const barColor = pct >= 80
+                    ? 'from-emerald-500 to-teal-400'
+                    : pct >= 40
+                        ? 'from-indigo-500 to-sky-400'
+                        : 'from-amber-500 to-orange-400';
+
+                const badgeStatus = pct >= 100
+                    ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Selesai</span>`
+                    : pct > 0
+                        ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Dalam Progres</span>`
+                        : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Baru Direkodkan</span>`;
+
+                const surveyorDisplay = grp.surveyorsArr.length > 0
+                    ? grp.surveyorsArr.map(s => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/90 text-sky-300 border border-slate-700 text-xs font-semibold"><i class="fa-solid fa-user-check text-[10px] text-sky-400"></i>${escapeHtml(s)}</span>`).join(' ')
+                    : `<span class="text-xs text-slate-500 italic">Tiada nama surveyor</span>`;
+
+                const kategoriDisplay = grp.categoriesArr.length > 0
+                    ? grp.categoriesArr.map(k => `<span class="px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/25 text-[11px] font-semibold">${escapeHtml(k)}</span>`).join(' ')
+                    : `<span class="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px]">Umum</span>`;
+
+                const qtySummary = Object.entries(grp.quantitiesByUnit)
+                    .map(([u, val]) => `<span class="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-bold text-slate-200">${val} <span class="text-amber-400">${escapeHtml(u)}</span></span>`)
+                    .join(' ');
+
+                const latestTask = grp.tasks.length > 0 ? grp.tasks[0].tugas : 'Kerja ukur lapangan direkodkan';
+                const highlightClass = grp.isNewlyAdded ? 'new-card-highlight' : '';
+
+                const progressFractionText = grp.targetQty > 0
+                    ? `<span class="text-[11px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${grp.doneQty}</strong> / <strong class="text-slate-200">${grp.targetQty} ${escapeHtml(grp.primaryUnit)}</strong></span>`
+                    : (grp.doneQty > 0 ? `<span class="text-[11px] text-slate-400 font-medium">Kuantiti Statistik: <strong class="text-emerald-400">${grp.doneQty}</strong></span>` : '');
+
+                return `
+                    <div class="exec-card rounded-2xl p-5 flex flex-col justify-between space-y-4 ${highlightClass}">
+                        <div class="space-y-3">
+                            <!-- Card Top Header -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">No. Fail Projek</span>
+                                    <h3 class="font-display text-base sm:text-lg font-extrabold text-white tracking-tight mt-0.5">${escapeHtml(grp.idFile)}</h3>
+                                </div>
+                                ${badgeStatus}
+                            </div>
+
+                            <!-- Kategori Badges -->
+                            <div class="flex flex-wrap gap-1.5">
+                                ${kategoriDisplay}
+                            </div>
+
+                            <!-- Nama Surveyor Section -->
+                            <div class="pt-1">
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Surveyor Bertugas:</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${surveyorDisplay}
+                                </div>
+                            </div>
+
+                            <!-- Tugas & Kuantiti -->
+                            <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 font-medium truncate max-w-[70%]"><i class="fa-solid fa-briefcase text-indigo-400 mr-1.5"></i>${escapeHtml(latestTask)}</span>
+                                    <span class="text-slate-500 text-[11px]">${grp.tasks.length} Tugas</span>
+                                </div>
+                                ${qtySummary ? `<div class="flex flex-wrap gap-1.5 pt-1">${qtySummary}</div>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar & Tarikh -->
+                        <div class="space-y-3 pt-2 border-t border-slate-800/80">
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="font-semibold text-slate-300">Peratus Progres Kerja</span>
+                                    <div class="flex items-center gap-2">
+                                        ${progressFractionText}
+                                        <span class="font-display font-extrabold text-sm text-amber-400">${pct}%</span>
+                                    </div>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                                    <div class="h-full bg-gradient-to-r ${barColor} rounded-full transition-all duration-700" style="width: ${barWidth}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                                <span><i class="fa-regular fa-calendar text-slate-500 mr-1"></i>Mula: <strong class="text-slate-300">${escapeHtml(grp.tarikhMula)}</strong></span>
+                                <span><i class="fa-solid fa-flag-checkered text-amber-500/80 mr-1"></i>Jangka Siap: <strong class="text-slate-300">${escapeHtml(grp.jangkaSiap)}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Statistik Kategori & Pastikan Nama Surveyor Dipaparkan Dengan Tepat
+        function renderCategoryStats() {
+            const container = document.getElementById('categoryStatsContainer');
+            if (!container || !window.__processedData) return;
+
+            const { combinedRecords, categoryPercentMap, categorySurveyorBackupMap, fileSurveyorBackupMap } = window.__processedData;
+            const catMap = new Map();
+
+            combinedRecords.forEach(rec => {
+                const parsedKats = splitMultiValues(rec.kategori);
+                const katList = parsedKats.length > 0 ? parsedKats : ['Lain-lain Kategori'];
+
+                katList.forEach(katName => {
+                    const key = katName.toUpperCase();
+                    if (!catMap.has(key)) {
+                        catMap.set(key, {
+                            name: katName,
+                            files: new Set(),
+                            surveyors: new Set(),
+                            totalTasks: 0,
+                            quantities: {},
+                            pctList: []
+                        });
+                    }
+                    const item = catMap.get(key);
+                    if (rec.idFile) addUniqueCaseInsensitive(item.files, rec.idFile);
+                    item.totalTasks += 1;
+
+                    // Masukkan Nama Surveyor yang sah sahaja
+                    const survItems = splitMultiValues(rec.surveyor);
+                    if (survItems.length > 0) {
+                        survItems.forEach(s => addUniqueCaseInsensitive(item.surveyors, s));
+                    } else if (rec.idFile && fileSurveyorBackupMap[rec.idFile.toLowerCase()]) {
+                        fileSurveyorBackupMap[rec.idFile.toLowerCase()].forEach(s => addUniqueCaseInsensitive(item.surveyors, s));
+                    }
+
+                    if (rec.kuantiti > 0 && (rec.sourceType !== 'stat' || rec.unit)) {
+                        const u = rec.unit || 'Unit';
+                        item.quantities[u] = (item.quantities[u] || 0) + rec.kuantiti;
+                    }
+
+                    if (rec.peratus !== null && !isNaN(rec.peratus)) {
+                        item.pctList.push(rec.peratus);
+                    }
+                });
+            });
+
+            const categoriesArray = Array.from(catMap.values());
+
+            if (categoriesArray.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-slate-500 text-sm">
+                        Tiada data kategori untuk dipaparkan.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = categoriesArray.map(cat => {
+                const kLower = cat.name.toLowerCase();
+
+                // Gabungkan surveyor daripada backup URL 2 jika ada
+                if (categorySurveyorBackupMap && categorySurveyorBackupMap[kLower]) {
+                    categorySurveyorBackupMap[kLower].forEach(s => {
+                        if (!isLikelyDateOrNumberOrUnit(s)) cat.surveyors.add(s);
+                    });
+                }
+
+                // Kira purata peratus bagi kategori ini
+                let pctValues = [...cat.pctList];
+                if (categoryPercentMap && categoryPercentMap[kLower]) {
+                    pctValues.push(...categoryPercentMap[kLower]);
+                }
+                const avgPct = pctValues.length > 0
+                    ? Math.round(pctValues.reduce((a, b) => a + b, 0) / pctValues.length)
+                    : 0;
+
+                const surveyorList = Array.from(cat.surveyors);
+                const surveyorBadgesHtml = surveyorList.length > 0
+                    ? surveyorList.map(survName => `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-500/15 text-indigo-200 border border-indigo-500/30 text-xs font-semibold">
+                            <i class="fa-solid fa-user-tie text-amber-400 text-[11px]"></i>
+                            ${escapeHtml(survName)}
+                        </span>
+                    `).join('')
+                    : `<span class="text-xs text-slate-500 italic">Belum ditetapkan</span>`;
+
+                const qtyBadgesHtml = Object.entries(cat.quantities).map(([unit, total]) => `
+                    <div class="px-3 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800 text-xs">
+                        <span class="font-bold text-white">${total}</span>
+                        <span class="text-amber-400 font-semibold ml-1">${escapeHtml(unit)}</span>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="exec-card rounded-2xl p-5 border-l-4 border-l-indigo-500 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Kategori Kerja</span>
+                                    <h3 class="font-display text-base font-extrabold text-white mt-0.5">${escapeHtml(cat.name)}</h3>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+                                    ${cat.files.size} Fail
+                                </span>
+                            </div>
+
+                            <!-- Senarai Nama Surveyor dalam Statistik Kategori -->
+                            <div class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800/90 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-id-badge"></i> Nama Surveyor Terlibat
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-slate-400">${surveyorList.length} Orang</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                    ${surveyorBadgesHtml}
+                                </div>
+                            </div>
+
+                            <!-- Jumlah Kuantiti Mengikut Unit -->
+                            ${qtyBadgesHtml ? `
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Jumlah Kuantiti Kerja:</p>
+                                    <div class="flex flex-wrap gap-2">${qtyBadgesHtml}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Progress Kategori -->
+                        <div class="pt-3 border-t border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400 font-medium">Purata Progres Kategori</span>
+                                <span class="font-bold text-emerald-400">${avgPct}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-500" style="width: ${avgPct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Jadual Raw pada Tab Data Sheet
+        function renderRawTables() {
+            const renderTable = (rows, containerId) => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!rows || rows.length === 0) {
+                    container.innerHTML = `<p class="text-slate-500 text-xs py-6 text-center">Tiada data dijumpai dalam pautan CSV ini.</p>`;
+                    return;
+                }
+                const headers = rows[0].__headers || Object.keys(rows[0]).filter(k => !k.startsWith('__'));
+                let html = `<table class="w-full text-left border-collapse"><thead><tr class="border-b border-slate-800 bg-slate-900/90">`;
+                headers.forEach(h => {
+                    html += `<th class="p-3 text-[11px] font-bold text-amber-400 uppercase tracking-wider">${escapeHtml(h)}</th>`;
+                });
+                html += `</tr></thead><tbody class="divide-y divide-slate-800/60">`;
+                rows.forEach(r => {
+                    html += `<tr class="hover:bg-slate-800/40 transition">`;
+                    headers.forEach(h => {
+                        html += `<td class="p-3 text-xs text-slate-300">${escapeHtml(r[h] || '-')}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            };
+
+            renderTable(rawStatRows, 'statsTableContainer');
+            renderTable(rawRekodRows, 'recordsTableContainer');
+        }
+
+        // Hantar Borang Tambah Kerja ke Google Apps Script & Jana Kad Progres Serta-merta
+        async function submitForm(e) {
+            e.preventDefault();
+
+            if (selectedKategoriList.length === 0) {
+                showModal('Pilih Kategori', 'Sila pilih sekurang-kurangnya satu Kategori Kerja daripada dropdown.', 'error');
+                return;
+            }
+            if (selectedSurveyorList.length === 0) {
+                showModal('Pilih Surveyor', 'Sila pilih sekurang-kurangnya seorang Surveyor daripada dropdown.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Menghantar & Menjana Kad...</span>`;
+
+            const payload = {
+                idFile: document.getElementById('idFile').value.trim(),
+                tarikh: document.getElementById('tarikh').value,
+                surveyor: selectedSurveyorList.join(', '),
+                kategori: selectedKategoriList.join(', '),
+                tugas: document.getElementById('tugas').value.trim(),
+                kuantiti: parseFloat(document.getElementById('kuantiti').value) || 0,
+                unit: document.getElementById('unit').value,
+                jangkaSiap: document.getElementById('jangkaSiap').value
+            };
+
+            try {
+                // Hantar ke Google Apps Script Web App
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Masukkan terus ke dalam state tempatan supaya Kad Progres & Statistik Kategori terus terpapar serta-merta
+                lastAddedFileId = payload.idFile;
+                localAddedRecords.unshift({
+                    ...payload,
+                    peratus: null,
+                    isNewlyAdded: true
+                });
+
+                // Reset Borang
+                document.getElementById('fieldWorkForm').reset();
+                document.getElementById('tarikh').value = new Date().toISOString().split('T')[0];
+                selectedKategoriList = [];
+                selectedSurveyorList = [];
+                document.getElementById('kategoriSelectedText').innerText = 'Pilih Kategori...';
+                document.getElementById('kategoriSelectedText').className = 'text-slate-400 truncate';
+                document.getElementById('surveyorSelectedText').innerText = 'Pilih Surveyor...';
+                document.getElementById('surveyorSelectedText').className = 'text-slate-400 truncate';
+
+                // Kemas kini paparan kad serta-merta dan tukar ke Dashboard
+                syncDynamicOptionsAndRender();
+                switchTab('dashboard');
+
+                showModal(
+                    'Kerja Berjaya Ditambah!',
+                    `Kad progres untuk fail "${payload.idFile}" telah dijana pada Dashboard dan data telah dihantar ke Google Sheets.`,
+                    'success'
+                );
+
+                // Muat semula CSV di belakang tabir selepas 2.5 saat
+                setTimeout(() => {
+                    refreshAllData();
+                }, 2500);
+
+            } catch (error) {
+                console.error("Ralat menghantar borang:", error);
+                showModal('Ralat Hantaran', 'Gagal menghubungi pelayan Google Apps Script. Sila cuba lagi.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Simpan & Jana Kad Progres</span>`;
+            }
+        }
+
+        function showModal(title, message, type) {
+            const modal = document.getElementById('notificationModal');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const icon = document.getElementById('modalIcon');
+
+            if (type === 'success') {
+                icon.className = "w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+                icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            } else {
+                icon.className = "w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40";
+                icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
