@@ -466,7 +466,7 @@
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
         // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXCGNQMe1c0_70cJA7AKEXL2fJE84fGDUVrEK13vvhyGjDRu1aGJbDUQVsVDwwSBEp9A/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwR5rja3C8Q9NhAQ0YrP0ZW_BmCOBAQdhX3JhIKGQ-xL0QYyMBVpOTYPVUVr-hN-b5v2Q/exec";
 
         // 2. URL CSV 1: Rekod Kerja Lapangan (Sumber Penjanaan Kad Progres & Sasaran Kuantiti)
         const CSV_REKOD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW5BxrFQw07_bCiTfbARTgXh8qYvbMnLo4Uur7iM6ROw42DMmluHxrxXd3bKxVADyj_dLu_pCoEob8/pub?gid=1800236702&single=true&output=csv";
@@ -474,24 +474,23 @@
         // 3. URL CSV 2: Laporan Statistik Surveyor (Sumber Kuantiti Siap & Peratus Progres Bar)
         const CSV_STAT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
 
-        // Pilihan Asas Kategori & Surveyor (Akan digabungkan secara dinamik dengan data dari CSV)
+        // Senarai Kategori Kerja Rasmi (Eksklusif)
         const DEFAULT_KATEGORI = [
-            "Ukur Kadaster",
-            "Ukur Topografi",
-            "Ukur Kejuruteraan",
-            "Ukur Hidrografi",
-            "Ukur Sempadan",
-            "Ukur Strata",
-            "Kerja Hitungan & Pelan"
+            "Cadastral",
+            "Calibration",
+            "Topography",
+            "Utility Mapping",
+            "TLS",
+            "Lidar"
         ];
 
+        // Senarai Surveyor Rasmi (Hanya Mangkuk1 hingga Mangkuk5)
         const DEFAULT_SURVEYORS = [
-            "En. Ahmad",
-            "En. Faizal",
-            "En. Hafiz",
-            "En. Syafiq",
-            "En. Rizwan",
-            "En. Zulkifli"
+            "Mangkuk1",
+            "Mangkuk2",
+            "Mangkuk3",
+            "Mangkuk4",
+            "Mangkuk5"
         ];
 
         // State Aplikasi
@@ -797,35 +796,41 @@
             const categoryPercentMap = {};
             const categorySurveyorBackupMap = {};
 
-            // Kumpul pilihan Kategori, Surveyor & Fail daripada Rekod Kerja (URL 1)
+            // Kumpul pilihan Fail sahaja, kekalkan senarai Kategori & Surveyor asal yang ditetapkan
             combinedRecords.forEach(r => {
                 if (r.idFile) existingFilesSet.add(r.idFile);
-                splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(allKategoriSet, k));
-                splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(allSurveyorSet, s));
 
                 if (r.idFile) {
                     const fNorm = normalizeFileId(r.idFile);
                     if (r.surveyor) {
                         if (!fileSurveyorBackupMap[fNorm]) fileSurveyorBackupMap[fNorm] = new Set();
-                        splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s));
+                        splitMultiValues(r.surveyor).forEach(s => {
+                            if (String(s).toLowerCase().startsWith('mangkuk')) {
+                                addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s);
+                            }
+                        });
                     }
                 }
             });
 
-            // Kumpul maklumat tambahan daripada Laporan Statistik Surveyor (URL 2)
             parsedStat.forEach(r => {
-                splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(allKategoriSet, k));
-                splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(allSurveyorSet, s));
-
                 if (r.idFile) {
                     const fNorm = normalizeFileId(r.idFile);
                     if (r.surveyor) {
                         if (!fileSurveyorBackupMap[fNorm]) fileSurveyorBackupMap[fNorm] = new Set();
-                        splitMultiValues(r.surveyor).forEach(s => addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s));
+                        splitMultiValues(r.surveyor).forEach(s => {
+                            if (String(s).toLowerCase().startsWith('mangkuk')) {
+                                addUniqueCaseInsensitive(fileSurveyorBackupMap[fNorm], s);
+                            }
+                        });
                     }
                     if (r.kategori) {
                         if (!fileCategoriesFromStatMap[fNorm]) fileCategoriesFromStatMap[fNorm] = new Set();
-                        splitMultiValues(r.kategori).forEach(k => addUniqueCaseInsensitive(fileCategoriesFromStatMap[fNorm], k));
+                        splitMultiValues(r.kategori).forEach(k => {
+                            if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) {
+                                addUniqueCaseInsensitive(fileCategoriesFromStatMap[fNorm], k);
+                            }
+                        });
                     }
                 }
             });
@@ -852,7 +857,7 @@
                 filterSelect.innerHTML = `<option value="ALL">Semua Kategori</option>` + katArr.map(k => `<option value="${escapeHtml(k)}" ${currentVal === k ? 'selected' : ''}>${escapeHtml(k)}</option>`).join('');
             }
 
-            renderDropdownMenus(Array.from(allKategoriSet).sort(), Array.from(allSurveyorSet).sort());
+            renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
 
             renderDashboardCards();
             renderRawTables();
@@ -909,11 +914,24 @@
                 const fileColIdx = findIndexByHeaderKeywords(['no file', 'no fail', 'no. fail', 'no. file', 'id file', 'no rujukan', 'rujukan', 'fail', 'file'], ['tarikh', 'masa', 'timestamp']);
                 let idFile = fileColIdx !== -1 ? (vals[fileColIdx] || '').trim() : '';
 
+                // Jika tiada header 'No File' ditemui atau kosong, cari mana-mana sel yang menyerupai format No File (cth: MGK 001/26, JUPEM/...)
+                if (!idFile) {
+                    for (let i = 0; i < vals.length; i++) {
+                        const candidate = (vals[i] || '').trim();
+                        if (candidate && !isLikelyDateOrNumberOrUnit(candidate) && !isMetadataHeader(candidate)) {
+                            if (/[A-Za-z]+[\s\-_/]*\d+/i.test(candidate)) {
+                                idFile = candidate;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (!idFile && vals[0] && !isLikelyDateOrNumberOrUnit(vals[0]) && !isMetadataHeader(vals[0])) {
                     idFile = vals[0];
                 }
 
-                // Hanya warisi No File untuk rekod kerja jika sel digabungkan (merged cell), JANGAN warisi secara membuta tuli untuk statistik jika baris tiada No File
+                // Hanya warisi No File untuk rekod kerja jika sel digabungkan (merged cell)
                 if (idFile) {
                     lastContext.idFile = idFile;
                 } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
@@ -922,10 +940,14 @@
 
                 const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
                 const jangkaColIdx = findIndexByHeaderKeywords(['jangka siap', 'tarikh siap', 'jangka', 'siap', 'target', 'due'], ['masa', 'timestamp']);
-                const tugasColIdx = findIndexByHeaderKeywords(['tugas', 'kerja', 'task', 'aktiviti', 'perkara', 'deskripsi'], ['kategori', 'peratus', 'fail', 'file', 'masa', 'kuantiti']);
-                const qtyColIdx = findIndexByHeaderKeywords(['kuantiti', 'qty', 'quantity', 'jumlah', 'bilangan', 'luas', 'siap'], ['peratus', '%', 'masa', 'timestamp', 'tarikh', 'jangka']);
-                const unitColIdx = findIndexByHeaderKeywords(['unit', 'ukuran'], ['kuantiti', 'masa']);
-                const pctColIdx = findIndexByHeaderKeywords(['peratus', 'progress', 'progres', '%'], ['kuantiti']);
+                const tugasColIdx = findIndexByHeaderKeywords(['tugas', 'kerja', 'task', 'aktiviti', 'perkara', 'deskripsi'], ['kategori', 'peratus', 'fail', 'file', 'masa', 'kuantiti', 'jarak', 'luas']);
+                // Pastikan 'siap', 'tarikh', 'jangka', 'masa' dikecualikan supaya tidak terambil kolum Tarikh Siap / Jangka Siap
+                const qtyColIdx = findIndexByHeaderKeywords(
+                    ['kuantiti', 'qty', 'quantity', 'jarak', 'luas', 'bilangan', 'jumlah', 'meter', 'ekar', 'lot', 'ukuran'],
+                    ['peratus', '%', 'masa', 'timestamp', 'tarikh', 'jangka', 'siap', 'no file', 'no fail', 'unit']
+                );
+                const unitColIdx = findIndexByHeaderKeywords(['unit', 'ukuran'], ['kuantiti', 'masa', 'jarak', 'luas']);
+                const pctColIdx = findIndexByHeaderKeywords(['peratus', 'progress', 'progres', '%'], ['kuantiti', 'jarak']);
 
                 let tarikh = tarikhColIdx !== -1 ? (vals[tarikhColIdx] || '').trim() : '';
                 let jangkaSiap = jangkaColIdx !== -1 ? (vals[jangkaColIdx] || '').trim() : '';
@@ -934,8 +956,46 @@
                 let unit = unitColIdx !== -1 ? (vals[unitColIdx] || '').trim() : '';
                 let rawPct = pctColIdx !== -1 ? (vals[pctColIdx] || '').trim() : '';
 
-                let kategoriValues = findAllValuesByHeaderKeywords(['kategori', 'jenis', 'skop', 'category'], ['masa', 'timestamp', 'kuantiti', 'tarikh', 'surveyor']);
+                // Jika nilai rawQty mengandungi unit sekali (cth: "150 Meter" atau "10 Lot"), ekstrak unit jika unit masih kosong
+                if (rawQty && !unit) {
+                    const unitMatch = rawQty.match(/\b(lot|ekar|meter|m|km|ha|hektar)\b/i);
+                    if (unitMatch) unit = unitMatch[1];
+                }
+
+                // Fallback: Jika dalam sheet laporan surveyor (stat) kolum kuantiti tidak menggunakan nama standard, cari sel nombor yang sah
+                if (sourceType === 'stat' && !rawQty) {
+                    for (let i = 0; i < vals.length; i++) {
+                        if (i === fileColIdx || i === tarikhColIdx || i === jangkaColIdx || i === pctColIdx || i === unitColIdx) continue;
+                        const hName = String(headers[i] || '').toLowerCase();
+                        if (
+                            hName.includes('timestamp') || hName.includes('masa') || hName.includes('tarikh') ||
+                            hName.includes('jangka') || hName.includes('siap') || hName.includes('file') ||
+                            hName.includes('fail') || hName.includes('surveyor') || hName.includes('nama') ||
+                            hName.includes('kategori') || hName.includes('tugas')
+                        ) continue;
+                        const cellText = (vals[i] || '').trim();
+                        if (cellText && /^-?\d+(\.\d+)?(\s*(lot|ekar|meter|m|km|ha|unit))?$/i.test(cellText)) {
+                            rawQty = cellText;
+                            break;
+                        }
+                    }
+                }
+
+                let kategoriValues = findAllValuesByHeaderKeywords(['kategori', 'jenis', 'skop', 'category'], ['masa', 'timestamp', 'kuantiti', 'tarikh', 'surveyor', 'fail', 'file']);
                 let surveyorValues = findAllValuesByHeaderKeywords(['surveyor', 'juruukur', 'nama surveyor', 'penyelia', 'petugas', 'pic', 'nama'], ['fail', 'file', 'kategori', 'masa', 'timestamp', 'kuantiti']);
+
+                // Semak jika mana-mana sel dalam baris mengandungi nama kategori rasmi secara langsung (terutama dalam sheet laporan surveyor)
+                vals.forEach((cellVal, idx) => {
+                    if (idx === fileColIdx || idx === tarikhColIdx || idx === jangkaColIdx || idx === qtyColIdx) return;
+                    const cleanCell = String(cellVal || '').trim();
+                    if (!cleanCell) return;
+                    splitMultiValues(cleanCell).forEach(part => {
+                        const matchedDefaultKat = DEFAULT_KATEGORI.find(dk => dk.toLowerCase() === part.toLowerCase());
+                        if (matchedDefaultKat && !kategoriValues.some(kv => kv.toLowerCase().includes(matchedDefaultKat.toLowerCase()))) {
+                            kategoriValues.push(matchedDefaultKat);
+                        }
+                    });
+                });
 
                 if (kategoriValues.length === 0 && !hasHeaders && vals.length >= 4) {
                     if (!isLikelyDateOrNumberOrUnit(vals[3])) kategoriValues.push(vals[3]);
@@ -944,72 +1004,60 @@
                     if (!isLikelyDateOrNumberOrUnit(vals[2])) surveyorValues.push(vals[2]);
                 }
 
+                let hasMatrixEntries = false;
                 const knownColIndices = new Set([fileColIdx, tarikhColIdx, jangkaColIdx, tugasColIdx, qtyColIdx, unitColIdx, pctColIdx]);
                 headers.forEach((h, idx) => {
-                    if (!knownColIndices.has(idx) && !isMetadataHeader(h)) {
+                    const hTrim = String(h || '').trim();
+                    const isOfficialKatHeader = DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === hTrim.toLowerCase());
+                    if (!knownColIndices.has(idx) && (!isMetadataHeader(hTrim) || isOfficialKatHeader)) {
                         const cellVal = (vals[idx] || '').trim();
                         if (cellVal && cellVal.toLowerCase() !== 'false' && cellVal !== '0' && cellVal !== '-') {
                             const numVal = parseFloat(cellVal.replace(/[^0-9.-]/g, ''));
                             if (cellVal.toLowerCase() === 'true' || cellVal === '✓' || cellVal === '✔') {
-                                kategoriValues.push(String(h).trim());
-                            } else if (sourceType === 'stat' && !isNaN(numVal) && numVal > 0 && idFile) {
+                                kategoriValues.push(hTrim);
+                            } else if (sourceType === 'stat' && isOfficialKatHeader && !isNaN(numVal) && numVal > 0 && idFile) {
+                                hasMatrixEntries = true;
                                 normalizedList.push({
                                     idFile: idFile,
                                     tarikh: tarikh,
                                     surveyor: surveyorValues.join(', '),
-                                    kategori: String(h).trim(),
-                                    tugas: tugas || String(h).trim(),
+                                    kategori: hTrim,
+                                    tugas: tugas || hTrim,
                                     kuantiti: numVal,
                                     unit: unit,
                                     jangkaSiap: jangkaSiap,
                                     peratus: null,
-                                    sourceType: 'stat'
+                                    sourceType: sourceType,
+                                    isMatrixCol: true
                                 });
-                            } else if (isNaN(numVal) && !isLikelyDateOrNumberOrUnit(cellVal)) {
-                                kategoriValues.push(cellVal);
                             }
                         }
                     }
                 });
 
-                let kategori = kategoriValues.join(', ');
-                let surveyor = surveyorValues.join(', ');
+                const parsedQty = parseFloat(String(rawQty).replace(/[^0-9.-]/g, ''));
+                const kuantiti = !isNaN(parsedQty) ? parsedQty : 0;
 
-                if (tarikh) lastContext.tarikh = tarikh;
-                else if (lastContext.tarikh) tarikh = lastContext.tarikh;
-
-                if (surveyor) lastContext.surveyor = surveyor;
-                else if (lastContext.surveyor) surveyor = lastContext.surveyor;
-
-                if (jangkaSiap) lastContext.jangkaSiap = jangkaSiap;
-                else if (lastContext.jangkaSiap) jangkaSiap = lastContext.jangkaSiap;
-
-                let numQty = parseFloat(String(rawQty).replace(/[^0-9.-]/g, ''));
-                if (isNaN(numQty)) numQty = 0;
-
-                let parsedPct = null;
+                let peratus = null;
                 if (rawPct !== '') {
-                    const pVal = parseFloat(String(rawPct).replace(/[^0-9.-]/g, ''));
-                    if (!isNaN(pVal)) {
-                        parsedPct = (pVal > 0 && pVal <= 1 && !String(rawPct).includes('%') && String(rawPct).includes('.')) ? pVal * 100 : pVal;
+                    const p = parseFloat(String(rawPct).replace(/[^0-9.-]/g, ''));
+                    if (!isNaN(p)) {
+                        peratus = (p > 0 && p <= 1 && !String(rawPct).includes('%')) ? p * 100 : p;
                     }
                 }
 
-                if (parsedPct !== null) {
-                    parsedPct = Math.min(100, Math.max(0, parsedPct));
-                }
-
-                if (idFile || kategori || surveyor || parsedPct !== null || numQty > 0) {
+                // Elakkan duplikasi jika baris ini sudah dipecahkan mengikut lajur matriks kategori
+                if (!hasMatrixEntries && (idFile || kategoriValues.length > 0 || surveyorValues.length > 0 || kuantiti > 0)) {
                     normalizedList.push({
                         idFile: idFile,
                         tarikh: tarikh,
-                        surveyor: surveyor,
-                        kategori: kategori,
+                        surveyor: surveyorValues.join(', '),
+                        kategori: kategoriValues.join(', '),
                         tugas: tugas,
-                        kuantiti: numQty,
+                        kuantiti: kuantiti,
                         unit: unit,
                         jangkaSiap: jangkaSiap,
-                        peratus: parsedPct,
+                        peratus: peratus,
                         sourceType: sourceType
                     });
                 }
@@ -1018,85 +1066,169 @@
             return normalizedList;
         }
 
-        // Fungsi Kira Peratus Progres Kerja dengan Tepat bagi Satu Fail
+        // Fungsi Kira Peratus Progres Kerja dengan Tepat bagi Satu Fail & Setiap Kategori
         // Mengambil Sasaran Kuantiti dari URL 1 (Rekod) dan Kuantiti Siap dari URL 2 (Laporan Statistik Surveyor)
         function resolveProgressDetailsForFile(fileKey, kategoriList, rekodTasksForFile) {
             const { parsedStat } = window.__processedData || {};
             const fNorm = normalizeFileId(fileKey);
 
-            // 1. Jumlahkan Sasaran Kuantiti daripada URL 1 (Rekod Kerja) untuk fail ini
-            let totalTargetQty = 0;
-            let primaryUnit = '';
-            (rekodTasksForFile || []).forEach(t => {
-                const q = parseFloat(t.kuantiti);
-                if (!isNaN(q) && q > 0) {
-                    totalTargetQty += q;
-                }
-                if (!primaryUnit && t.unit) {
-                    primaryUnit = t.unit;
-                }
-            });
-
-            // 2. Cari semua baris laporan bagi No File ini di dalam URL 2 (Laporan Surveyor)
+            // Padankan hanya baris laporan yang mempunyai No File yang sama (tepat selepas normalisasi)
             const statRecsForFile = (parsedStat || []).filter(r => {
                 if (!r.idFile) return false;
-                return normalizeFileId(r.idFile) === fNorm;
+                const rNorm = normalizeFileId(r.idFile);
+                return rNorm === fNorm;
             });
 
-            // Jika tiada sebarang laporan dikemas kini oleh surveyor dalam URL 2 untuk fail ini, progres MESTI 0%
-            if (statRecsForFile.length === 0) {
-                return {
-                    percentage: 0,
-                    doneQty: 0,
-                    targetQty: Math.round(totalTargetQty * 100) / 100,
-                    unit: primaryUnit || 'Unit'
-                };
-            }
+            // 1. Cari Sasaran Kuantiti Peringkat Fail daripada URL 1 (Rekod Kerja)
+            // Bagi No File yang sama, nilai jarak/kuantiti sasaran adalah sama
+            let fileLevelTargetQty = 0;
+            let fileLevelUnit = '';
+            (rekodTasksForFile || []).forEach(t => {
+                const q = parseFloat(t.kuantiti);
+                if (!isNaN(q) && q > 0 && fileLevelTargetQty === 0) {
+                    fileLevelTargetQty = q;
+                }
+                if (!fileLevelUnit && t.unit) {
+                    fileLevelUnit = t.unit;
+                }
+            });
 
-            // 3. Jumlahkan Kuantiti Siap yang dilaporkan oleh surveyor dalam URL 2 untuk fail ini
-            let totalDoneQty = 0;
-            const statExplicitPcts = [];
+            // 2. Jumlahkan kuantiti siap daripada URL 2 (Laporan Surveyor) untuk fail ini
+            let totalFileStatDoneQty = 0;
+            let uncategorizedStatDoneQty = 0;
+            const totalFileExplicitPcts = [];
+
+            // Senarai kategori yang wujud pada fail ini (jika tiada, letakkan 'Umum')
+            const effectiveCategories = (kategoriList && kategoriList.length > 0) ? kategoriList : ['Umum'];
 
             statRecsForFile.forEach(st => {
                 const q = parseFloat(st.kuantiti);
-                if (!isNaN(q) && q > 0) {
-                    totalDoneQty += q;
+                const validQty = (!isNaN(q) && q > 0) ? q : 0;
+                totalFileStatDoneQty += validQty;
+
+                if (st.peratus !== null && !isNaN(st.peratus) && st.peratus >= 0) {
+                    totalFileExplicitPcts.push(st.peratus);
                 }
-                if (st.peratus !== null && !isNaN(st.peratus) && st.peratus > 0) {
-                    statExplicitPcts.push(st.peratus);
-                }
-                if (!primaryUnit && st.unit) {
-                    primaryUnit = st.unit;
+
+                // Semak sama ada baris laporan ini sepadan dengan mana-mana kategori pada kad fail ini
+                const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
+                const stTugas = String(st.tugas || '').toLowerCase().trim();
+
+                const matchesAnyCardCat = effectiveCategories.some(ec => {
+                    const ecLow = ec.toLowerCase().trim();
+                    return stCats.some(sc => sc === ecLow || sc.includes(ecLow) || ecLow.includes(sc)) ||
+                           (stTugas && (stTugas === ecLow || stTugas.includes(ecLow) || ecLow.includes(stTugas)));
+                });
+
+                if (!matchesAnyCardCat) {
+                    uncategorizedStatDoneQty += validQty;
                 }
             });
 
-            // 4. Kira Peratus Progres berdasarkan nisbah (Kuantiti Siap URL 2 / Kuantiti Sasaran URL 1) * 100
-            let finalPct = 0;
+            // 3. Kira progres secara individu untuk setiap kategori yang dipilih pada kad
+            const categoryProgressList = effectiveCategories.map(catName => {
+                const catLower = catName.toLowerCase().trim();
 
-            if (totalTargetQty > 0) {
-                if (totalDoneQty > 0) {
-                    finalPct = (totalDoneQty / totalTargetQty) * 100;
-                } else if (statExplicitPcts.length > 0) {
-                    finalPct = statExplicitPcts.reduce((a, b) => a + b, 0) / statExplicitPcts.length;
-                } else {
-                    finalPct = 0;
-                }
-            } else {
-                // Jika tiada sasaran kuantiti dalam URL 1 tetapi ada peratus eksplisit dalam URL 2
-                if (statExplicitPcts.length > 0) {
-                    finalPct = statExplicitPcts.reduce((a, b) => a + b, 0) / statExplicitPcts.length;
-                } else {
-                    finalPct = 0;
-                }
-            }
+                // A. Cari Sasaran Kuantiti daripada URL 1 (Rekod Kerja) untuk kategori ini
+                let catTargetQty = 0;
+                let catUnit = '';
 
-            finalPct = Math.min(100, Math.max(0, finalPct));
+                (rekodTasksForFile || []).forEach(t => {
+                    const rowCats = splitMultiValues(t.kategori).map(c => c.toLowerCase().trim());
+                    const isMatch = (catLower === 'umum' && rowCats.length === 0) ||
+                        rowCats.some(rc => rc === catLower || rc.includes(catLower) || catLower.includes(rc));
+
+                    if (isMatch) {
+                        const q = parseFloat(t.kuantiti);
+                        if (!isNaN(q) && q > 0 && catTargetQty === 0) {
+                            catTargetQty = q;
+                        }
+                        if (!catUnit && t.unit) {
+                            catUnit = t.unit;
+                        }
+                    }
+                });
+
+                // Jika baris kategori berkongsi sasaran fail yang sama
+                if (catTargetQty === 0 && fileLevelTargetQty > 0) {
+                    catTargetQty = fileLevelTargetQty;
+                }
+                if (!catUnit && fileLevelUnit) {
+                    catUnit = fileLevelUnit;
+                }
+
+                // B. Cari Kuantiti Siap daripada URL 2 (Laporan Statistik Surveyor) untuk kategori ini
+                let catDoneQty = 0;
+                const catExplicitPcts = [];
+
+                statRecsForFile.forEach(st => {
+                    const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
+                    const stTugas = String(st.tugas || '').toLowerCase().trim();
+
+                    const isDirectCatMatch = stCats.some(sc => sc === catLower || sc.includes(catLower) || catLower.includes(sc)) ||
+                        (stTugas && (stTugas === catLower || stTugas.includes(catLower) || catLower.includes(stTugas)));
+
+                    if (isDirectCatMatch) {
+                        const q = parseFloat(st.kuantiti);
+                        if (!isNaN(q) && q > 0) {
+                            catDoneQty += q;
+                        }
+                        if (st.peratus !== null && !isNaN(st.peratus) && st.peratus >= 0) {
+                            catExplicitPcts.push(st.peratus);
+                        }
+                        if (!catUnit && st.unit) {
+                            catUnit = st.unit;
+                        }
+                    }
+                });
+
+                // Jika laporan surveyor bagi No File ini tidak menyatakan kategori secara spesifik,
+                // gunakan kuantiti laporan tanpa kategori tersebut supaya progres tetap dikira
+                if (catDoneQty === 0 && uncategorizedStatDoneQty > 0) {
+                    catDoneQty = uncategorizedStatDoneQty;
+                }
+
+                // C. Kira Peratus Progres: (Kuantiti Siap URL 2 / Kuantiti Sasaran URL 1) * 100
+                let catPct = 0;
+                if (catTargetQty > 0 && catDoneQty > 0) {
+                    catPct = (catDoneQty / catTargetQty) * 100;
+                } else if (catExplicitPcts.length > 0) {
+                    catPct = catExplicitPcts.reduce((a, b) => a + b, 0) / catExplicitPcts.length;
+                } else if (catDoneQty === 0 && totalFileExplicitPcts.length > 0 && effectiveCategories.length === 1) {
+                    catPct = totalFileExplicitPcts.reduce((a, b) => a + b, 0) / totalFileExplicitPcts.length;
+                }
+
+                // Hadkan antara 0% hingga 100%
+                catPct = Math.min(100, Math.max(0, catPct));
+
+                return {
+                    kategori: catName,
+                    percentage: Math.round(catPct * 10) / 10,
+                    doneQty: Math.round(catDoneQty * 100) / 100,
+                    targetQty: Math.round(catTargetQty * 100) / 100,
+                    unit: catUnit || 'Unit'
+                };
+            });
+
+            // Purata keseluruhan fail berdasarkan semua kategori di dalamnya
+            const overallPct = categoryProgressList.length > 0
+                ? categoryProgressList.reduce((sum, item) => sum + item.percentage, 0) / categoryProgressList.length
+                : 0;
+
+            const totalDone = totalFileStatDoneQty > 0
+                ? totalFileStatDoneQty
+                : categoryProgressList.reduce((sum, item) => sum + item.doneQty, 0);
+            const totalTarget = fileLevelTargetQty > 0
+                ? fileLevelTargetQty
+                : categoryProgressList.reduce((sum, item) => sum + item.targetQty, 0);
+            const primaryUnit = fileLevelUnit || categoryProgressList[0]?.unit || 'Unit';
 
             return {
-                percentage: Math.round(finalPct * 10) / 10,
-                doneQty: Math.round(totalDoneQty * 100) / 100,
-                targetQty: Math.round(totalTargetQty * 100) / 100,
-                unit: primaryUnit || 'Unit'
+                percentage: Math.round(overallPct * 10) / 10,
+                doneQty: Math.round(totalDone * 100) / 100,
+                targetQty: Math.round(totalTarget * 100) / 100,
+                unit: primaryUnit,
+                categoryProgressList: categoryProgressList
             };
         }
 
@@ -1109,7 +1241,7 @@
             const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const filterKat = document.getElementById('filterKategoriSelect')?.value || 'ALL';
 
-            // Kumpulkan rekod mengikut No File yang telah dinormalisasi supaya "MGK 001/26" & "MGK 001/26 " bergabung dalam 1 kad
+            // Kumpulkan rekod mengikut No File yang telah dinormalisasi
             const fileGroupsMap = new Map();
 
             combinedRecords.forEach((rec, idx) => {
@@ -1136,11 +1268,19 @@
                 if (rec.tarikh && (grp.tarikhMula === '-' || !grp.tarikhMula)) grp.tarikhMula = rec.tarikh;
                 if (rec.jangkaSiap && (grp.jangkaSiap === '-' || !grp.jangkaSiap)) grp.jangkaSiap = rec.jangkaSiap;
 
-                // Kumpul semua Surveyor daripada kedua-dua sumber
-                splitMultiValues(rec.surveyor).forEach(s => addUniqueCaseInsensitive(grp.surveyors, s));
+                // Masukkan hanya surveyor yang bermula dengan Mangkuk
+                splitMultiValues(rec.surveyor).forEach(s => {
+                    if (String(s).toLowerCase().startsWith('mangkuk')) {
+                        addUniqueCaseInsensitive(grp.surveyors, s);
+                    }
+                });
 
-                // Kumpul semua Kategori daripada setiap baris fail ini (memastikan fail dengan 2+ kategori memaparkan kesemuanya)
-                splitMultiValues(rec.kategori).forEach(k => addUniqueCaseInsensitive(grp.categories, k));
+                // Masukkan hanya kategori rasmi yang dibenarkan
+                splitMultiValues(rec.kategori).forEach(k => {
+                    if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) {
+                        addUniqueCaseInsensitive(grp.categories, k);
+                    }
+                });
 
                 if (rec.sourceType !== 'stat') {
                     grp.rekodEntries.push(rec);
@@ -1154,7 +1294,10 @@
                     }
                     if (rec.kuantiti > 0) {
                         const u = rec.unit || 'Unit';
-                        grp.quantitiesByUnit[u] = (grp.quantitiesByUnit[u] || 0) + rec.kuantiti;
+                        // Kekalkan nilai jarak/kuantiti yang sama bagi No File yang sama (tidak digandakan jika baris berulang)
+                        if (!grp.quantitiesByUnit[u]) {
+                            grp.quantitiesByUnit[u] = rec.kuantiti;
+                        }
                     }
                 } else if (rec.peratus !== null && !isNaN(rec.peratus)) {
                     grp.explicitPcts.push(rec.peratus);
@@ -1164,19 +1307,31 @@
             let fileGroups = Array.from(fileGroupsMap.values()).map(grp => {
                 const fNorm = grp.normKey;
 
-                // Gabungkan juga mana-mana kategori daripada Sheet Statistik (URL 2) untuk fail ini
                 if (fileCategoriesFromStatMap && fileCategoriesFromStatMap[fNorm]) {
-                    fileCategoriesFromStatMap[fNorm].forEach(k => addUniqueCaseInsensitive(grp.categories, k));
+                    fileCategoriesFromStatMap[fNorm].forEach(k => {
+                        if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) {
+                            addUniqueCaseInsensitive(grp.categories, k);
+                        }
+                    });
                 }
 
-                // Gabungkan juga surveyor daripada Sheet Statistik (URL 2) jika ada
                 if (fileSurveyorBackupMap && fileSurveyorBackupMap[fNorm]) {
-                    fileSurveyorBackupMap[fNorm].forEach(s => addUniqueCaseInsensitive(grp.surveyors, s));
+                    fileSurveyorBackupMap[fNorm].forEach(s => {
+                        if (String(s).toLowerCase().startsWith('mangkuk')) {
+                            addUniqueCaseInsensitive(grp.surveyors, s);
+                        }
+                    });
                 }
 
                 const categoriesArr = Array.from(grp.categories);
                 const surveyorsArr = Array.from(grp.surveyors);
                 const progDetails = resolveProgressDetailsForFile(grp.idFile, categoriesArr, grp.rekodEntries);
+
+                // Pastikan nilai kuantiti sasaran bagi No File yang sama kekal konsisten dan tidak berganda
+                let aggregatedQuantities = { ...grp.quantitiesByUnit };
+                if (Object.keys(aggregatedQuantities).length === 0 && progDetails.targetQty > 0) {
+                    aggregatedQuantities[progDetails.unit] = progDetails.targetQty;
+                }
 
                 return {
                     ...grp,
@@ -1185,11 +1340,12 @@
                     progress: progDetails.percentage,
                     doneQty: progDetails.doneQty,
                     targetQty: progDetails.targetQty,
-                    primaryUnit: progDetails.unit
+                    primaryUnit: progDetails.unit,
+                    quantitiesByUnit: aggregatedQuantities,
+                    categoryProgressList: progDetails.categoryProgressList || []
                 };
             });
 
-            // Kemas kini KPI Utama
             const allSurveyorsGlobal = new Set();
             const allCategoriesGlobal = new Set();
             fileGroups.forEach(g => {
@@ -1207,7 +1363,6 @@
             document.getElementById('statTotalSurveyors').innerText = allSurveyorsGlobal.size;
             document.getElementById('statTotalTasksText').innerText = `${combinedRecords.length} rekod kerja aktif`;
 
-            // Tapis ikut kategori & carian
             if (filterKat !== 'ALL') {
                 fileGroups = fileGroups.filter(g => g.categoriesArr.some(c => c.toLowerCase() === filterKat.toLowerCase()));
             }
@@ -1234,12 +1389,6 @@
             container.innerHTML = fileGroups.map(grp => {
                 const rawPct = isNaN(grp.progress) ? 0 : grp.progress;
                 const pct = Math.min(100, Math.max(0, Math.round(rawPct)));
-                const barWidth = pct > 0 ? Math.max(pct, 4) : 0;
-                const barColor = pct >= 80
-                    ? 'from-emerald-500 to-teal-400'
-                    : pct >= 40
-                        ? 'from-indigo-500 to-sky-400'
-                        : 'from-amber-500 to-orange-400';
 
                 const badgeStatus = pct >= 100
                     ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Selesai</span>`
@@ -1262,14 +1411,41 @@
                 const latestTask = grp.tasks.length > 0 ? grp.tasks[0].tugas : 'Kerja ukur lapangan direkodkan';
                 const highlightClass = grp.isNewlyAdded ? 'new-card-highlight' : '';
 
-                const progressFractionText = grp.targetQty > 0
-                    ? `<span class="text-[11px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${grp.doneQty}</strong> / <strong class="text-slate-200">${grp.targetQty} ${escapeHtml(grp.primaryUnit)}</strong></span>`
-                    : (grp.doneQty > 0 ? `<span class="text-[11px] text-slate-400 font-medium">Kuantiti Statistik: <strong class="text-emerald-400">${grp.doneQty}</strong></span>` : '');
+                const categoryBarsHtml = (grp.categoryProgressList || []).map(catProg => {
+                    const cPct = Math.min(100, Math.max(0, Math.round(catProg.percentage || 0)));
+                    const cBarWidth = cPct > 0 ? Math.max(cPct, 4) : 0;
+                    const cBarColor = cPct >= 80
+                        ? 'from-emerald-500 to-teal-400'
+                        : cPct >= 40
+                            ? 'from-indigo-500 to-sky-400'
+                            : 'from-amber-500 to-orange-400';
+
+                    const cFractionText = catProg.targetQty > 0
+                        ? `<span class="text-[10px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong> / <strong class="text-slate-200">${catProg.targetQty} ${escapeHtml(catProg.unit)}</strong></span>`
+                        : (catProg.doneQty > 0 ? `<span class="text-[10px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong></span>` : '');
+
+                    return `
+                        <div class="bg-slate-950/50 rounded-xl p-2.5 border border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between items-center gap-2 text-xs">
+                                <span class="font-bold text-slate-200 flex items-center gap-1.5 truncate">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                    <span class="truncate">${escapeHtml(catProg.kategori)}</span>
+                                </span>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    ${cFractionText}
+                                    <span class="font-display font-extrabold text-xs text-amber-400">${cPct}%</span>
+                                </div>
+                            </div>
+                            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                                <div class="h-full bg-gradient-to-r ${cBarColor} rounded-full transition-all duration-700" style="width: ${cBarWidth}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
                 return `
                     <div class="exec-card rounded-2xl p-5 flex flex-col justify-between space-y-4 ${highlightClass}">
                         <div class="space-y-3">
-                            <!-- Card Top Header -->
                             <div class="flex items-start justify-between gap-2">
                                 <div>
                                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">No. Fail Projek</span>
@@ -1278,12 +1454,10 @@
                                 ${badgeStatus}
                             </div>
 
-                            <!-- Kategori Badges -->
                             <div class="flex flex-wrap gap-1.5">
                                 ${kategoriDisplay}
                             </div>
 
-                            <!-- Nama Surveyor Section -->
                             <div class="pt-1">
                                 <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Surveyor Bertugas:</p>
                                 <div class="flex flex-wrap gap-1.5">
@@ -1291,7 +1465,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tugas & Kuantiti -->
                             <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 space-y-2">
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-slate-400 font-medium truncate max-w-[70%]"><i class="fa-solid fa-briefcase text-indigo-400 mr-1.5"></i>${escapeHtml(latestTask)}</span>
@@ -1301,18 +1474,14 @@
                             </div>
                         </div>
 
-                        <!-- Progress Bar & Tarikh -->
                         <div class="space-y-3 pt-2 border-t border-slate-800/80">
-                            <div class="space-y-1.5">
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="font-semibold text-slate-300">Peratus Progres Kerja</span>
-                                    <div class="flex items-center gap-2">
-                                        ${progressFractionText}
-                                        <span class="font-display font-extrabold text-sm text-amber-400">${pct}%</span>
-                                    </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center text-[11px] uppercase tracking-wider font-bold text-slate-400">
+                                    <span>Progres Mengikut Kategori (${grp.categoryProgressList.length})</span>
+                                    <span class="text-amber-400">Purata: ${pct}%</span>
                                 </div>
-                                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                                    <div class="h-full bg-gradient-to-r ${barColor} rounded-full transition-all duration-700" style="width: ${barWidth}%"></div>
+                                <div class="space-y-2">
+                                    ${categoryBarsHtml}
                                 </div>
                             </div>
 
