@@ -3,389 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Eksekutif Statistik Ukur Tanah</title>
+    <title>Dashboard Progres Kerja Ukur | Dark Executive</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
                     colors: {
-                        exec: {
-                            bg: '#070b14',
-                            surface: '#0f172a',
-                            card: '#131c31',
-                            border: '#1e293b',
-                            gold: '#f59e0b',
-                            accent: '#6366f1',
-                            emerald: '#10b981'
-                        }
+                        darker: '#090d16',
+                        cardDark: '#131c2e',
+                        borderDark: '#1e293b',
+                        accent: '#00e5ff'
                     }
                 }
             }
         }
     </script>
-
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #070b14;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
-            background-attachment: fixed;
-            color: #f1f5f9;
-        }
-
-        /* Buang anak panah (spinner) pada input nombor Kuantiti */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
-
-        /* Custom Scrollbar Dark Executive */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-
-        /* Executive Card Glow & Transitions */
-        .exec-card {
-            background: linear-gradient(145deg, rgba(19, 28, 49, 0.92), rgba(15, 23, 42, 0.96));
-            border: 1px solid rgba(51, 65, 85, 0.65);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .exec-card:hover {
-            border-color: rgba(99, 102, 241, 0.45);
-            transform: translateY(-2px);
-            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(99, 102, 241, 0.08);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #090d16; color: #f8fafc; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
         /* Highlight animasi untuk kad baru */
-        @keyframes pulseGold {
-            0%, 100% { border-color: rgba(245, 158, 11, 0.85); box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
-            50% { border-color: rgba(16, 185, 129, 0.85); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
+        @keyframes pulseAccent {
+            0%, 100% { border-color: rgba(0, 229, 255, 0.8); box-shadow: 0 0 22px rgba(0, 229, 255, 0.2); }
+            50% { border-color: rgba(16, 185, 129, 0.8); box-shadow: 0 0 14px rgba(16, 185, 129, 0.15); }
         }
-        .new-card-highlight {
-            animation: pulseGold 2.5s infinite;
-        }
+        .new-card-highlight { animation: pulseAccent 2.5s infinite; }
     </style>
 </head>
-<body class="min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col bg-darker text-slate-100 selection:bg-accent selection:text-darker">
 
-    <!-- ================= TOP EXECUTIVE NAVBAR ================= -->
-    <nav class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Brand Logo -->
-                <div class="flex items-center gap-3.5 cursor-pointer" onclick="switchTab('dashboard')">
-                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 border border-amber-400/40">
-                        <i class="fa-solid fa-compass-drafting text-xl"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-display font-extrabold text-lg tracking-tight text-white">GEO<span class="text-amber-400">STAT</span></span>
-                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">Executive</span>
-                        </div>
-                        <p class="text-xs text-slate-400 hidden sm:block">Sistem Pemantauan Progres & Statistik Ukur Tanah</p>
-                    </div>
+    <!-- Header Navigation Bar -->
+    <header class="border-b border-borderDark bg-cardDark/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i data-lucide="compass" class="w-6 h-6 text-darker font-bold"></i>
                 </div>
-
-                <!-- Navigation Buttons -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/25">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        <span>Dashboard</span>
-                    </button>
-                    <button id="nav-tambah" onclick="switchTab('tambah')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent">
-                        <i class="fa-solid fa-plus-circle text-emerald-400"></i>
-                        <span>Tambah Kerja</span>
-                    </button>
-                    <button id="nav-statistik" onclick="switchTab('statistik')" class="nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent">
-                        <i class="fa-solid fa-table-list text-amber-400"></i>
-                        <span class="hidden md:inline">Data Sheet</span>
-                    </button>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        GEO-STAT <span class="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 font-normal">Dark Executive</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Sistem Pemantauan Progres & Statistik Ukur Tanah</p>
                 </div>
             </div>
+
+            <nav class="flex items-center gap-2 sm:gap-3">
+                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 bg-accent/20 text-accent border border-accent/40 shadow-sm">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <button id="nav-tambah" onclick="switchTab('tambah')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 text-slate-400 border border-transparent hover:bg-cardDark">
+                    <i data-lucide="file-plus" class="w-4 h-4"></i> Tambah Kerja
+                </button>
+                <button id="nav-statistik" onclick="switchTab('statistik')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 text-slate-400 border border-transparent hover:bg-cardDark">
+                    <i data-lucide="table" class="w-4 h-4"></i> Data Sheet
+                </button>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <!-- ================= MAIN CONTAINER ================= -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- ================================================================= -->
-        <!-- PAGE 1: DASHBOARD EKSEKUTIF                                       -->
-        <!-- ================================================================= -->
+        <!-- TAB 1: DASHBOARD -->
         <div id="view-dashboard" class="view-section space-y-8">
 
-            <!-- Executive Hero Banner -->
-            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/90 to-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl">
-                <div class="absolute -right-10 -top-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute right-20 -bottom-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div class="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                    <div class="space-y-2">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-medium text-amber-400">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Integrasi Langsung Google Sheets & Apps Script
-                        </div>
-                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                            Dashboard Eksekutif Progres Kerja Ukur
-                        </h1>
-                        <p class="text-slate-400 text-sm max-w-2xl">
-                            Kad progres dijana secara automatik daripada rekod kerja lapangan manakala peratusan siap diselaraskan secara langsung daripada pangkalan data statistik.
-                        </p>
+            <!-- Panel Atas -->
+            <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-xs text-accent mb-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Integrasi Langsung Google Sheets & Apps Script
                     </div>
-
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <button onclick="refreshAllData()" id="btnRefresh" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2">
-                            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-indigo-400"></i>
-                            <span>Muat Semula Data</span>
-                        </button>
-                        <button onclick="switchTab('tambah')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Tambah Kerja Baru</span>
-                        </button>
-                    </div>
+                    <h3 class="text-lg font-bold text-white">Dashboard Progres Kerja Ukur</h3>
+                    <p class="text-xs text-slate-400 max-w-2xl">Kad progres dijana secara automatik daripada rekod kerja lapangan manakala peratusan siap diselaraskan secara langsung daripada pangkalan data statistik.</p>
+                </div>
+                <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <button onclick="refreshAllData()" id="btnRefresh" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-darker border border-borderDark text-slate-300 font-medium text-sm hover:bg-cardDark transition flex items-center justify-center gap-2">
+                        <span id="refreshIcon" class="inline-flex"><i data-lucide="refresh-cw" class="w-4 h-4 text-accent"></i></span>
+                        Muat Semula
+                    </button>
+                    <button onclick="switchTab('tambah')" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-accent text-darker font-semibold text-sm hover:bg-accent/90 transition shadow-lg shadow-accent/20 flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Tambah Kerja Baru
+                    </button>
                 </div>
             </div>
 
-            <!-- KPI Metric Cards (4 Columns) -->
+            <!-- Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Jumlah Fail -->
-                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-indigo-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Jumlah Fail Kerja</p>
-                            <h3 id="statTotalFiles" class="text-3xl font-display font-extrabold text-white mt-2">0</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-folder-tree"></i>
-                        </div>
+                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jumlah Fail Kerja</span>
+                        <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i data-lucide="folder-kanban" class="w-5 h-5"></i></div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-check text-indigo-400"></i>
-                        <span>Kad progres aktif dijana</span>
-                    </p>
+                    <div class="text-3xl font-bold text-white tracking-tight" id="statTotalFiles">0</div>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-blue-400 font-medium">Aktif</span> kad progres dijana</p>
                 </div>
 
-                <!-- Purata Progres -->
-                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-emerald-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Purata Peratus Kerja</p>
-                            <h3 id="statAvgProgress" class="text-3xl font-display font-extrabold text-emerald-400 mt-2">0%</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-chart-line"></i>
-                        </div>
+                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Purata Peratus Kerja</span>
+                        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-database text-emerald-400"></i>
-                        <span>Sumber: Sheet Statistik Peratus</span>
-                    </p>
+                    <div class="text-3xl font-bold text-white tracking-tight" id="statAvgProgress">0%</div>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-emerald-400 font-medium">Sumber</span> sheet statistik peratus</p>
                 </div>
 
-                <!-- Jumlah Kategori -->
-                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-amber-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Aktif</p>
-                            <h3 id="statTotalCategories" class="text-3xl font-display font-extrabold text-amber-400 mt-2">0</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
+                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kategori Aktif</span>
+                        <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i data-lucide="layers" class="w-5 h-5"></i></div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-tags text-amber-400"></i>
-                        <span id="statTotalTasksText">0 rekod tugasan lapangan</span>
-                    </p>
+                    <div class="text-3xl font-bold text-white tracking-tight" id="statTotalCategories">0</div>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-cyan-400 font-medium" id="statTotalTasksText">0 rekod tugasan lapangan</span></p>
                 </div>
 
-                <!-- Surveyor Aktif -->
-                <div class="exec-card rounded-2xl p-5 border-t-2 border-t-sky-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Surveyor Terlibat</p>
-                            <h3 id="statTotalSurveyors" class="text-3xl font-display font-extrabold text-sky-400 mt-2">0</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-user-astronaut"></i>
-                        </div>
+                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Surveyor Terlibat</span>
+                        <div class="p-2.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20"><i data-lucide="users" class="w-5 h-5"></i></div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-users-viewfinder text-sky-400"></i>
-                        <span>Dipetakan mengikut kategori & fail</span>
-                    </p>
+                    <div class="text-3xl font-bold text-white tracking-tight" id="statTotalSurveyors">0</div>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-violet-400 font-medium">Dipetakan</span> mengikut kategori & fail</p>
                 </div>
             </div>
 
-            <!-- ================= SEKSYEN 1: KAD PROGRES MENGIKUT FAIL ================= -->
-            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-6">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800/80 pb-5">
+            <!-- Kad Progres Mengikut Fail -->
+            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-6 border-b border-borderDark flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-2.5 h-6 rounded-full bg-amber-500"></span>
-                            <h2 class="font-display text-lg sm:text-xl font-bold text-white">Kad Progres Mengikut Fail</h2>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-1">
-                            Menampilkan kad kerja yang ditambah berserta peratusan siap daripada data statistik.
-                        </p>
+                        <h3 class="text-lg font-bold text-white">Kad Progres Mengikut Fail</h3>
+                        <p class="text-xs text-slate-400">Kad kerja yang ditambah berserta peratusan siap daripada data statistik</p>
                     </div>
-
-                    <!-- Search & Filter Controls -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                        <select id="filterKategoriSelect" onchange="renderDashboardCards()" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-700/80 text-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-slate-500"></i>
+                            <input type="text" id="searchInput" oninput="renderDashboardCards()" placeholder="Cari No File / Surveyor / Tugas..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
+                        </div>
+                        <select id="filterKategoriSelect" onchange="renderDashboardCards()" class="px-4 py-2 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
                             <option value="ALL">Semua Kategori</option>
                         </select>
-                        <div class="relative w-full sm:w-64">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </span>
-                            <input type="text" id="searchInput" oninput="renderDashboardCards()" placeholder="Cari No File, Surveyor, Tugas..." class="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-900 border border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:border-indigo-500">
-                        </div>
                     </div>
                 </div>
 
-                <!-- Grid Container for File Progress Cards -->
-                <div id="fileCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div id="fileCardsContainer" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="col-span-full py-12 text-center text-slate-400">
-                        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-indigo-400 mb-3"></i>
+                        <div class="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                         <p class="text-sm">Memuatkan kad progres fail dan peratusan kerja...</p>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- ================================================================= -->
-        <!-- PAGE 2: HALAMAN TAMBAH KERJA (DEDICATED PAGE - TIADA OVERLAP)     -->
-        <!-- ================================================================= -->
+        <!-- TAB 2: TAMBAH KERJA -->
         <div id="view-tambah" class="view-section hidden max-w-3xl mx-auto">
-            <div class="exec-card rounded-2xl p-6 sm:p-8 border-t-4 border-t-amber-500">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800 mb-6">
-                    <div>
-                        <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">Pendaftaran Rekod Baru</span>
-                        <h2 class="font-display text-xl sm:text-2xl font-extrabold text-white mt-0.5">Borang Tambah Kerja Lapangan</h2>
-                        <p class="text-xs text-slate-400 mt-1">Data akan dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik.</p>
+            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl p-8">
+                <div class="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-borderDark">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 rounded-xl bg-accent/10 text-accent border border-accent/30">
+                            <i data-lucide="file-plus-2" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">Borang Tambah Kerja Lapangan</h2>
+                            <p class="text-xs text-slate-400">Data dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik</p>
+                        </div>
                     </div>
-                    <button type="button" onclick="switchTab('dashboard')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Kembali ke Dashboard</span>
+                    <button type="button" onclick="switchTab('dashboard')" class="hidden sm:flex px-4 py-2 rounded-xl bg-darker border border-borderDark text-slate-300 font-medium text-sm hover:bg-cardDark transition items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
                     </button>
                 </div>
 
                 <form id="fieldWorkForm" onsubmit="submitForm(event)" class="space-y-6">
-                    <!-- Row 1: No File & Tarikh -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                No File <span class="text-amber-400">*</span>
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
-                                    <i class="fa-solid fa-file-signature text-xs"></i>
-                                </span>
-                                <input type="text" id="idFile" required placeholder="Cth: JUPEM/WPKL/2026/01" list="existingFilesList"
-                                    class="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                                <datalist id="existingFilesList"></datalist>
-                            </div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">No File</label>
+                            <input type="text" id="idFile" required placeholder="Cth: MGK 001/26" list="existingFilesList" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
+                            <datalist id="existingFilesList"></datalist>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Tarikh Kerja <span class="text-amber-400">*</span>
-                            </label>
-                            <input type="date" id="tarikh" required
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tarikh Kerja</label>
+                            <input type="date" id="tarikh" required class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
                         </div>
                     </div>
 
-                    <!-- Row 2: Kategori (Dropdown Pelbagai) & Surveyor (Dropdown Pelbagai) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <!-- Dropdown Pilihan Pelbagai: KATEGORI (Tiada Button Tambah Baru) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div class="relative">
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Kategori Kerja (Pilihan Pelbagai) <span class="text-amber-400">*</span>
-                            </label>
-                            <div id="kategoriDropdownToggle" onclick="toggleDropdown('kategori')"
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 hover:border-slate-600 rounded-xl cursor-pointer flex justify-between items-center select-none transition">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Kategori (Pilihan Pelbagai)</label>
+                            <div id="kategoriDropdownToggle" onclick="toggleDropdown('kategori')" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-sm cursor-pointer flex justify-between items-center select-none hover:border-accent/50 transition">
                                 <span id="kategoriSelectedText" class="text-slate-400 truncate">Pilih Kategori...</span>
-                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 ml-2 shrink-0"></i>
                             </div>
-                            <div id="kategoriDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2.5 max-h-60 overflow-y-auto space-y-1">
-                                <!-- Diisi secara dinamik oleh JS -->
-                            </div>
+                            <div id="kategoriDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-darker border border-borderDark rounded-xl shadow-2xl p-2 max-h-60 overflow-y-auto space-y-1"></div>
                         </div>
 
-                        <!-- Dropdown Pilihan Pelbagai: SURVEYOR (Tiada Button Tambah Baru) -->
                         <div class="relative">
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Surveyor (Pilihan Pelbagai) <span class="text-amber-400">*</span>
-                            </label>
-                            <div id="surveyorDropdownToggle" onclick="toggleDropdown('surveyor')"
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 hover:border-slate-600 rounded-xl cursor-pointer flex justify-between items-center select-none transition">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Surveyor (Pilihan Pelbagai)</label>
+                            <div id="surveyorDropdownToggle" onclick="toggleDropdown('surveyor')" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-sm cursor-pointer flex justify-between items-center select-none hover:border-accent/50 transition">
                                 <span id="surveyorSelectedText" class="text-slate-400 truncate">Pilih Surveyor...</span>
-                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 ml-2 shrink-0"></i>
                             </div>
-                            <div id="surveyorDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2.5 max-h-60 overflow-y-auto space-y-1">
-                                <!-- Diisi secara dinamik oleh JS -->
-                            </div>
+                            <div id="surveyorDropdownMenu" class="hidden absolute z-30 mt-1.5 w-full bg-darker border border-borderDark rounded-xl shadow-2xl p-2 max-h-60 overflow-y-auto space-y-1"></div>
                         </div>
                     </div>
 
-                    <!-- Row 3: Tugas, Kuantiti (Tanpa Spinner), & Unit (Lot, Ekar, Meter) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tugas / Deskripsi</label>
+                        <input type="text" id="tugas" required placeholder="Cth: Cerapan Sempadan" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Tugas / Deskripsi <span class="text-amber-400">*</span>
-                            </label>
-                            <input type="text" id="tugas" required placeholder="Cth: Cerapan Sempadan"
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Kuantiti</label>
+                            <input type="number" id="kuantiti" step="any" required placeholder="0.00" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Kuantiti <span class="text-amber-400">*</span>
-                            </label>
-                            <input type="number" id="kuantiti" step="any" required placeholder="Masukkan nilai (cth: 15)"
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                                Unit Ukuran <span class="text-amber-400">*</span>
-                            </label>
-                            <select id="unit" required
-                                class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                                <option value="" disabled selected class="text-slate-500">Pilih Unit</option>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Unit</label>
+                            <select id="unit" required class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
+                                <option value="" disabled selected>Pilih Unit...</option>
                                 <option value="Lot">Lot</option>
                                 <option value="Ekar">Ekar</option>
                                 <option value="Meter">Meter</option>
@@ -393,77 +240,52 @@
                         </div>
                     </div>
 
-                    <!-- Row 4: Jangka Siap -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                            Tarikh Jangka Siap <span class="text-amber-400">*</span>
-                        </label>
-                        <input type="date" id="jangkaSiap" required
-                            class="w-full px-4 py-2.5 text-sm bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tarikh Jangka Siap</label>
+                        <input type="date" id="jangkaSiap" required class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-end gap-3">
-                        <button type="button" onclick="switchTab('dashboard')"
-                            class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition">
-                            Batal
-                        </button>
-                        <button type="submit" id="submitBtn"
-                            class="px-7 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-sm font-extrabold shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <span>Simpan & Jana Kad Progres</span>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-borderDark">
+                        <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-xl bg-darker border border-borderDark text-slate-300 font-medium text-sm hover:bg-cardDark transition">Batal</button>
+                        <button type="submit" id="submitBtn" class="px-6 py-3 rounded-xl bg-accent text-darker font-semibold text-sm hover:bg-accent/90 transition shadow-lg shadow-accent/20 flex items-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i> <span>Simpan & Jana Kad Progres</span>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- PAGE 3: DATA SHEET & JADUAL STATISTIK                             -->
-        <!-- ================================================================= -->
+        <!-- TAB 3: DATA SHEET -->
         <div id="view-statistik" class="view-section hidden space-y-6">
-            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
-                    <div>
-                        <span class="text-[11px] font-bold uppercase tracking-widest text-emerald-400">Sumber URL 2 (Peratus Kerja)</span>
-                        <h2 class="font-display text-lg font-bold text-white">Jadual Statistik & Peratusan Progres</h2>
-                    </div>
+            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-6 border-b border-borderDark">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Sumber URL 2 (Peratus Kerja)</span>
+                    <h3 class="text-lg font-bold text-white mt-2">Jadual Statistik & Peratusan Progres</h3>
                 </div>
-                <div id="statsTableContainer" class="overflow-x-auto">
-                    <p class="text-slate-400 text-sm py-6 text-center">Memuatkan jadual statistik...</p>
+                <div id="statsTableContainer" class="w-full overflow-x-auto">
+                    <p class="text-slate-500 text-sm py-8 text-center">Memuatkan jadual statistik...</p>
                 </div>
             </div>
 
-            <div class="exec-card rounded-2xl p-6 sm:p-7 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
-                    <div>
-                        <span class="text-[11px] font-bold uppercase tracking-widest text-indigo-400">Sumber URL 1 (Rekod Kerja Lapangan)</span>
-                        <h2 class="font-display text-lg font-bold text-white">Jadual Rekod Kerja</h2>
-                    </div>
+            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-6 border-b border-borderDark">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/30">Sumber URL 1 (Rekod Kerja Lapangan)</span>
+                    <h3 class="text-lg font-bold text-white mt-2">Jadual Rekod Kerja</h3>
                 </div>
-                <div id="recordsTableContainer" class="overflow-x-auto">
-                    <p class="text-slate-400 text-sm py-6 text-center">Memuatkan jadual rekod kerja...</p>
+                <div id="recordsTableContainer" class="w-full overflow-x-auto">
+                    <p class="text-slate-500 text-sm py-8 text-center">Memuatkan jadual rekod kerja...</p>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- ================= CUSTOM NOTIFICATION MODAL ================= -->
-    <div id="notificationModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="exec-card rounded-2xl max-w-md w-full p-6 text-center space-y-4 border border-slate-700">
-            <div id="modalIcon" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl"></div>
-            <h3 id="modalTitle" class="font-display text-lg font-extrabold text-white"></h3>
-            <p id="modalMessage" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
-            <div class="pt-2">
-                <button onclick="closeModal()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold transition">
-                    Tutup Makluman
-                </button>
-            </div>
-        </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-xl border text-sm flex items-center gap-3 transition-all transform translate-y-2 opacity-0 hidden max-w-sm">
+        <i id="toastIcon" class="w-5 h-5 shrink-0"></i>
+        <span id="toastMsg">Mesej notifikasi...</span>
     </div>
 
-    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
         // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwR5rja3C8Q9NhAQ0YrP0ZW_BmCOBAQdhX3JhIKGQ-xL0QYyMBVpOTYPVUVr-hN-b5v2Q/exec";
@@ -474,26 +296,12 @@
         // 3. URL CSV 2: Laporan Statistik Surveyor (Sumber Kuantiti Siap & Peratus Progres Bar)
         const CSV_STAT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
 
-        // Senarai Kategori Kerja Rasmi (Eksklusif)
-        const DEFAULT_KATEGORI = [
-            "Cadastral",
-            "Calibration",
-            "Topography",
-            "Utility Mapping",
-            "TLS",
-            "Lidar"
-        ];
+        const DEFAULT_KATEGORI = ["Cadastral", "Calibration", "Topography", "Utility Mapping", "TLS", "Lidar"];
+        const DEFAULT_SURVEYORS = ["Mangkuk1", "Mangkuk2", "Mangkuk3", "Mangkuk4", "Mangkuk5"];
 
-        // Senarai Surveyor Rasmi (Hanya Mangkuk1 hingga Mangkuk5)
-        const DEFAULT_SURVEYORS = [
-            "Mangkuk1",
-            "Mangkuk2",
-            "Mangkuk3",
-            "Mangkuk4",
-            "Mangkuk5"
-        ];
+        const NAV_ACTIVE = "nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 bg-accent/20 text-accent border border-accent/40 shadow-sm";
+        const NAV_INACTIVE = "nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 text-slate-400 border border-transparent hover:bg-cardDark";
 
-        // State Aplikasi
         let rawRekodRows = [];
         let rawStatRows = [];
         let localAddedRecords = [];
@@ -501,22 +309,24 @@
         let selectedSurveyorList = [];
         let lastAddedFileId = null;
 
-        // Mulakan Aplikasi
+        function refreshIcons() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            refreshIcons();
             const today = new Date().toISOString().split('T')[0];
             const tarikhInput = document.getElementById('tarikh');
             const jangkaInput = document.getElementById('jangkaSiap');
             if (tarikhInput) tarikhInput.value = today;
             if (jangkaInput) jangkaInput.value = today;
 
-            // Tutup dropdown apabila klik di luar
             document.addEventListener('click', (e) => {
                 const katToggle = document.getElementById('kategoriDropdownToggle');
                 const katMenu = document.getElementById('kategoriDropdownMenu');
                 if (katToggle && katMenu && !katToggle.contains(e.target) && !katMenu.contains(e.target)) {
                     katMenu.classList.add('hidden');
                 }
-
                 const survToggle = document.getElementById('surveyorDropdownToggle');
                 const survMenu = document.getElementById('surveyorDropdownMenu');
                 if (survToggle && survMenu && !survToggle.contains(e.target) && !survMenu.contains(e.target)) {
@@ -529,52 +339,33 @@
             refreshAllData();
         });
 
-        // Fungsi Navigasi Halaman (Dashboard, Tambah Kerja, Data Sheet)
         function switchTab(tabName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const activeView = document.getElementById(`view-${tabName}`);
             if (activeView) activeView.classList.remove('hidden');
 
-            const navIds = ['dashboard', 'tambah', 'statistik'];
-            navIds.forEach(id => {
+            ['dashboard', 'tambah', 'statistik'].forEach(id => {
                 const btn = document.getElementById(`nav-${id}`);
-                if (!btn) return;
-                if (id === tabName) {
-                    btn.className = "nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/25";
-                } else {
-                    btn.className = "nav-link px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent";
-                }
+                if (btn) btn.className = id === tabName ? NAV_ACTIVE : NAV_INACTIVE;
             });
         }
 
-        // Bina Menu Dropdown Pelbagai Pilihan (Kategori & Surveyor)
         function renderDropdownMenus(kategoriOptions, surveyorOptions) {
+            const optionHtml = (type, value, isChecked) => `
+                <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-cardDark cursor-pointer transition text-sm text-slate-200">
+                    <input type="checkbox" value="${escapeHtml(value)}" ${isChecked ? 'checked' : ''} onchange="onMultiSelectChange('${type}', this)"
+                        class="w-4 h-4 rounded accent-cyan-400">
+                    <span class="font-medium">${escapeHtml(value)}</span>
+                </label>
+            `;
+
             const katMenu = document.getElementById('kategoriDropdownMenu');
             if (katMenu) {
-                katMenu.innerHTML = kategoriOptions.map(kat => {
-                    const isChecked = selectedKategoriList.includes(kat) ? 'checked' : '';
-                    return `
-                        <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/90 cursor-pointer transition text-xs sm:text-sm text-slate-200">
-                            <input type="checkbox" value="${escapeHtml(kat)}" ${isChecked} onchange="onMultiSelectChange('kategori', this)"
-                                class="w-4 h-4 rounded border-slate-600 bg-slate-950 text-amber-500 focus:ring-amber-500">
-                            <span class="font-medium">${escapeHtml(kat)}</span>
-                        </label>
-                    `;
-                }).join('');
+                katMenu.innerHTML = kategoriOptions.map(kat => optionHtml('kategori', kat, selectedKategoriList.includes(kat))).join('');
             }
-
             const survMenu = document.getElementById('surveyorDropdownMenu');
             if (survMenu) {
-                survMenu.innerHTML = surveyorOptions.map(surv => {
-                    const isChecked = selectedSurveyorList.includes(surv) ? 'checked' : '';
-                    return `
-                        <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/90 cursor-pointer transition text-xs sm:text-sm text-slate-200">
-                            <input type="checkbox" value="${escapeHtml(surv)}" ${isChecked} onchange="onMultiSelectChange('surveyor', this)"
-                                class="w-4 h-4 rounded border-slate-600 bg-slate-950 text-amber-500 focus:ring-amber-500">
-                            <span class="font-medium">${escapeHtml(surv)}</span>
-                        </label>
-                    `;
-                }).join('');
+                survMenu.innerHTML = surveyorOptions.map(surv => optionHtml('surveyor', surv, selectedSurveyorList.includes(surv))).join('');
             }
         }
 
@@ -596,7 +387,7 @@
                 const labelEl = document.getElementById('kategoriSelectedText');
                 if (selectedKategoriList.length > 0) {
                     labelEl.innerText = selectedKategoriList.join(', ');
-                    labelEl.className = 'text-amber-400 font-semibold truncate';
+                    labelEl.className = 'text-accent font-medium truncate';
                 } else {
                     labelEl.innerText = 'Pilih Kategori...';
                     labelEl.className = 'text-slate-400 truncate';
@@ -610,7 +401,7 @@
                 const labelEl = document.getElementById('surveyorSelectedText');
                 if (selectedSurveyorList.length > 0) {
                     labelEl.innerText = selectedSurveyorList.join(', ');
-                    labelEl.className = 'text-amber-400 font-semibold truncate';
+                    labelEl.className = 'text-accent font-medium truncate';
                 } else {
                     labelEl.innerText = 'Pilih Surveyor...';
                     labelEl.className = 'text-slate-400 truncate';
@@ -618,10 +409,9 @@
             }
         }
 
-        // Muat Turun & Selaraskan Kedua-dua CSV
         async function refreshAllData() {
             const icon = document.getElementById('refreshIcon');
-            if (icon) icon.classList.add('fa-spin');
+            if (icon) icon.classList.add('animate-spin');
 
             try {
                 const cacheBuster = `&_t=${Date.now()}`;
@@ -629,16 +419,14 @@
                     fetch(CSV_REKOD_URL + cacheBuster).then(r => r.ok ? r.text() : ""),
                     fetch(CSV_STAT_URL + cacheBuster).then(r => r.ok ? r.text() : "")
                 ]);
-
                 rawRekodRows = parseCSV(resRekod);
                 rawStatRows = parseCSV(resStat);
-
                 syncDynamicOptionsAndRender();
             } catch (err) {
                 console.error("Ralat memuat turun data CSV:", err);
                 syncDynamicOptionsAndRender();
             } finally {
-                if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 400);
+                if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
             }
         }
 
@@ -667,9 +455,7 @@
                 } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
                     if (ch === '\r' && nextCh === '\n') i++;
                     currentRow.push(currentCell.trim());
-                    if (currentRow.some(cell => cell !== '')) {
-                        rows.push(currentRow);
-                    }
+                    if (currentRow.some(cell => cell !== '')) rows.push(currentRow);
                     currentRow = [];
                     currentCell = '';
                 } else {
@@ -678,9 +464,7 @@
             }
             if (currentCell !== '' || currentRow.length > 0) {
                 currentRow.push(currentCell.trim());
-                if (currentRow.some(cell => cell !== '')) {
-                    rows.push(currentRow);
-                }
+                if (currentRow.some(cell => cell !== '')) rows.push(currentRow);
             }
 
             if (rows.length === 0) return [];
@@ -700,11 +484,7 @@
             for (let r = startIdx; r < rows.length; r++) {
                 const vals = rows[r];
                 if (vals.every(v => !v)) continue;
-                const obj = {
-                    __headers: headers,
-                    __rawValues: vals,
-                    __hasExplicitHeaders: hasExplicitHeaders
-                };
+                const obj = { __headers: headers, __rawValues: vals, __hasExplicitHeaders: hasExplicitHeaders };
                 headers.forEach((h, idx) => {
                     obj[h] = vals[idx] !== undefined ? vals[idx].replace(/^"|"$/g, '').trim() : '';
                 });
@@ -713,17 +493,13 @@
             return result;
         }
 
-        // Pengecaman Pintar Nilai (Elak salah papar Tarikh / Kuantiti / Masa sebagai Nama Surveyor atau Kategori)
         function isLikelyDateOrNumberOrUnit(str) {
             if (!str) return true;
             const s = String(str).trim();
             if (!s) return true;
-            // Semak jika nombor atau peratus sahaja (cth: 100, 45.5%, 0)
             if (/^-?\d+(\.\d+)?%?$/.test(s)) return true;
-            // Semak jika format tarikh atau timestamp (YYYY-MM-DD, DD/MM/YYYY, atau ada masa HH:MM)
             if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(s) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/.test(s)) return true;
             if (/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM|am|pm))?$/.test(s)) return true;
-            // Semak jika unit ukuran tunggal atau nama kolum metadata (Masa Mula, Masa Tamat, Kuantiti, Timestamp)
             const nonCategoryTerms = [
                 'lot', 'ekar', 'meter', 'm', 'ha', 'hektar', 'unit',
                 'timestamp', 'masa mula', 'masa tamat', 'masa', 'kuantiti', 'qty',
@@ -733,7 +509,6 @@
             return false;
         }
 
-        // Semak sama ada nama kolum ialah kolum metadata (bukan kategori kerja)
         function isMetadataHeader(headerName) {
             if (!headerName) return true;
             const hLower = String(headerName).trim().toLowerCase();
@@ -750,7 +525,6 @@
             return excludedHeaders.some(ex => hLower === ex || hLower.includes(ex));
         }
 
-        // Fungsi pisahkan nilai pelbagai (Kategori / Surveyor) yang dipisahkan dengan koma, baris baharu, atau titik bertitik
         function splitMultiValues(rawStr) {
             if (!rawStr) return [];
             return String(rawStr)
@@ -759,47 +533,33 @@
                 .filter(s => s && !isLikelyDateOrNumberOrUnit(s) && !isMetadataHeader(s));
         }
 
-        // Normalisasi No File supaya "MGK 001/26", "MGK001/26", dan "mgk 001 / 26" dipadankan dengan tepat
         function normalizeFileId(idStr) {
             if (!idStr) return '';
-            return String(idStr)
-                .toUpperCase()
-                .replace(/\s+/g, '')
-                .replace(/^["']+|["']+$/g, '')
-                .trim();
+            return String(idStr).toUpperCase().replace(/\s+/g, '').replace(/^["']+|["']+$/g, '').trim();
         }
 
-        // Tambah item ke dalam Set secara Case-Insensitive supaya tiada duplikasi ejaan tetapi kekal semua kategori berbeza
         function addUniqueCaseInsensitive(targetSet, value) {
             if (!value) return;
             const cleanVal = String(value).trim();
             if (!cleanVal || isLikelyDateOrNumberOrUnit(cleanVal) || isMetadataHeader(cleanVal)) return;
             const exists = Array.from(targetSet).some(item => item.toLowerCase() === cleanVal.toLowerCase());
-            if (!exists) {
-                targetSet.add(cleanVal);
-            }
+            if (!exists) targetSet.add(cleanVal);
         }
 
-        // Fungsi Sinkronisasi Data, Pilihan Dropdown & Render Semula
         function syncDynamicOptionsAndRender() {
             const parsedRekod = extractNormalizedRows(rawRekodRows, 'rekod');
             const parsedStat = extractNormalizedRows(rawStatRows, 'stat');
-
-            // Kad progres dijana daripada Rekod Kerja (URL 1) + Rekod Baru
             const combinedRecords = [...localAddedRecords, ...parsedRekod];
 
             const allKategoriSet = new Set(DEFAULT_KATEGORI);
-            const allSurveyorSet = new Set(DEFAULT_SURVEYORS);
             const existingFilesSet = new Set();
             const fileSurveyorBackupMap = {};
             const fileCategoriesFromStatMap = {};
             const categoryPercentMap = {};
             const categorySurveyorBackupMap = {};
 
-            // Kumpul pilihan Fail sahaja, kekalkan senarai Kategori & Surveyor asal yang ditetapkan
             combinedRecords.forEach(r => {
                 if (r.idFile) existingFilesSet.add(r.idFile);
-
                 if (r.idFile) {
                     const fNorm = normalizeFileId(r.idFile);
                     if (r.surveyor) {
@@ -858,20 +618,12 @@
             }
 
             renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
-
             renderDashboardCards();
             renderRawTables();
         }
 
-        // Ekstrak Medan Secara Pintar daripada Baris CSV (Menyokong Pelbagai Lajur & Sel Bergabung / Merged Rows)
         function extractNormalizedRows(rows, sourceType = 'rekod') {
-            let lastContext = {
-                idFile: '',
-                tarikh: '',
-                surveyor: '',
-                jangkaSiap: ''
-            };
-
+            let lastContext = { idFile: '', tarikh: '', surveyor: '', jangkaSiap: '' };
             const normalizedList = [];
 
             (rows || []).forEach(row => {
@@ -884,9 +636,7 @@
                     for (let i = 0; i < headers.length; i++) {
                         const hLower = String(headers[i] || '').toLowerCase().trim();
                         if (excludeKeywords.some(ex => hLower.includes(ex))) continue;
-                        if (keywords.some(kw => hLower === kw || hLower.includes(kw))) {
-                            return i;
-                        }
+                        if (keywords.some(kw => hLower === kw || hLower.includes(kw))) return i;
                     }
                     return -1;
                 };
@@ -914,7 +664,6 @@
                 const fileColIdx = findIndexByHeaderKeywords(['no file', 'no fail', 'no. fail', 'no. file', 'id file', 'no rujukan', 'rujukan', 'fail', 'file'], ['tarikh', 'masa', 'timestamp']);
                 let idFile = fileColIdx !== -1 ? (vals[fileColIdx] || '').trim() : '';
 
-                // Jika tiada header 'No File' ditemui atau kosong, cari mana-mana sel yang menyerupai format No File (cth: MGK 001/26, JUPEM/...)
                 if (!idFile) {
                     for (let i = 0; i < vals.length; i++) {
                         const candidate = (vals[i] || '').trim();
@@ -931,7 +680,6 @@
                     idFile = vals[0];
                 }
 
-                // Hanya warisi No File untuk rekod kerja jika sel digabungkan (merged cell)
                 if (idFile) {
                     lastContext.idFile = idFile;
                 } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
@@ -941,7 +689,6 @@
                 const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
                 const jangkaColIdx = findIndexByHeaderKeywords(['jangka siap', 'tarikh siap', 'jangka', 'siap', 'target', 'due'], ['masa', 'timestamp']);
                 const tugasColIdx = findIndexByHeaderKeywords(['tugas', 'kerja', 'task', 'aktiviti', 'perkara', 'deskripsi'], ['kategori', 'peratus', 'fail', 'file', 'masa', 'kuantiti', 'jarak', 'luas']);
-                // Pastikan 'siap', 'tarikh', 'jangka', 'masa' dikecualikan supaya tidak terambil kolum Tarikh Siap / Jangka Siap
                 const qtyColIdx = findIndexByHeaderKeywords(
                     ['kuantiti', 'qty', 'quantity', 'jarak', 'luas', 'bilangan', 'jumlah', 'meter', 'ekar', 'lot', 'ukuran'],
                     ['peratus', '%', 'masa', 'timestamp', 'tarikh', 'jangka', 'siap', 'no file', 'no fail', 'unit']
@@ -956,13 +703,11 @@
                 let unit = unitColIdx !== -1 ? (vals[unitColIdx] || '').trim() : '';
                 let rawPct = pctColIdx !== -1 ? (vals[pctColIdx] || '').trim() : '';
 
-                // Jika nilai rawQty mengandungi unit sekali (cth: "150 Meter" atau "10 Lot"), ekstrak unit jika unit masih kosong
                 if (rawQty && !unit) {
                     const unitMatch = rawQty.match(/\b(lot|ekar|meter|m|km|ha|hektar)\b/i);
                     if (unitMatch) unit = unitMatch[1];
                 }
 
-                // Fallback: Jika dalam sheet laporan surveyor (stat) kolum kuantiti tidak menggunakan nama standard, cari sel nombor yang sah
                 if (sourceType === 'stat' && !rawQty) {
                     for (let i = 0; i < vals.length; i++) {
                         if (i === fileColIdx || i === tarikhColIdx || i === jangkaColIdx || i === pctColIdx || i === unitColIdx) continue;
@@ -984,7 +729,6 @@
                 let kategoriValues = findAllValuesByHeaderKeywords(['kategori', 'jenis', 'skop', 'category'], ['masa', 'timestamp', 'kuantiti', 'tarikh', 'surveyor', 'fail', 'file']);
                 let surveyorValues = findAllValuesByHeaderKeywords(['surveyor', 'juruukur', 'nama surveyor', 'penyelia', 'petugas', 'pic', 'nama'], ['fail', 'file', 'kategori', 'masa', 'timestamp', 'kuantiti']);
 
-                // Semak jika mana-mana sel dalam baris mengandungi nama kategori rasmi secara langsung (terutama dalam sheet laporan surveyor)
                 vals.forEach((cellVal, idx) => {
                     if (idx === fileColIdx || idx === tarikhColIdx || idx === jangkaColIdx || idx === qtyColIdx) return;
                     const cleanCell = String(cellVal || '').trim();
@@ -1046,7 +790,6 @@
                     }
                 }
 
-                // Elakkan duplikasi jika baris ini sudah dipecahkan mengikut lajur matriks kategori
                 if (!hasMatrixEntries && (idFile || kategoriValues.length > 0 || surveyorValues.length > 0 || kuantiti > 0)) {
                     normalizedList.push({
                         idFile: idFile,
@@ -1066,39 +809,26 @@
             return normalizedList;
         }
 
-        // Fungsi Kira Peratus Progres Kerja dengan Tepat bagi Satu Fail & Setiap Kategori
-        // Mengambil Sasaran Kuantiti dari URL 1 (Rekod) dan Kuantiti Siap dari URL 2 (Laporan Statistik Surveyor)
         function resolveProgressDetailsForFile(fileKey, kategoriList, rekodTasksForFile) {
             const { parsedStat } = window.__processedData || {};
             const fNorm = normalizeFileId(fileKey);
 
-            // Padankan hanya baris laporan yang mempunyai No File yang sama (tepat selepas normalisasi)
             const statRecsForFile = (parsedStat || []).filter(r => {
                 if (!r.idFile) return false;
-                const rNorm = normalizeFileId(r.idFile);
-                return rNorm === fNorm;
+                return normalizeFileId(r.idFile) === fNorm;
             });
 
-            // 1. Cari Sasaran Kuantiti Peringkat Fail daripada URL 1 (Rekod Kerja)
-            // Bagi No File yang sama, nilai jarak/kuantiti sasaran adalah sama
             let fileLevelTargetQty = 0;
             let fileLevelUnit = '';
             (rekodTasksForFile || []).forEach(t => {
                 const q = parseFloat(t.kuantiti);
-                if (!isNaN(q) && q > 0 && fileLevelTargetQty === 0) {
-                    fileLevelTargetQty = q;
-                }
-                if (!fileLevelUnit && t.unit) {
-                    fileLevelUnit = t.unit;
-                }
+                if (!isNaN(q) && q > 0 && fileLevelTargetQty === 0) fileLevelTargetQty = q;
+                if (!fileLevelUnit && t.unit) fileLevelUnit = t.unit;
             });
 
-            // 2. Jumlahkan kuantiti siap daripada URL 2 (Laporan Surveyor) untuk fail ini
             let totalFileStatDoneQty = 0;
             let uncategorizedStatDoneQty = 0;
             const totalFileExplicitPcts = [];
-
-            // Senarai kategori yang wujud pada fail ini (jika tiada, letakkan 'Umum')
             const effectiveCategories = (kategoriList && kategoriList.length > 0) ? kategoriList : ['Umum'];
 
             statRecsForFile.forEach(st => {
@@ -1110,7 +840,6 @@
                     totalFileExplicitPcts.push(st.peratus);
                 }
 
-                // Semak sama ada baris laporan ini sepadan dengan mana-mana kategori pada kad fail ini
                 const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
                 const stTugas = String(st.tugas || '').toLowerCase().trim();
 
@@ -1120,16 +849,11 @@
                            (stTugas && (stTugas === ecLow || stTugas.includes(ecLow) || ecLow.includes(stTugas)));
                 });
 
-                if (!matchesAnyCardCat) {
-                    uncategorizedStatDoneQty += validQty;
-                }
+                if (!matchesAnyCardCat) uncategorizedStatDoneQty += validQty;
             });
 
-            // 3. Kira progres secara individu untuk setiap kategori yang dipilih pada kad
             const categoryProgressList = effectiveCategories.map(catName => {
                 const catLower = catName.toLowerCase().trim();
-
-                // A. Cari Sasaran Kuantiti daripada URL 1 (Rekod Kerja) untuk kategori ini
                 let catTargetQty = 0;
                 let catUnit = '';
 
@@ -1137,58 +861,35 @@
                     const rowCats = splitMultiValues(t.kategori).map(c => c.toLowerCase().trim());
                     const isMatch = (catLower === 'umum' && rowCats.length === 0) ||
                         rowCats.some(rc => rc === catLower || rc.includes(catLower) || catLower.includes(rc));
-
                     if (isMatch) {
                         const q = parseFloat(t.kuantiti);
-                        if (!isNaN(q) && q > 0 && catTargetQty === 0) {
-                            catTargetQty = q;
-                        }
-                        if (!catUnit && t.unit) {
-                            catUnit = t.unit;
-                        }
+                        if (!isNaN(q) && q > 0 && catTargetQty === 0) catTargetQty = q;
+                        if (!catUnit && t.unit) catUnit = t.unit;
                     }
                 });
 
-                // Jika baris kategori berkongsi sasaran fail yang sama
-                if (catTargetQty === 0 && fileLevelTargetQty > 0) {
-                    catTargetQty = fileLevelTargetQty;
-                }
-                if (!catUnit && fileLevelUnit) {
-                    catUnit = fileLevelUnit;
-                }
+                if (catTargetQty === 0 && fileLevelTargetQty > 0) catTargetQty = fileLevelTargetQty;
+                if (!catUnit && fileLevelUnit) catUnit = fileLevelUnit;
 
-                // B. Cari Kuantiti Siap daripada URL 2 (Laporan Statistik Surveyor) untuk kategori ini
                 let catDoneQty = 0;
                 const catExplicitPcts = [];
 
                 statRecsForFile.forEach(st => {
                     const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
                     const stTugas = String(st.tugas || '').toLowerCase().trim();
-
                     const isDirectCatMatch = stCats.some(sc => sc === catLower || sc.includes(catLower) || catLower.includes(sc)) ||
                         (stTugas && (stTugas === catLower || stTugas.includes(catLower) || catLower.includes(stTugas)));
 
                     if (isDirectCatMatch) {
                         const q = parseFloat(st.kuantiti);
-                        if (!isNaN(q) && q > 0) {
-                            catDoneQty += q;
-                        }
-                        if (st.peratus !== null && !isNaN(st.peratus) && st.peratus >= 0) {
-                            catExplicitPcts.push(st.peratus);
-                        }
-                        if (!catUnit && st.unit) {
-                            catUnit = st.unit;
-                        }
+                        if (!isNaN(q) && q > 0) catDoneQty += q;
+                        if (st.peratus !== null && !isNaN(st.peratus) && st.peratus >= 0) catExplicitPcts.push(st.peratus);
+                        if (!catUnit && st.unit) catUnit = st.unit;
                     }
                 });
 
-                // Jika laporan surveyor bagi No File ini tidak menyatakan kategori secara spesifik,
-                // gunakan kuantiti laporan tanpa kategori tersebut supaya progres tetap dikira
-                if (catDoneQty === 0 && uncategorizedStatDoneQty > 0) {
-                    catDoneQty = uncategorizedStatDoneQty;
-                }
+                if (catDoneQty === 0 && uncategorizedStatDoneQty > 0) catDoneQty = uncategorizedStatDoneQty;
 
-                // C. Kira Peratus Progres: (Kuantiti Siap URL 2 / Kuantiti Sasaran URL 1) * 100
                 let catPct = 0;
                 if (catTargetQty > 0 && catDoneQty > 0) {
                     catPct = (catDoneQty / catTargetQty) * 100;
@@ -1198,7 +899,6 @@
                     catPct = totalFileExplicitPcts.reduce((a, b) => a + b, 0) / totalFileExplicitPcts.length;
                 }
 
-                // Hadkan antara 0% hingga 100%
                 catPct = Math.min(100, Math.max(0, catPct));
 
                 return {
@@ -1210,7 +910,6 @@
                 };
             });
 
-            // Purata keseluruhan fail berdasarkan semua kategori di dalamnya
             const overallPct = categoryProgressList.length > 0
                 ? categoryProgressList.reduce((sum, item) => sum + item.percentage, 0) / categoryProgressList.length
                 : 0;
@@ -1232,7 +931,6 @@
             };
         }
 
-        // Render Kad Progres Mengikut Fail pada Dashboard
         function renderDashboardCards() {
             const container = document.getElementById('fileCardsContainer');
             if (!container || !window.__processedData) return;
@@ -1241,7 +939,6 @@
             const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const filterKat = document.getElementById('filterKategoriSelect')?.value || 'ALL';
 
-            // Kumpulkan rekod mengikut No File yang telah dinormalisasi
             const fileGroupsMap = new Map();
 
             combinedRecords.forEach((rec, idx) => {
@@ -1268,18 +965,12 @@
                 if (rec.tarikh && (grp.tarikhMula === '-' || !grp.tarikhMula)) grp.tarikhMula = rec.tarikh;
                 if (rec.jangkaSiap && (grp.jangkaSiap === '-' || !grp.jangkaSiap)) grp.jangkaSiap = rec.jangkaSiap;
 
-                // Masukkan hanya surveyor yang bermula dengan Mangkuk
                 splitMultiValues(rec.surveyor).forEach(s => {
-                    if (String(s).toLowerCase().startsWith('mangkuk')) {
-                        addUniqueCaseInsensitive(grp.surveyors, s);
-                    }
+                    if (String(s).toLowerCase().startsWith('mangkuk')) addUniqueCaseInsensitive(grp.surveyors, s);
                 });
 
-                // Masukkan hanya kategori rasmi yang dibenarkan
                 splitMultiValues(rec.kategori).forEach(k => {
-                    if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) {
-                        addUniqueCaseInsensitive(grp.categories, k);
-                    }
+                    if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) addUniqueCaseInsensitive(grp.categories, k);
                 });
 
                 if (rec.sourceType !== 'stat') {
@@ -1294,10 +985,7 @@
                     }
                     if (rec.kuantiti > 0) {
                         const u = rec.unit || 'Unit';
-                        // Kekalkan nilai jarak/kuantiti yang sama bagi No File yang sama (tidak digandakan jika baris berulang)
-                        if (!grp.quantitiesByUnit[u]) {
-                            grp.quantitiesByUnit[u] = rec.kuantiti;
-                        }
+                        if (!grp.quantitiesByUnit[u]) grp.quantitiesByUnit[u] = rec.kuantiti;
                     }
                 } else if (rec.peratus !== null && !isNaN(rec.peratus)) {
                     grp.explicitPcts.push(rec.peratus);
@@ -1309,17 +997,13 @@
 
                 if (fileCategoriesFromStatMap && fileCategoriesFromStatMap[fNorm]) {
                     fileCategoriesFromStatMap[fNorm].forEach(k => {
-                        if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) {
-                            addUniqueCaseInsensitive(grp.categories, k);
-                        }
+                        if (DEFAULT_KATEGORI.some(dk => dk.toLowerCase() === k.toLowerCase())) addUniqueCaseInsensitive(grp.categories, k);
                     });
                 }
 
                 if (fileSurveyorBackupMap && fileSurveyorBackupMap[fNorm]) {
                     fileSurveyorBackupMap[fNorm].forEach(s => {
-                        if (String(s).toLowerCase().startsWith('mangkuk')) {
-                            addUniqueCaseInsensitive(grp.surveyors, s);
-                        }
+                        if (String(s).toLowerCase().startsWith('mangkuk')) addUniqueCaseInsensitive(grp.surveyors, s);
                     });
                 }
 
@@ -1327,7 +1011,6 @@
                 const surveyorsArr = Array.from(grp.surveyors);
                 const progDetails = resolveProgressDetailsForFile(grp.idFile, categoriesArr, grp.rekodEntries);
 
-                // Pastikan nilai kuantiti sasaran bagi No File yang sama kekal konsisten dan tidak berganda
                 let aggregatedQuantities = { ...grp.quantitiesByUnit };
                 if (Object.keys(aggregatedQuantities).length === 0 && progDetails.targetQty > 0) {
                     aggregatedQuantities[progDetails.unit] = progDetails.targetQty;
@@ -1377,12 +1060,13 @@
 
             if (fileGroups.length === 0) {
                 container.innerHTML = `
-                    <div class="col-span-full py-12 text-center bg-slate-900/50 rounded-2xl border border-slate-800/80 p-6">
-                        <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-3"></i>
-                        <p class="text-slate-300 font-semibold text-sm">Tiada Kad Progres Dijumpai</p>
-                        <p class="text-slate-500 text-xs mt-1">Sila tambah kerja baru atau ubah kata kunci carian anda.</p>
+                    <div class="col-span-full text-center py-12 text-slate-500">
+                        <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-3 text-slate-600"></i>
+                        <p class="text-sm font-medium text-slate-300">Tiada Kad Progres Dijumpai</p>
+                        <p class="text-xs mt-1">Sila tambah kerja baru atau ubah kata kunci carian.</p>
                     </div>
                 `;
+                refreshIcons();
                 return;
             }
 
@@ -1391,21 +1075,21 @@
                 const pct = Math.min(100, Math.max(0, Math.round(rawPct)));
 
                 const badgeStatus = pct >= 100
-                    ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Selesai</span>`
+                    ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">Selesai</span>`
                     : pct > 0
-                        ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Dalam Progres</span>`
-                        : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Baru Direkodkan</span>`;
+                        ? `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-accent/15 text-accent border border-accent/30 shrink-0">Dalam Progres</span>`
+                        : `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30 shrink-0">Baru Direkod</span>`;
 
                 const surveyorDisplay = grp.surveyorsArr.length > 0
-                    ? grp.surveyorsArr.map(s => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/90 text-sky-300 border border-slate-700 text-xs font-semibold"><i class="fa-solid fa-user-check text-[10px] text-sky-400"></i>${escapeHtml(s)}</span>`).join(' ')
+                    ? grp.surveyorsArr.map(s => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-darker/50 border border-borderDark text-slate-200 text-xs font-medium"><i data-lucide="user-check" class="w-3 h-3 text-accent"></i>${escapeHtml(s)}</span>`).join(' ')
                     : `<span class="text-xs text-slate-500 italic">Tiada nama surveyor</span>`;
 
                 const kategoriDisplay = grp.categoriesArr.length > 0
-                    ? grp.categoriesArr.map(k => `<span class="px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/25 text-[11px] font-semibold">${escapeHtml(k)}</span>`).join(' ')
-                    : `<span class="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px]">Umum</span>`;
+                    ? grp.categoriesArr.map(k => `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-accent/10 text-accent border border-accent/20 inline-block">${escapeHtml(k)}</span>`).join(' ')
+                    : `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-darker text-slate-400 border border-borderDark inline-block">Umum</span>`;
 
                 const qtySummary = Object.entries(grp.quantitiesByUnit)
-                    .map(([u, val]) => `<span class="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-bold text-slate-200">${val} <span class="text-amber-400">${escapeHtml(u)}</span></span>`)
+                    .map(([u, val]) => `<span class="px-2.5 py-1 rounded-lg bg-darker border border-borderDark text-xs font-semibold text-white">${val} <span class="text-accent">${escapeHtml(u)}</span></span>`)
                     .join(' ');
 
                 const latestTask = grp.tasks.length > 0 ? grp.tasks[0].tugas : 'Kerja ukur lapangan direkodkan';
@@ -1415,28 +1099,28 @@
                     const cPct = Math.min(100, Math.max(0, Math.round(catProg.percentage || 0)));
                     const cBarWidth = cPct > 0 ? Math.max(cPct, 4) : 0;
                     const cBarColor = cPct >= 80
-                        ? 'from-emerald-500 to-teal-400'
+                        ? 'from-emerald-500 to-emerald-400'
                         : cPct >= 40
-                            ? 'from-indigo-500 to-sky-400'
-                            : 'from-amber-500 to-orange-400';
+                            ? 'from-cyan-500 to-blue-500'
+                            : 'from-blue-600 to-blue-400';
 
                     const cFractionText = catProg.targetQty > 0
-                        ? `<span class="text-[10px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong> / <strong class="text-slate-200">${catProg.targetQty} ${escapeHtml(catProg.unit)}</strong></span>`
-                        : (catProg.doneQty > 0 ? `<span class="text-[10px] text-slate-400 font-medium">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong></span>` : '');
+                        ? `<span class="text-[10px] text-slate-400">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong> / <strong class="text-slate-200">${catProg.targetQty} ${escapeHtml(catProg.unit)}</strong></span>`
+                        : (catProg.doneQty > 0 ? `<span class="text-[10px] text-slate-400">Siap: <strong class="text-emerald-400">${catProg.doneQty}</strong></span>` : '');
 
                     return `
-                        <div class="bg-slate-950/50 rounded-xl p-2.5 border border-slate-800/80 space-y-1.5">
+                        <div class="space-y-1.5 py-1">
                             <div class="flex justify-between items-center gap-2 text-xs">
-                                <span class="font-bold text-slate-200 flex items-center gap-1.5 truncate">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span class="text-slate-300 font-medium flex items-center gap-1.5 truncate">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0"></span>
                                     <span class="truncate">${escapeHtml(catProg.kategori)}</span>
                                 </span>
                                 <div class="flex items-center gap-2 shrink-0">
                                     ${cFractionText}
-                                    <span class="font-display font-extrabold text-xs text-amber-400">${cPct}%</span>
+                                    <span class="font-bold text-white">${cPct}%</span>
                                 </div>
                             </div>
-                            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                            <div class="w-full h-2 bg-darker rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r ${cBarColor} rounded-full transition-all duration-700" style="width: ${cBarWidth}%"></div>
                             </div>
                         </div>
@@ -1444,58 +1128,61 @@
                 }).join('');
 
                 return `
-                    <div class="exec-card rounded-2xl p-5 flex flex-col justify-between space-y-4 ${highlightClass}">
-                        <div class="space-y-3">
+                    <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl flex flex-col justify-between gap-4 hover:border-accent/40 transition ${highlightClass}">
+                        <div class="space-y-4">
                             <div class="flex items-start justify-between gap-2">
-                                <div>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">No. Fail Projek</span>
-                                    <h3 class="font-display text-base sm:text-lg font-extrabold text-white tracking-tight mt-0.5">${escapeHtml(grp.idFile)}</h3>
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+                                        <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-white font-semibold text-base truncate">${escapeHtml(grp.idFile)}</h3>
+                                        <span class="text-xs text-slate-400">No. Fail Projek</span>
+                                    </div>
                                 </div>
                                 ${badgeStatus}
                             </div>
 
-                            <div class="flex flex-wrap gap-1.5">
-                                ${kategoriDisplay}
+                            <div class="flex flex-wrap gap-1.5">${kategoriDisplay}</div>
+
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Surveyor Bertugas</h4>
+                                <div class="flex flex-wrap gap-1.5">${surveyorDisplay}</div>
                             </div>
 
-                            <div class="pt-1">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Surveyor Bertugas:</p>
-                                <div class="flex flex-wrap gap-1.5">
-                                    ${surveyorDisplay}
+                            <div class="p-3 rounded-xl bg-darker/50 border border-borderDark space-y-2">
+                                <div class="flex items-center justify-between text-xs gap-2">
+                                    <span class="text-slate-300 truncate flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5 text-accent shrink-0"></i>${escapeHtml(latestTask)}</span>
+                                    <span class="text-slate-500 shrink-0">${grp.tasks.length} Tugas</span>
                                 </div>
-                            </div>
-
-                            <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 space-y-2">
-                                <div class="flex items-center justify-between text-xs">
-                                    <span class="text-slate-400 font-medium truncate max-w-[70%]"><i class="fa-solid fa-briefcase text-indigo-400 mr-1.5"></i>${escapeHtml(latestTask)}</span>
-                                    <span class="text-slate-500 text-[11px]">${grp.tasks.length} Tugas</span>
-                                </div>
-                                ${qtySummary ? `<div class="flex flex-wrap gap-1.5 pt-1">${qtySummary}</div>` : ''}
+                                ${qtySummary ? `<div class="flex flex-wrap gap-1.5">${qtySummary}</div>` : ''}
                             </div>
                         </div>
 
-                        <div class="space-y-3 pt-2 border-t border-slate-800/80">
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-center text-[11px] uppercase tracking-wider font-bold text-slate-400">
-                                    <span>Progres Mengikut Kategori (${grp.categoryProgressList.length})</span>
-                                    <span class="text-amber-400">Purata: ${pct}%</span>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progres Kategori (${grp.categoryProgressList.length})</h4>
+                                    <span class="text-xs font-semibold text-accent">Purata: ${pct}%</span>
                                 </div>
-                                <div class="space-y-2">
+                                <div class="bg-darker/30 p-3 rounded-xl border border-borderDark">
                                     ${categoryBarsHtml}
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                                <span><i class="fa-regular fa-calendar text-slate-500 mr-1"></i>Mula: <strong class="text-slate-300">${escapeHtml(grp.tarikhMula)}</strong></span>
-                                <span><i class="fa-solid fa-flag-checkered text-amber-500/80 mr-1"></i>Jangka Siap: <strong class="text-slate-300">${escapeHtml(grp.jangkaSiap)}</strong></span>
+                            <div class="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-borderDark">
+                                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-500"></i>Mula: <strong class="text-slate-300">${escapeHtml(grp.tarikhMula)}</strong></span>
+                                <span class="flex items-center gap-1"><i data-lucide="flag" class="w-3.5 h-3.5 text-accent"></i>Siap: <strong class="text-slate-300">${escapeHtml(grp.jangkaSiap)}</strong></span>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            refreshIcons();
         }
 
-        // Render Statistik Kategori & Pastikan Nama Surveyor Dipaparkan Dengan Tepat
+        // Render Statistik Kategori (kekal seperti asal — tiada container dalam HTML semasa)
         function renderCategoryStats() {
             const container = document.getElementById('categoryStatsContainer');
             if (!container || !window.__processedData) return;
@@ -1510,20 +1197,12 @@
                 katList.forEach(katName => {
                     const key = katName.toUpperCase();
                     if (!catMap.has(key)) {
-                        catMap.set(key, {
-                            name: katName,
-                            files: new Set(),
-                            surveyors: new Set(),
-                            totalTasks: 0,
-                            quantities: {},
-                            pctList: []
-                        });
+                        catMap.set(key, { name: katName, files: new Set(), surveyors: new Set(), totalTasks: 0, quantities: {}, pctList: [] });
                     }
                     const item = catMap.get(key);
                     if (rec.idFile) addUniqueCaseInsensitive(item.files, rec.idFile);
                     item.totalTasks += 1;
 
-                    // Masukkan Nama Surveyor yang sah sahaja
                     const survItems = splitMultiValues(rec.surveyor);
                     if (survItems.length > 0) {
                         survItems.forEach(s => addUniqueCaseInsensitive(item.surveyors, s));
@@ -1536,38 +1215,28 @@
                         item.quantities[u] = (item.quantities[u] || 0) + rec.kuantiti;
                     }
 
-                    if (rec.peratus !== null && !isNaN(rec.peratus)) {
-                        item.pctList.push(rec.peratus);
-                    }
+                    if (rec.peratus !== null && !isNaN(rec.peratus)) item.pctList.push(rec.peratus);
                 });
             });
 
             const categoriesArray = Array.from(catMap.values());
 
             if (categoriesArray.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full py-8 text-center text-slate-500 text-sm">
-                        Tiada data kategori untuk dipaparkan.
-                    </div>
-                `;
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Tiada data kategori untuk dipaparkan.</div>`;
                 return;
             }
 
             container.innerHTML = categoriesArray.map(cat => {
                 const kLower = cat.name.toLowerCase();
 
-                // Gabungkan surveyor daripada backup URL 2 jika ada
                 if (categorySurveyorBackupMap && categorySurveyorBackupMap[kLower]) {
                     categorySurveyorBackupMap[kLower].forEach(s => {
                         if (!isLikelyDateOrNumberOrUnit(s)) cat.surveyors.add(s);
                     });
                 }
 
-                // Kira purata peratus bagi kategori ini
                 let pctValues = [...cat.pctList];
-                if (categoryPercentMap && categoryPercentMap[kLower]) {
-                    pctValues.push(...categoryPercentMap[kLower]);
-                }
+                if (categoryPercentMap && categoryPercentMap[kLower]) pctValues.push(...categoryPercentMap[kLower]);
                 const avgPct = pctValues.length > 0
                     ? Math.round(pctValues.reduce((a, b) => a + b, 0) / pctValues.length)
                     : 0;
@@ -1575,89 +1244,66 @@
                 const surveyorList = Array.from(cat.surveyors);
                 const surveyorBadgesHtml = surveyorList.length > 0
                     ? surveyorList.map(survName => `
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-500/15 text-indigo-200 border border-indigo-500/30 text-xs font-semibold">
-                            <i class="fa-solid fa-user-tie text-amber-400 text-[11px]"></i>
-                            ${escapeHtml(survName)}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-darker/50 border border-borderDark text-slate-200 text-xs font-medium">
+                            <i data-lucide="user-check" class="w-3 h-3 text-accent"></i>${escapeHtml(survName)}
                         </span>
                     `).join('')
                     : `<span class="text-xs text-slate-500 italic">Belum ditetapkan</span>`;
 
                 const qtyBadgesHtml = Object.entries(cat.quantities).map(([unit, total]) => `
-                    <div class="px-3 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800 text-xs">
-                        <span class="font-bold text-white">${total}</span>
-                        <span class="text-amber-400 font-semibold ml-1">${escapeHtml(unit)}</span>
-                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-darker border border-borderDark text-xs font-semibold text-white">${total} <span class="text-accent">${escapeHtml(unit)}</span></span>
                 `).join('');
 
                 return `
-                    <div class="exec-card rounded-2xl p-5 border-l-4 border-l-indigo-500 flex flex-col justify-between space-y-4">
+                    <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl flex flex-col justify-between gap-4 hover:border-accent/40 transition">
                         <div class="space-y-3">
-                            <div class="flex items-start justify-between gap-2">
-                                <div>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Kategori Kerja</span>
-                                    <h3 class="font-display text-base font-extrabold text-white mt-0.5">${escapeHtml(cat.name)}</h3>
-                                </div>
-                                <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
-                                    ${cat.files.size} Fail
-                                </span>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-white font-semibold text-base">${escapeHtml(cat.name)}</h3>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-accent/15 text-accent border border-accent/30">${cat.files.size} Fail</span>
                             </div>
-
-                            <!-- Senarai Nama Surveyor dalam Statistik Kategori -->
-                            <div class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800/90 space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                        <i class="fa-solid fa-id-badge"></i> Nama Surveyor Terlibat
-                                    </span>
-                                    <span class="text-[11px] font-semibold text-slate-400">${surveyorList.length} Orang</span>
+                            <div class="p-3 rounded-xl bg-darker/50 border border-borderDark space-y-2">
+                                <div class="flex justify-between text-xs">
+                                    <span class="font-semibold text-slate-400 uppercase tracking-wider">Surveyor Terlibat</span>
+                                    <span class="text-slate-400">${surveyorList.length} Orang</span>
                                 </div>
-                                <div class="flex flex-wrap gap-1.5 pt-1">
-                                    ${surveyorBadgesHtml}
-                                </div>
+                                <div class="flex flex-wrap gap-1.5">${surveyorBadgesHtml}</div>
                             </div>
-
-                            <!-- Jumlah Kuantiti Mengikut Unit -->
-                            ${qtyBadgesHtml ? `
-                                <div>
-                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Jumlah Kuantiti Kerja:</p>
-                                    <div class="flex flex-wrap gap-2">${qtyBadgesHtml}</div>
-                                </div>
-                            ` : ''}
+                            ${qtyBadgesHtml ? `<div class="flex flex-wrap gap-1.5">${qtyBadgesHtml}</div>` : ''}
                         </div>
-
-                        <!-- Progress Kategori -->
-                        <div class="pt-3 border-t border-slate-800/80 space-y-1.5">
+                        <div class="pt-3 border-t border-borderDark space-y-1.5">
                             <div class="flex justify-between text-xs">
-                                <span class="text-slate-400 font-medium">Purata Progres Kategori</span>
+                                <span class="text-slate-400">Purata Progres Kategori</span>
                                 <span class="font-bold text-emerald-400">${avgPct}%</span>
                             </div>
-                            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-500" style="width: ${avgPct}%"></div>
+                            <div class="w-full h-2 bg-darker rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-500" style="width: ${avgPct}%"></div>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            refreshIcons();
         }
 
-        // Render Jadual Raw pada Tab Data Sheet
         function renderRawTables() {
             const renderTable = (rows, containerId) => {
                 const container = document.getElementById(containerId);
                 if (!container) return;
                 if (!rows || rows.length === 0) {
-                    container.innerHTML = `<p class="text-slate-500 text-xs py-6 text-center">Tiada data dijumpai dalam pautan CSV ini.</p>`;
+                    container.innerHTML = `<p class="text-slate-500 text-sm py-8 text-center">Tiada data dijumpai dalam pautan CSV ini.</p>`;
                     return;
                 }
                 const headers = rows[0].__headers || Object.keys(rows[0]).filter(k => !k.startsWith('__'));
-                let html = `<table class="w-full text-left border-collapse"><thead><tr class="border-b border-slate-800 bg-slate-900/90">`;
+                let html = `<table class="w-full text-left border-collapse text-xs"><thead><tr class="bg-darker/60 border-b border-borderDark uppercase tracking-wider text-slate-400 font-semibold">`;
                 headers.forEach(h => {
-                    html += `<th class="p-3 text-[11px] font-bold text-amber-400 uppercase tracking-wider">${escapeHtml(h)}</th>`;
+                    html += `<th class="px-3 py-3 whitespace-nowrap">${escapeHtml(h)}</th>`;
                 });
-                html += `</tr></thead><tbody class="divide-y divide-slate-800/60">`;
+                html += `</tr></thead><tbody class="divide-y divide-borderDark text-slate-200">`;
                 rows.forEach(r => {
-                    html += `<tr class="hover:bg-slate-800/40 transition">`;
+                    html += `<tr class="hover:bg-cardDark/50 transition">`;
                     headers.forEach(h => {
-                        html += `<td class="p-3 text-xs text-slate-300">${escapeHtml(r[h] || '-')}</td>`;
+                        html += `<td class="px-3 py-3 text-slate-300">${escapeHtml(r[h] || '-')}</td>`;
                     });
                     html += `</tr>`;
                 });
@@ -1669,22 +1315,21 @@
             renderTable(rawRekodRows, 'recordsTableContainer');
         }
 
-        // Hantar Borang Tambah Kerja ke Google Apps Script & Jana Kad Progres Serta-merta
         async function submitForm(e) {
             e.preventDefault();
 
             if (selectedKategoriList.length === 0) {
-                showModal('Pilih Kategori', 'Sila pilih sekurang-kurangnya satu Kategori Kerja daripada dropdown.', 'error');
+                showModal('Pilih Kategori', 'Sila pilih sekurang-kurangnya satu Kategori Kerja.', 'error');
                 return;
             }
             if (selectedSurveyorList.length === 0) {
-                showModal('Pilih Surveyor', 'Sila pilih sekurang-kurangnya seorang Surveyor daripada dropdown.', 'error');
+                showModal('Pilih Surveyor', 'Sila pilih sekurang-kurangnya seorang Surveyor.', 'error');
                 return;
             }
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Menghantar & Menjana Kad...</span>`;
+            submitBtn.innerHTML = `<span class="w-4 h-4 border-2 border-darker border-t-transparent rounded-full animate-spin"></span> <span>Menghantar...</span>`;
 
             const payload = {
                 idFile: document.getElementById('idFile').value.trim(),
@@ -1698,7 +1343,6 @@
             };
 
             try {
-                // Hantar ke Google Apps Script Web App
                 await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -1706,15 +1350,9 @@
                     body: JSON.stringify(payload)
                 });
 
-                // Masukkan terus ke dalam state tempatan supaya Kad Progres & Statistik Kategori terus terpapar serta-merta
                 lastAddedFileId = payload.idFile;
-                localAddedRecords.unshift({
-                    ...payload,
-                    peratus: null,
-                    isNewlyAdded: true
-                });
+                localAddedRecords.unshift({ ...payload, peratus: null, isNewlyAdded: true });
 
-                // Reset Borang
                 document.getElementById('fieldWorkForm').reset();
                 document.getElementById('tarikh').value = new Date().toISOString().split('T')[0];
                 selectedKategoriList = [];
@@ -1724,48 +1362,53 @@
                 document.getElementById('surveyorSelectedText').innerText = 'Pilih Surveyor...';
                 document.getElementById('surveyorSelectedText').className = 'text-slate-400 truncate';
 
-                // Kemas kini paparan kad serta-merta dan tukar ke Dashboard
                 syncDynamicOptionsAndRender();
                 switchTab('dashboard');
 
-                showModal(
-                    'Kerja Berjaya Ditambah!',
-                    `Kad progres untuk fail "${payload.idFile}" telah dijana pada Dashboard dan data telah dihantar ke Google Sheets.`,
-                    'success'
-                );
+                showModal('Kerja Berjaya Ditambah', `Kad progres untuk fail "${payload.idFile}" telah dijana dan data dihantar ke Google Sheets.`, 'success');
 
-                // Muat semula CSV di belakang tabir selepas 2.5 saat
-                setTimeout(() => {
-                    refreshAllData();
-                }, 2500);
-
+                setTimeout(() => { refreshAllData(); }, 2500);
             } catch (error) {
                 console.error("Ralat menghantar borang:", error);
                 showModal('Ralat Hantaran', 'Gagal menghubungi pelayan Google Apps Script. Sila cuba lagi.', 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Simpan & Jana Kad Progres</span>`;
+                submitBtn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> <span>Simpan & Jana Kad Progres</span>`;
+                refreshIcons();
             }
         }
 
-        function showModal(title, message, type) {
-            const modal = document.getElementById('notificationModal');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = message;
-            const icon = document.getElementById('modalIcon');
+        // Notifikasi gaya toast (sama seperti Dashboard Laporan Harian)
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toastMsg");
+            const toastIcon = document.getElementById("toastIcon");
+            if (!toast || !toastMsg || !toastIcon) return;
 
-            if (type === 'success') {
-                icon.className = "w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
-                icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            toastMsg.innerText = msg;
+            toast.className = "fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-xl border text-sm flex items-center gap-3 transition-all transform translate-y-0 opacity-100 max-w-sm";
+
+            if (type === "success") {
+                toast.classList.add("bg-emerald-950/90", "border-emerald-500/30", "text-emerald-200");
+                toastIcon.setAttribute("data-lucide", "check-circle");
+            } else if (type === "error") {
+                toast.classList.add("bg-red-950/90", "border-red-500/30", "text-red-200");
+                toastIcon.setAttribute("data-lucide", "alert-circle");
             } else {
-                icon.className = "w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40";
-                icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+                toast.classList.add("bg-slate-900/90", "border-borderDark", "text-slate-200");
+                toastIcon.setAttribute("data-lucide", "info");
             }
-            modal.classList.remove('hidden');
+            refreshIcons();
+
+            setTimeout(() => {
+                toast.classList.add("translate-y-2", "opacity-0");
+                setTimeout(() => toast.classList.add("hidden"), 300);
+            }, 3500);
         }
 
-        function closeModal() {
-            document.getElementById('notificationModal').classList.add('hidden');
+        // Kekalkan nama fungsi asal supaya panggilan sedia ada tak berubah
+        function showModal(title, message, type) {
+            showToast(`${title} — ${message}`, type === 'success' ? 'success' : 'error');
         }
 
         function escapeHtml(str) {
