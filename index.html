@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portal utama sistem statistik dan operasi jurukur tanah.">
+    <title>GEO-STAT | Portal Utama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        exec: {
+                            bg: '#070b14',
+                            card: '#131c31',
+                            border: '#1e293b',
+                            gold: '#f59e0b',
+                            accent: '#6366f1',
+                            cyan: '#00e5ff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #070b14;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.14) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(0, 229, 255, 0.08) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #f1f5f9;
+        }
+        .grid-lines {
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(ellipse at top, black 30%, transparent 75%);
+            -webkit-mask-image: radial-gradient(ellipse at top, black 30%, transparent 75%);
+        }
+        .app-card { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+        .app-card:hover { transform: translateY(-4px); }
+        .app-card:focus-visible { outline: 2px solid #00e5ff; outline-offset: 4px; }
+        @media (prefers-reduced-motion: reduce) {
+            .app-card, .app-card:hover { transition: none; transform: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-exec-cyan selection:text-exec-bg">
+
+    <div class="grid-lines fixed inset-0 pointer-events-none" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header class="relative border-b border-exec-border/70 bg-exec-card/60 backdrop-blur">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-compass text-exec-bg"></i>
+                </div>
+                <div class="leading-tight">
+                    <p class="font-display font-extrabold text-white tracking-tight">GEO-STAT</p>
+                    <p class="text-[11px] text-slate-400">Statistik &amp; Operasi Jurukur Tanah</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400">
+                <i class="fa-regular fa-calendar"></i>
+                <span id="today">--/--/----</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative flex-1">
+        <!-- Hero -->
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-10 text-center">
+            <span class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full bg-exec-accent/10 text-indigo-300 border border-exec-accent/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Portal Utama
+            </span>
+            <h1 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mt-5">
+                Satu pintu untuk semua<br class="hidden sm:block">
+                <span class="bg-gradient-to-r from-cyan-300 via-indigo-300 to-amber-300 bg-clip-text text-transparent">dashboard ukur tanah</span>
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mt-5">
+                Pilih sistem yang nak dibuka. Progres kerja lapangan ikut fail, atau laporan harian dan prestasi setiap jurukur.
+            </p>
+        </section>
+
+        <!-- App cards -->
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+            <div class="grid gap-6 md:grid-cols-2">
+
+                <!-- Operation -->
+                <a href="./operation/" class="app-card group relative block rounded-3xl border border-exec-border bg-exec-card/80 backdrop-blur p-6 sm:p-8 hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-500/10">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line text-2xl text-amber-400"></i>
+                        </div>
+                        <span class="text-[11px] uppercase tracking-wider font-semibold text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">Operation</span>
+                    </div>
+                    <h2 class="font-display text-xl sm:text-2xl font-extrabold text-white mt-6">Dashboard Eksekutif Progres Kerja Ukur</h2>
+                    <p class="text-slate-400 text-sm mt-2">
+                        Kad progres dijana automatik daripada rekod kerja lapangan, dengan peratusan siap diselaraskan terus dari pangkalan data statistik.
+                    </p>
+                    <ul class="mt-6 space-y-2.5 text-sm text-slate-300">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-layer-group w-4 text-amber-400/80"></i>Kad progres mengikut fail</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-file-circle-plus w-4 text-amber-400/80"></i>Borang tambah kerja lapangan</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-table w-4 text-amber-400/80"></i>Jadual statistik, peratusan &amp; rekod kerja</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-sm font-semibold text-amber-300">
+                        Buka dashboard
+                        <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <!-- Teamsite -->
+                <a href="./teamsite/" class="app-card group relative block rounded-3xl border border-exec-border bg-exec-card/80 backdrop-blur p-6 sm:p-8 hover:border-cyan-400/50 hover:shadow-2xl hover:shadow-cyan-500/10">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center">
+                            <i class="fa-solid fa-users-viewfinder text-2xl text-cyan-300"></i>
+                        </div>
+                        <span class="text-[11px] uppercase tracking-wider font-semibold text-cyan-300/90 bg-cyan-500/10 border border-cyan-400/20 px-2.5 py-1 rounded-full">Teamsite</span>
+                    </div>
+                    <h2 class="font-display text-xl sm:text-2xl font-extrabold text-white mt-6">Dashboard Statistik Jurukur Tanah</h2>
+                    <p class="text-slate-400 text-sm mt-2">
+                        Rekod laporan operasi harian setiap jurukur, siap dengan carta dan analisis prestasi pasukan.
+                    </p>
+                    <ul class="mt-6 space-y-2.5 text-sm text-slate-300">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-gauge-high w-4 text-cyan-300/80"></i>Dashboard &amp; rekod operasi harian</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-clipboard-list w-4 text-cyan-300/80"></i>Borang laporan harian jurukur</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-user-check w-4 text-cyan-300/80"></i>Analisis prestasi mengikut surveyor</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                        Buka dashboard
+                        <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- Info strip -->
+            <div class="mt-10 grid gap-4 sm:grid-cols-3 text-sm">
+                <div class="rounded-2xl border border-exec-border bg-exec-card/50 p-4 flex items-center gap-3">
+                    <i class="fa-brands fa-google-drive text-emerald-400 text-lg"></i>
+                    <span class="text-slate-300">Data dari Google Sheets</span>
+                </div>
+                <div class="rounded-2xl border border-exec-border bg-exec-card/50 p-4 flex items-center gap-3">
+                    <i class="fa-solid fa-code text-indigo-300 text-lg"></i>
+                    <span class="text-slate-300">Backend Google Apps Script</span>
+                </div>
+                <div class="rounded-2xl border border-exec-border bg-exec-card/50 p-4 flex items-center gap-3">
+                    <i class="fa-solid fa-mobile-screen text-amber-300 text-lg"></i>
+                    <span class="text-slate-300">Boleh guna di telefon &amp; desktop</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="relative border-t border-exec-border/70">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+            <p>&copy; <span id="year"></span> GEO-STAT. Sistem Statistik &amp; Operasi Jurukur Tanah.</p>
+            <p>Dibina oleh Syahmi</p>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('today').textContent =
+                pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+            document.getElementById('year').textContent = d.getFullYear();
+        })();
+    </script>
+</body>
+</html>
