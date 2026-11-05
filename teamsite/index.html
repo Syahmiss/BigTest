@@ -1,21 +1,26 @@
 <!DOCTYPE html>
-<html lang="ms" class="dark">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Statistik Jurukur Tanah | Dark Executive</title>
+    <title>Dashboard Laporan Harian | GEO-STAT</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Urbanist', 'Inter', 'sans-serif']
+                    },
                     colors: {
-                        darker: '#090d16',
-                        cardDark: '#131c2e',
-                        borderDark: '#1e293b',
-                        accent: '#00e5ff'
+                        brand: 'rgb(var(--brand-rgb) / <alpha-value>)',
+                        brand2: 'rgb(var(--brand2-rgb) / <alpha-value>)',
+                        gold: 'rgb(var(--gold-rgb) / <alpha-value>)',
+                        ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
+                        canvas: 'rgb(var(--canvas-rgb) / <alpha-value>)',
+                        line: 'rgb(var(--line-rgb) / <alpha-value>)'
                     }
                 }
             }
@@ -27,43 +32,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Urbanist:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #090d16; color: #f8fafc; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #090d16; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        /* ===== Token warna: tukar di sini sahaja (nilai RGB) ===== */
+        :root {
+            --brand-rgb: 34 34 211;     /* biru royal  #2222D3 */
+            --brand2-rgb: 79 82 232;    /* biru terang #4F52E8 */
+            --gold-rgb: 255 229 0;      /* kuning      #FFE500 */
+            --ink-rgb: 17 24 39;        /* teks utama  #111827 */
+            --canvas-rgb: 245 246 250;  /* latar halaman */
+            --line-rgb: 229 231 235;    /* garisan / border */
+        }
+        body { font-family: 'Inter', sans-serif; background-color: rgb(var(--canvas-rgb)); color: rgb(var(--ink-rgb)); }
+        h1, h2, h3, .font-display { font-family: 'Urbanist', 'Inter', sans-serif; letter-spacing: -0.01em; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgb(var(--canvas-rgb)); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+        input[type="date"], input[type="time"] { color-scheme: light; }
+
+        /* Hero biru dengan corak grid ukur */
+        .hero {
+            background:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 48px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 48px),
+                linear-gradient(115deg, rgb(var(--brand2-rgb)) 0%, rgb(var(--brand-rgb)) 70%);
+        }
+        .hero::after {
+            content: ""; position: absolute; right: -80px; top: -80px; width: 360px; height: 360px;
+            border-radius: 9999px; border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 0 0 40px rgba(255,255,255,0.03), 0 0 0 80px rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+        /* Kad KPI kuning / biru silih ganti */
+        .kpi-gold { background: rgb(var(--gold-rgb)); color: rgb(var(--ink-rgb)); }
+        .kpi-blue { background: linear-gradient(135deg, rgb(var(--brand2-rgb)), rgb(var(--brand-rgb))); color: #fff; }
+        .kpi { transition: transform .2s ease, box-shadow .2s ease; }
+        .kpi:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(17, 24, 39, .35); }
+
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-darker text-slate-100 selection:bg-accent selection:text-darker">
+<body class="min-h-screen flex flex-col bg-canvas text-ink selection:bg-brand selection:text-white">
 
     <!-- Header Navigation Bar -->
-    <header class="border-b border-borderDark bg-cardDark/80 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                    <i data-lucide="compass" class="w-6 h-6 text-darker font-bold"></i>
+    <header class="bg-white border-b border-line sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="w-12 h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
+                    <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                        GEO-STAT <span class="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 font-normal">Dark Executive</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Sistem Statistik & Operasi Jurukur Tanah Profesional</p>
+                <div class="leading-tight">
+                    <div class="font-display text-xl font-extrabold tracking-tight text-ink">GEO-STAT</div>
+                    <div class="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Statistik &amp; Operasi Jurukur Tanah</div>
                 </div>
             </div>
-
-            <nav class="flex items-center gap-2 sm:gap-3">
-                <button id="navDashboard" onclick="switchTab('dashboard')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 bg-accent/20 text-accent border border-accent/40 shadow-sm">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+            <nav class="flex items-center gap-1 sm:gap-3">
+                <button id="navDashboard" onclick="switchTab('dashboard')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="hidden sm:inline">Dashboard</span>
                 </button>
-                <button id="navForm" onclick="switchTab('form')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 text-slate-400 border border-transparent hover:bg-cardDark">
-                    <i data-lucide="file-plus" class="w-4 h-4"></i> Borang Laporan
+                <button id="navForm" onclick="switchTab('form')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
+                    <i data-lucide="file-plus" class="w-4 h-4"></i><span class="hidden sm:inline">Borang Laporan</span>
                 </button>
-                <button id="navSurveyor" onclick="switchTab('surveyor')" class="nav-btn px-4 py-2.5 rounded-xl font-medium text-sm transition flex items-center gap-2 text-slate-400 border border-transparent hover:bg-cardDark">
-                    <i data-lucide="users" class="w-4 h-4"></i> Statistik Surveyor
+                <button id="navSurveyor" onclick="switchTab('surveyor')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
+                    <i data-lucide="users" class="w-4 h-4"></i><span class="hidden sm:inline">Statistik Surveyor</span>
                 </button>
             </nav>
         </div>
@@ -74,60 +108,71 @@
 
         <!-- TAB 1: DASHBOARD UTAMA -->
         <div id="viewDashboard" class="tab-content space-y-8">
-            
+
+            <section class="hero relative overflow-hidden rounded-lg text-white">
+                <div class="relative z-10 p-6 sm:p-10 lg:p-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div class="max-w-2xl">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gold mb-3">Laporan Operasi Harian</p>
+                        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">Statistik &amp; Operasi<br>Jurukur Tanah</h1>
+                        <p class="mt-4 text-sm sm:text-base text-white/85 leading-relaxed">Pantau laporan harian, output kerja dan isu lapangan setiap surveyor terus daripada Google Sheets.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="switchTab('form')" class="px-5 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2"><i data-lucide="file-plus" class="w-4 h-4"></i> Hantar Laporan</button>
+                        <button onclick="exportCSV()" class="px-5 py-3 rounded-md bg-white/10 border border-white/30 text-white font-semibold text-sm hover:bg-white/20 transition flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Eksport CSV</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jumlah Laporan</span>
-                        <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+                <div class="kpi kpi-gold rounded-lg p-6 flex gap-4">
+                    <i data-lucide="file-text" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Jumlah Laporan</p>
+                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalLaporan">0</div>
+                        <p class="text-sm mt-1 opacity-80">Rekod dalam pangkalan data</p>
                     </div>
-                    <div class="text-3xl font-bold text-white tracking-tight" id="totalLaporan">0</div>
-                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-emerald-400 font-medium">Aktif</span> dalam pangkalan data</p>
                 </div>
-
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jumlah Projek (File)</span>
-                        <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i data-lucide="folder-kanban" class="w-5 h-5"></i></div>
+                <div class="kpi kpi-blue rounded-lg p-6 flex gap-4">
+                    <i data-lucide="folder-kanban" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Projek (File)</p>
+                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalProjek">0</div>
+                        <p class="text-sm mt-1 opacity-80">Fail ukur unik</p>
                     </div>
-                    <div class="text-3xl font-bold text-white tracking-tight" id="totalProjek">0</div>
-                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-cyan-400 font-medium">Unik</span> fail ukur</p>
                 </div>
-
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jumlah Kuantiti Siap</span>
-                        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                <div class="kpi kpi-gold rounded-lg p-6 flex gap-4">
+                    <i data-lucide="check-circle-2" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Kuantiti Siap</p>
+                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalKuantiti">0</div>
+                        <p class="text-sm mt-1 opacity-80">Output kerja mengikut unit</p>
                     </div>
-                    <div class="text-3xl font-bold text-white tracking-tight" id="totalKuantiti">0</div>
-                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-emerald-400 font-medium">Akruan</span> output kerja</p>
                 </div>
-
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/40 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Jumlah Isu Dilapor</span>
-                        <div class="p-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+                <div class="kpi kpi-blue rounded-lg p-6 flex gap-4">
+                    <i data-lucide="alert-triangle" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Isu Dilapor</p>
+                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalIsu">0</div>
+                        <p class="text-sm mt-1 opacity-80">Perlu perhatian lapangan</p>
                     </div>
-                    <div class="text-3xl font-bold text-white tracking-tight" id="totalIsu">0</div>
-                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><span class="text-red-400 font-medium">Perhatian</span> lapangan</p>
                 </div>
             </div>
 
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                        <i data-lucide="pie-chart" class="w-4 h-4 text-accent"></i> Taburan Kategori Kerja
+                <div class="bg-white border border-line rounded-lg p-6 shadow-sm">
+                    <h3 class="text-base font-semibold text-ink mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-brand"></i> Taburan Kategori Kerja
                     </h3>
                     <div class="relative h-72">
                         <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
 
-                <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-accent"></i> Status Isu Lapangan
+                <div class="bg-white border border-line rounded-lg p-6 shadow-sm">
+                    <h3 class="text-base font-semibold text-ink mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand"></i> Status Isu Lapangan
                     </h3>
                     <div class="relative h-72">
                         <canvas id="statusChart"></canvas>
@@ -136,28 +181,29 @@
             </div>
 
             <!-- Data Table Section -->
-            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-6 border-b border-borderDark flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-line flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                        <h3 class="text-lg font-bold text-white">Rekod Laporan Operasi Harian</h3>
-                        <p class="text-xs text-slate-400">Senarai penuh data daripada pangkalan Google Sheets &amp; input tempatan</p>
+                        <h3 class="text-lg font-bold text-ink">Rekod Laporan Operasi Harian</h3>
+                        <p class="text-xs text-slate-500">Senarai penuh data daripada pangkalan Google Sheets &amp; input tempatan</p>
                     </div>
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-64">
-                            <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-slate-500"></i>
-                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari No File / Surveyor..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
+                            <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-slate-400"></i>
+                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari No File / Surveyor..." class="w-full pl-10 pr-4 py-2 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
                         </div>
-                        <select id="filterCategory" onchange="filterTable()" class="px-4 py-2 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
+                        <select id="filterCategory" onchange="filterTable()" class="px-4 py-2 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
                             <option value="">Semua Kategori</option>
                             <option value="Cadastral">Cadastral</option>
                             <option value="Engineering">Engineering</option>
+                            <option value="Calibration">Calibration</option>
                             <option value="Topography">Topography</option>
                             <option value="Strata">Strata</option>
                             <option value="Utility Mapping">Utility Mapping</option>
                             <option value="TLS">TLS</option>
                             <option value="Lidar">Lidar</option>
                         </select>
-                        <button onclick="exportCSV()" class="px-4 py-2 rounded-xl bg-accent/20 text-accent border border-accent/30 font-medium text-sm hover:bg-accent/30 transition flex items-center gap-2">
+                        <button onclick="exportCSV()" class="px-4 py-2 rounded-md bg-brand/20 text-brand border border-brand/30 font-medium text-sm hover:bg-brand/30 transition flex items-center gap-2">
                             <i data-lucide="download" class="w-4 h-4"></i> Eksport
                         </button>
                     </div>
@@ -166,7 +212,7 @@
                 <div class="w-full overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[1200px] text-xs">
                         <thead>
-                            <tr class="bg-darker/60 border-b border-borderDark uppercase tracking-wider text-slate-400 font-semibold">
+                            <tr class="bg-canvas/60 border-b border-line uppercase tracking-wider text-slate-500 font-semibold">
                                 <th class="px-3 py-3">No File</th>
                                 <th class="px-3 py-3">Tarikh</th>
                                 <th class="px-3 py-3">Masa Mula</th>
@@ -182,9 +228,7 @@
                                 <th class="px-3 py-3">Perancangan</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="divide-y divide-borderDark text-slate-200">
-                            <!-- Data populated via script -->
-                        </tbody>
+                        <tbody id="tableBody" class="divide-y divide-line text-slate-700"></tbody>
                     </table>
                 </div>
             </div>
@@ -192,48 +236,49 @@
 
         <!-- TAB 2: BORANG LAPORAN HARIAN -->
         <div id="viewForm" class="tab-content hidden max-w-3xl mx-auto">
-            <div class="bg-cardDark border border-borderDark rounded-2xl shadow-xl p-8">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-borderDark">
-                    <div class="p-3 rounded-xl bg-accent/10 text-accent border border-accent/30">
+            <div class="bg-white border border-line rounded-lg shadow-sm p-8">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-line">
+                    <div class="p-3 rounded-md bg-gold text-ink">
                         <i data-lucide="file-plus-2" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-white">Borang Laporan Harian Jurukur</h2>
-                        <p class="text-xs text-slate-400">Sila lengkapkan maklumat operasi lapangan dengan teliti</p>
+                        <h2 class="text-xl font-bold text-ink">Borang Laporan Harian Jurukur</h2>
+                        <p class="text-xs text-slate-500">Sila lengkapkan maklumat operasi lapangan dengan teliti</p>
                     </div>
                 </div>
 
                 <form id="dailyReportForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">No File</label>
-                            <div class="flex rounded-xl bg-darker border border-borderDark overflow-hidden focus-within:border-accent">
-                                <span class="px-4 py-3 bg-cardDark border-r border-borderDark text-slate-400 font-semibold text-sm flex items-center">MGK</span>
-                                <input type="text" id="f_nofile" placeholder="001/26 Mangkuk" class="flex-1 px-4 py-3 bg-transparent text-white focus:outline-none text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">No File</label>
+                            <div class="flex rounded-md bg-canvas border border-line overflow-hidden focus-within:border-brand">
+                                <span class="px-4 py-3 bg-white border-r border-line text-slate-500 font-semibold text-sm flex items-center">MGK</span>
+                                <input type="text" id="f_nofile" placeholder="001/26 Mangkuk" class="flex-1 px-4 py-3 bg-transparent text-ink focus:outline-none text-sm" required>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tarikh</label>
-                            <input type="date" id="f_tarikh" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tarikh</label>
+                            <input type="date" id="f_tarikh" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Masa Mula</label>
-                            <input type="time" id="f_mula" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Masa Mula</label>
+                            <input type="time" id="f_mula" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Masa Tamat</label>
-                            <input type="time" id="f_tamat" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Masa Tamat</label>
+                            <input type="time" id="f_tamat" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Kategori</label>
-                            <select id="f_kategori" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Kategori</label>
+                            <select id="f_kategori" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                                 <option value="">Pilih Kategori...</option>
                                 <option value="Cadastral">Cadastral</option>
                                 <option value="Engineering">Engineering</option>
+                                <option value="Calibration">Calibration</option>
                                 <option value="Topography">Topography</option>
                                 <option value="Strata">Strata</option>
                                 <option value="Utility Mapping">Utility Mapping</option>
@@ -243,35 +288,30 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Surveyor</label>
-                            <input type="text" id="f_surveyor" placeholder="Nama Pegawai Ukur" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Surveyor</label>
+                            <input type="text" id="f_surveyor" placeholder="Nama Pegawai Ukur" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
                     </div>
 
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Tugas (Skop Kerja)</label>
-                            <button type="button" onclick="addTugasRow()" class="text-xs text-accent hover:underline flex items-center gap-1 font-medium">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Tugas (Skop Kerja)</label>
+                            <button type="button" onclick="addTugasRow()" class="text-xs text-brand hover:underline flex items-center gap-1 font-medium">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tugas
                             </button>
                         </div>
-                        <div id="tugasContainer" class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <input type="text" placeholder="Masukkan skop tugas..." class="flex-1 px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
-                                <button type="button" onclick="removeTugasRow(this)" class="p-3 rounded-xl bg-red-950/40 text-red-400 border border-red-500/30 hover:bg-red-900/50 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                        </div>
+                        <div id="tugasContainer" class="space-y-2"></div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Kuantiti</label>
-                            <input type="number" step="any" id="f_kuantiti" placeholder="0.00" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required style="-moz-appearance: textfield;">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Kuantiti</label>
+                            <input type="number" step="any" min="0" id="f_kuantiti" placeholder="0.00" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required style="-moz-appearance: textfield;">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Unit</label>
-                            <select id="f_unit" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Unit</label>
+                            <select id="f_unit" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                                 <option value="">Pilih Unit...</option>
                                 <option value="Lot">Lot</option>
                                 <option value="Meter">Meter</option>
@@ -283,30 +323,30 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Status Isu (Pilihan)</label>
-                        <input type="text" id="f_status" placeholder="Cth: Cuaca hujan lebat / Tiada isu" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Status Isu (Pilihan)</label>
+                        <input type="text" id="f_status" placeholder="Cth: Cuaca hujan lebat / Tiada isu" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Jangka Siap Asal</label>
-                            <input type="date" id="f_asal" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Jangka Siap Asal</label>
+                            <input type="date" id="f_asal" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Jangka Siap Semasa</label>
-                            <input type="date" id="f_semasa" class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Jangka Siap Semasa</label>
+                            <input type="date" id="f_semasa" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Perancangan Seterusnya</label>
-                        <textarea id="f_perancangan" rows="3" placeholder="Nyatakan perancangan kerja..." class="w-full px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required></textarea>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Perancangan Seterusnya</label>
+                        <textarea id="f_perancangan" rows="3" placeholder="Nyatakan perancangan kerja..." class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required></textarea>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-4 border-t border-borderDark">
-                        <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-xl bg-darker border border-borderDark text-slate-300 font-medium text-sm hover:bg-cardDark transition">Batal</button>
-                        <button type="submit" class="px-6 py-3 rounded-xl bg-accent text-darker font-semibold text-sm hover:bg-accent/90 transition shadow-lg shadow-accent/20">Hantar Laporan</button>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-line">
+                        <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm hover:bg-canvas transition">Batal</button>
+                        <button type="submit" id="submitBtn" class="px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed">Hantar Laporan</button>
                     </div>
                 </form>
             </div>
@@ -314,65 +354,229 @@
 
         <!-- TAB 3: STATISTIK SURVEYOR -->
         <div id="viewSurveyor" class="tab-content hidden space-y-6">
-            <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-bold text-white">Analisis Prestasi Mengikut Surveyor</h3>
-                    <p class="text-xs text-slate-400">Prestasi produktiviti pegawai ukur berasaskan tempoh masa</p>
+                    <h3 class="text-lg font-bold text-ink">Analisis Prestasi Mengikut Surveyor</h3>
+                    <p class="text-xs text-slate-500">Prestasi produktiviti pegawai ukur berasaskan tempoh masa</p>
                 </div>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <select id="filterMonth" onchange="onMonthFilterChange()" class="px-4 py-2.5 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
+                    <select id="filterMonth" onchange="onMonthFilterChange()" class="px-4 py-2.5 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
                         <option value="">Semua Bulan</option>
                     </select>
-                    <select id="filterWeek" onchange="onTimeFilterTypeChange()" class="px-4 py-2.5 rounded-xl bg-darker border border-borderDark text-sm text-white focus:outline-none focus:border-accent">
+                    <select id="filterWeek" onchange="renderSurveyorStats()" class="px-4 py-2.5 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
                         <option value="">Semua Minggu</option>
                     </select>
                 </div>
             </div>
 
-            <div id="surveyorStatsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Surveyor cards populated via script -->
-            </div>
+            <div id="surveyorStatsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
     </main>
 
+    <footer class="mt-12 bg-ink text-white/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between gap-2 text-xs">
+            <span>&copy; <span id="footerYear"></span> GEO-STAT &middot; Sistem Statistik Jurukur Tanah</span>
+            <span>Data diselaraskan daripada Google Sheets</span>
+        </div>
+        <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+    </footer>
+
     <!-- Toast Notification -->
-    <div id="toast" class="fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-xl border text-sm flex items-center gap-3 transition-all transform translate-y-2 opacity-0 hidden">
-        <i id="toastIcon" class="w-5 h-5"></i>
+    <div id="toast" class="fixed top-20 right-6 z-50 px-4 py-3 rounded-md shadow-sm border text-sm flex items-center gap-3 transition-all transform translate-y-2 opacity-0 hidden max-w-sm">
+        <i id="toastIcon" class="w-5 h-5 shrink-0"></i>
         <span id="toastMsg">Mesej notifikasi...</span>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loader" class="fixed inset-0 bg-darker/80 backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
+    <div id="loader" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
         <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-sm font-medium text-slate-300">Memuatkan data operasi...</p>
+            <div class="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm font-medium text-slate-600">Memuatkan data operasi...</p>
         </div>
     </div>
 
-    <!-- Script Utama -->
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtaZfErSp6qjiFh4PZYWaLh_3EjGJDTTpXcizGmD0DenU1nQy8JceWLbsDfl-YaCH2/exec"; 
-        
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztJoR9hGGB5CUBnmvKKHwMrtroSC9qMM5ZbaVuwKqtg1pCZv4mqDppHU-TH4Pu4DGB/exec";
+
+        const LOCAL_KEY = "geo_local_reports";
+        // Nilai yang dianggap "tiada isu" (termasuk "Tiada isu" seperti contoh placeholder borang)
+        const NO_ISSUE_VALUES = new Set(['', '-', '0', 'tiada', 'tiada isu', 'tiada masalah', 'tak ada', 'takde', 'none', 'no', 'nil', 'n/a', 'na']);
+        const CHART_COLORS = ['#2222D3', '#FFE500', '#4F52E8', '#111827', '#10B981', '#F59E0B', '#EC4899', '#14B8A6'];
+        const NAMA_BULAN = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+
+        // Peta nama lajur Google Sheets / key tempatan -> medan standard
+        const FIELD_ALIASES = {
+            noFile: ['no file', 'nofile', 'no fail'],
+            tarikh: ['tarikh', 'date'],
+            masaMula: ['masa mula', 'masamula'],
+            masaTamat: ['masa tamat', 'masatamat'],
+            kategori: ['kategori', 'category'],
+            surveyor: ['surveyor', 'juruukur'],
+            tugas: ['tugas', 'skop kerja'],
+            kuantiti: ['kuantiti', 'qty'],
+            unit: ['unit'],
+            statusIsu: ['status isu', 'statusisu', 'isu'],
+            jangkaAsal: ['jangka siap asal', 'jangka asal', 'jangkaasal'],
+            jangkaSemasa: ['jangka siap semasa', 'jangka semasa', 'jangkasemasa'],
+            perancangan: ['perancangan', 'perancangan seterusnya']
+        };
+
         let masterData = [];
         let categoryChartInstance = null;
         let statusChartInstance = null;
+        let toastTimer = null;
+        let toastHideTimer = null;
 
-        // Fungsi pembantu untuk menormalkan no file (mengambil nombor asas hadapan cth: 001/26)
-        function normalizeNoFile(rawNoFile) {
-            if (!rawNoFile) return "";
-            let cleaned = String(rawNoFile).replace(/^mgk\s*/i, "").trim();
-            // Ambil token pertama (cth: "001/26" daripada "001/26 Mangkuk")
-            let parts = cleaned.split(/\s+/);
-            let baseNum = parts[0] || cleaned;
-            return "MGK " + baseNum;
+        // ---------- Helper ----------
+        function refreshIcons() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        // Tarikh hari ini ikut waktu tempatan (toISOString guna UTC, salah sebelum 8 pagi di Malaysia)
+        function todayLocalIso() {
+            const d = new Date();
+            return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        }
+
+        // Sokong YYYY-MM-DD (input borang) dan DD/MM/YYYY (format Google Sheets Malaysia)
+        function parseTarikh(value) {
+            const s = String(value || '').trim();
+            let y, m, d;
+            let match = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+            if (match) {
+                y = +match[1]; m = +match[2]; d = +match[3];
+            } else {
+                match = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
+                if (!match) return null;
+                d = +match[1]; m = +match[2]; y = +match[3];
+                if (y < 100) y += 2000;
             }
+            if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+            return { y, m, d };
+        }
+
+        function tarikhToIso(value) {
+            const p = parseTarikh(value);
+            return p ? `${p.y}-${pad2(p.m)}-${pad2(p.d)}` : '';
+        }
+
+        function formatTarikh(value) {
+            const p = parseTarikh(value);
+            if (p) return `${pad2(p.d)}/${pad2(p.m)}/${p.y}`;
+            const raw = String(value || '').trim();
+            return raw || '-';
+        }
+
+        // Seragamkan masa: "8:00:00", "08:00", "8:00 PM" -> "HH:MM"
+        function normTime(value) {
+            const s = String(value || '').trim();
+            const m = s.match(/^(\d{1,2}):(\d{2})/);
+            if (!m) return s;
+            let h = +m[1];
+            if (/pm/i.test(s) && h < 12) h += 12;
+            if (/am/i.test(s) && h === 12) h = 0;
+            return `${pad2(h)}:${m[2]}`;
+        }
+
+        function parseQty(value) {
+            const n = parseFloat(String(value || '').replace(/,/g, ''));
+            return isNaN(n) ? 0 : n;
+        }
+
+        function fmtNum(n) {
+            return n.toLocaleString('en-MY', { maximumFractionDigits: 2 });
+        }
+
+        function hasIssue(value) {
+            return !NO_ISSUE_VALUES.has(String(value || '').trim().toLowerCase());
+        }
+
+        // Ambil nombor asas No File (cth: "MGK 001/26 Mangkuk" -> "MGK 001/26")
+        function normalizeNoFile(rawNoFile) {
+            if (!rawNoFile) return "";
+            const cleaned = String(rawNoFile).replace(/^mgk\s*/i, "").trim();
+            const baseNum = cleaned.split(/\s+/)[0] || cleaned;
+            return "MGK " + baseNum.toUpperCase();
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Tukar baris (CSV atau localStorage) kepada objek standard
+        function normalizeRow(raw, isLocal = false) {
+            const lookup = {};
+            Object.keys(raw || {}).forEach(k => { lookup[String(k).trim().toLowerCase()] = raw[k]; });
+            const row = {};
+            Object.entries(FIELD_ALIASES).forEach(([field, aliases]) => {
+                let value = '';
+                for (const alias of [field.toLowerCase(), ...aliases]) {
+                    const v = lookup[alias];
+                    if (v !== undefined && v !== null && String(v).trim() !== '') {
+                        value = String(v).trim();
+                        break;
+                    }
+                }
+                row[field] = value;
+            });
+            row._local = isLocal;
+            return row;
+        }
+
+        function isEmptyRow(row) {
+            return Object.keys(FIELD_ALIASES).every(f => !row[f]);
+        }
+
+        function reportKey(r) {
+            return [normalizeNoFile(r.noFile), tarikhToIso(r.tarikh), normTime(r.masaMula), String(r.surveyor).trim().toLowerCase()].join('|');
+        }
+
+        function readLocalReports() {
+            try {
+                const v = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+                return Array.isArray(v) ? v : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function writeLocalReports(list) {
+            try {
+                localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
+            } catch (e) {
+                console.warn("Gagal simpan localStorage:", e);
+            }
+        }
+
+        // Gabung data sheet + tempatan; rekod tempatan yang sudah wujud dalam sheet dibuang supaya tiada duplikasi
+        function mergeData(remoteRaw) {
+            const remote = (remoteRaw || []).map(r => normalizeRow(r, false)).filter(r => !isEmptyRow(r));
+            const remoteKeys = new Set(remote.map(reportKey));
+            const localRaw = readLocalReports();
+            const pending = localRaw.filter(l => !remoteKeys.has(reportKey(normalizeRow(l, true))));
+            if (pending.length !== localRaw.length) writeLocalReports(pending);
+            return [...pending.map(l => normalizeRow(l, true)), ...remote];
+        }
+
+        function localOnlyData() {
+            return readLocalReports().map(l => normalizeRow(l, true)).filter(r => !isEmptyRow(r));
+        }
+
+        // ---------- Init ----------
+        document.addEventListener("DOMContentLoaded", () => {
+            resetTugasRows();
+            const tarikhInput = document.getElementById("f_tarikh");
+            if (tarikhInput) tarikhInput.value = todayLocalIso();
+            refreshIcons();
             switchTab('dashboard');
             fetchCSVData();
         });
@@ -382,137 +586,131 @@
             const toastMsg = document.getElementById("toastMsg");
             const toastIcon = document.getElementById("toastIcon");
             if (!toast || !toastMsg || !toastIcon) return;
-            
+
+            // Batalkan timer toast sebelum ini supaya toast baru tak hilang awal
+            clearTimeout(toastTimer);
+            clearTimeout(toastHideTimer);
+
             toastMsg.innerText = msg;
-            toast.className = "fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-xl border text-sm flex items-center gap-3 transition-all transform translate-y-0 opacity-100";
-            
+            toast.className = "fixed top-20 right-6 z-50 px-4 py-3 rounded-md shadow-sm border text-sm flex items-center gap-3 transition-all transform translate-y-0 opacity-100 max-w-sm";
+
             if (type === "success") {
-                toast.classList.add("bg-emerald-950/90", "border-emerald-500/30", "text-emerald-200");
+                toast.classList.add("bg-emerald-50", "border-emerald-500/30", "text-emerald-800");
                 toastIcon.setAttribute("data-lucide", "check-circle");
             } else if (type === "error") {
-                toast.classList.add("bg-red-950/90", "border-red-500/30", "text-red-200");
+                toast.classList.add("bg-red-50", "border-red-500/30", "text-red-800");
                 toastIcon.setAttribute("data-lucide", "alert-circle");
             } else {
-                toast.classList.add("bg-slate-900/90", "border-borderDark", "text-slate-200");
+                toast.classList.add("bg-white", "border-line", "text-slate-700");
                 toastIcon.setAttribute("data-lucide", "info");
             }
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            refreshIcons();
 
-            setTimeout(() => {
+            toastTimer = setTimeout(() => {
                 toast.classList.add("translate-y-2", "opacity-0");
-                setTimeout(() => toast.classList.add("hidden"), 300);
+                toastHideTimer = setTimeout(() => toast.classList.add("hidden"), 300);
             }, 3500);
-        }
-
-        function escapeHtml(str) {
-            if (!str) return "";
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
         }
 
         function switchTab(tabName) {
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".nav-btn").forEach(el => {
-                el.classList.remove("bg-accent/20", "text-accent", "border-accent/40");
-                el.classList.add("text-slate-400", "border-transparent", "hover:bg-cardDark");
+                el.classList.remove("text-brand", "border-brand");
+                el.classList.add("text-ink", "border-transparent", "hover:text-brand");
             });
 
-            if (tabName === 'dashboard') {
-                const viewDash = document.getElementById("viewDashboard");
-                const navDash = document.getElementById("navDashboard");
-                if (viewDash) viewDash.classList.remove("hidden");
-                if (navDash) navDash.classList.add("bg-accent/20", "text-accent", "border-accent/40");
-                if (navDash) navDash.classList.remove("text-slate-400", "border-transparent");
-            } else if (tabName === 'form') {
-                const viewForm = document.getElementById("viewForm");
-                const navForm = document.getElementById("navForm");
-                if (viewForm) viewForm.classList.remove("hidden");
-                if (navForm) navForm.classList.add("bg-accent/20", "text-accent", "border-accent/40");
-                if (navForm) navForm.classList.remove("text-slate-400", "border-transparent");
-            } else if (tabName === 'surveyor') {
-                const viewSurveyor = document.getElementById("viewSurveyor");
-                const navSurveyor = document.getElementById("navSurveyor");
-                if (viewSurveyor) {
-                    viewSurveyor.classList.remove("hidden");
-                }
-                if (navSurveyor) {
-                    navSurveyor.classList.add("bg-accent/20", "text-accent", "border-accent/40");
-                    navSurveyor.classList.remove("text-slate-400", "border-transparent");
-                }
-                initSurveyorFilters();
+            const map = {
+                dashboard: ["viewDashboard", "navDashboard"],
+                form: ["viewForm", "navForm"],
+                surveyor: ["viewSurveyor", "navSurveyor"]
+            };
+            const [viewId, navId] = map[tabName] || map.dashboard;
+            const view = document.getElementById(viewId);
+            const nav = document.getElementById(navId);
+            if (view) view.classList.remove("hidden");
+            if (nav) {
+                nav.classList.add("text-brand", "border-brand");
+                nav.classList.remove("text-ink", "border-transparent");
             }
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            if (tabName === 'surveyor') initSurveyorFilters();
+            refreshIcons();
+        }
+
+        function isSurveyorTabOpen() {
+            const v = document.getElementById("viewSurveyor");
+            return v && !v.classList.contains("hidden");
+        }
+
+        // ---------- Tugas rows ----------
+        function tugasRowHtml() {
+            return `
+                <input type="text" placeholder="Masukkan skop tugas..." class="flex-1 px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
+                <button type="button" onclick="removeTugasRow(this)" class="p-3 rounded-md bg-red-50 text-red-600 border border-red-500/30 hover:bg-red-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            `;
         }
 
         function addTugasRow() {
             const container = document.getElementById("tugasContainer");
             if (!container) return;
             const div = document.createElement("div");
-            div.className = "flex items-center gap-2 mt-2";
-            div.innerHTML = `
-                <input type="text" placeholder="Masukkan skop tugas..." class="flex-1 px-4 py-3 rounded-xl bg-darker border border-borderDark text-white focus:outline-none focus:border-accent text-sm" required>
-                <button type="button" onclick="removeTugasRow(this)" class="p-3 rounded-xl bg-red-950/40 text-red-400 border border-red-500/30 hover:bg-red-900/50 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            `;
+            div.className = "flex items-center gap-2";
+            div.innerHTML = tugasRowHtml();
             container.appendChild(div);
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            refreshIcons();
+        }
+
+        function resetTugasRows() {
+            const container = document.getElementById("tugasContainer");
+            if (!container) return;
+            container.innerHTML = "";
+            addTugasRow();
         }
 
         function removeTugasRow(btn) {
             const container = document.getElementById("tugasContainer");
             if (!container) return;
             if (container.children.length > 1) {
-                btn.parentElement.remove();
+                btn.closest("div").remove();
             } else {
                 showToast("Sekurang-kurangnya satu tugas diperlukan.", "error");
             }
         }
 
+        // ---------- Data ----------
+        function applyData() {
+            updateStats();
+            filterTable();
+            renderCharts(masterData);
+            if (isSurveyorTabOpen()) initSurveyorFilters();
+        }
+
         function fetchCSVData() {
             const loader = document.getElementById("loader");
             if (loader) loader.style.display = "flex";
-            
+
             if (typeof Papa === 'undefined') {
                 if (loader) loader.style.display = "none";
-                let localSaved = JSON.parse(localStorage.getItem("geo_local_reports") || "[]");
-                masterData = localSaved;
-                updateStats();
-                renderTable(masterData);
-                renderCharts(masterData);
+                masterData = localOnlyData();
+                applyData();
+                showToast("PapaParse gagal dimuatkan, hanya data tempatan dipaparkan.", "error");
                 return;
             }
 
-            Papa.parse(CSV_URL, {
+            // Cache-buster supaya CSV terbitan Google tidak dipulangkan dari cache browser
+            Papa.parse(`${CSV_URL}&_t=${Date.now()}`, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
                     if (loader) loader.style.display = "none";
-                    let remoteData = results.data || [];
-                    let localSaved = JSON.parse(localStorage.getItem("geo_local_reports") || "[]");
-                    
-                    masterData = [...localSaved, ...remoteData];
-                    updateStats();
-                    renderTable(masterData);
-                    renderCharts(masterData);
+                    masterData = mergeData(results.data || []);
+                    applyData();
                 },
                 error: function(err) {
                     if (loader) loader.style.display = "none";
                     console.error("CSV Parse Error:", err);
-                    let localSaved = JSON.parse(localStorage.getItem("geo_local_reports") || "[]");
-                    masterData = localSaved;
-                    updateStats();
-                    renderTable(masterData);
-                    renderCharts(masterData);
+                    masterData = localOnlyData();
+                    applyData();
                     showToast("Gagal memuat CSV jauh, menggunakan data tempatan.", "error");
                 }
             });
@@ -525,26 +723,27 @@
             const elIsu = document.getElementById("totalIsu");
 
             if (elTotal) elTotal.innerText = masterData.length;
-            
-            // Menggunakan fungsi normalizeNoFile untuk mengira unik fail berasaskan nombor hadapan
-            const uniqueFiles = new Set(masterData.map(d => normalizeNoFile(d["No File"] || d["noFile"] || "")).filter(f => f !== "MGK "));
+
+            const uniqueFiles = new Set(masterData.filter(d => d.noFile).map(d => normalizeNoFile(d.noFile)).filter(f => f !== "MGK "));
             if (elProjek) elProjek.innerText = uniqueFiles.size;
 
-            let totalKuantiti = 0;
+            // Kuantiti dijumlah ikut unit; Lot + Meter tidak boleh dicampur jadi satu nombor
+            const unitTotals = {};
             masterData.forEach(d => {
-                let q = parseFloat(d["Kuantiti"] || d["kuantiti"] || 0);
-                if (!isNaN(q)) totalKuantiti += q;
-            });
-            if (elKuantiti) elKuantiti.innerText = totalKuantiti.toLocaleString(undefined, {maximumFractionDigits: 2});
-
-            let isuCount = 0;
-            masterData.forEach(d => {
-                let status = String(d["Status Isu"] || d["statusIsu"] || "").trim().toLowerCase();
-                if (status && status !== '-' && status !== 'tiada' && status !== '0' && status !== 'none') {
-                    isuCount++;
+                const q = parseQty(d.kuantiti);
+                if (q) {
+                    const u = d.unit || 'Unit';
+                    unitTotals[u] = (unitTotals[u] || 0) + q;
                 }
             });
-            if (elIsu) elIsu.innerText = isuCount;
+            const entries = Object.entries(unitTotals);
+            if (elKuantiti) {
+                elKuantiti.innerText = entries.length ? entries.map(([u, v]) => `${fmtNum(v)} ${u}`).join(' · ') : '0';
+                elKuantiti.classList.toggle('text-3xl', entries.length <= 1);
+                elKuantiti.classList.toggle('text-lg', entries.length > 1);
+            }
+
+            if (elIsu) elIsu.innerText = masterData.filter(d => hasIssue(d.statusIsu)).length;
         }
 
         function renderTable(data) {
@@ -553,77 +752,58 @@
             tbody.innerHTML = "";
 
             if (!data.length) {
-                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-8 text-slate-500">Tiada rekod data dijumpai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-8 text-slate-400">Tiada rekod data dijumpai.</td></tr>`;
                 return;
             }
 
-            data.forEach((row, idx) => {
-                const noFile = escapeHtml(row["No File"] || row["noFile"] || "-");
-                const tarikh = escapeHtml(row["Tarikh"] || row["tarikh"] || "-");
-                const masaMula = escapeHtml(row["Masa Mula"] || row["masaMula"] || "-");
-                const masaTamat = escapeHtml(row["Masa Tamat"] || row["masaTamat"] || "-");
-                const kategori = escapeHtml(row["Kategori"] || row["kategori"] || "-");
-                const surveyor = escapeHtml(row["Surveyor"] || row["surveyor"] || "-");
-                
-                const rawTugas = row["Tugas"] || row["tugas"] || "-";
-                let tugasHtml = "";
+            const fragment = document.createDocumentFragment();
+            data.forEach(row => {
+                const rawTugas = row.tugas || "-";
+                let tugasHtml;
                 if (rawTugas.includes(",")) {
-                    let parts = rawTugas.split(",").map(p => p.trim()).filter(Boolean);
-                    tugasHtml = `<ul class="list-disc list-inside space-y-0.5 text-slate-300">` + parts.map(p => `<li>${escapeHtml(p)}</li>`).join("") + `</ul>`;
+                    const parts = rawTugas.split(",").map(p => p.trim()).filter(Boolean);
+                    tugasHtml = `<ul class="list-disc list-inside space-y-0.5 text-slate-600">` + parts.map(p => `<li>${escapeHtml(p)}</li>`).join("") + `</ul>`;
                 } else {
-                    tugasHtml = `<span class="text-slate-300 block">${escapeHtml(rawTugas)}</span>`;
+                    tugasHtml = `<span class="text-slate-600 block">${escapeHtml(rawTugas)}</span>`;
                 }
 
-                const kuantiti = escapeHtml(row["Kuantiti"] || row["kuantiti"] || "-");
-                const unit = escapeHtml(row["Unit"] || row["unit"] || "-");
-                const rawIsu = String(row["Status Isu"] || row["statusIsu"] || "").trim();
-                
-                let isuHtml = "";
-                if (!rawIsu || rawIsu === '-' || rawIsu.toLowerCase() === 'tiada') {
-                    isuHtml = `<span class="text-slate-500">-</span>`;
-                } else {
-                    isuHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/15 text-red-400 border border-red-500/30 inline-block">${escapeHtml(rawIsu)}</span>`;
-                }
+                const isuHtml = hasIssue(row.statusIsu)
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/15 text-red-600 border border-red-500/30 inline-block">${escapeHtml(row.statusIsu)}</span>`
+                    : `<span class="text-slate-400">${row.statusIsu ? escapeHtml(row.statusIsu) : '-'}</span>`;
 
-                const asal = escapeHtml(row["Jangka Siap Asal"] || row["jangkaAsal"] || "-");
-                const semasa = escapeHtml(row["Jangka Siap Semasa"] || row["jangkaSemasa"] || "-");
-                const perancangan = escapeHtml(row["Perancangan"] || row["perancangan"] || "-");
+                const localBadge = row._local
+                    ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/30" title="Belum muncul dalam Google Sheets">Tempatan</span>`
+                    : '';
 
                 const tr = document.createElement("tr");
-                tr.className = "border-b border-borderDark hover:bg-cardDark/50 transition text-xs";
+                tr.className = "border-b border-line hover:bg-canvas transition text-xs";
                 tr.innerHTML = `
-                    <td class="px-3 py-3 font-medium text-white whitespace-nowrap">${noFile}</td>
-                    <td class="px-3 py-3 text-slate-300 whitespace-nowrap">${tarikh}</td>
-                    <td class="px-3 py-3 text-slate-400 whitespace-nowrap">${masaMula}</td>
-                    <td class="px-3 py-3 text-slate-400 whitespace-nowrap">${masaTamat}</td>
-                    <td class="px-3 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-accent/10 text-accent border border-accent/20 inline-block">${kategori}</span></td>
-                    <td class="px-3 py-3 text-white font-medium whitespace-nowrap">${surveyor}</td>
+                    <td class="px-3 py-3 font-medium text-ink whitespace-nowrap">${escapeHtml(row.noFile || '-')}${localBadge}</td>
+                    <td class="px-3 py-3 text-slate-600 whitespace-nowrap">${escapeHtml(formatTarikh(row.tarikh))}</td>
+                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.masaMula ? normTime(row.masaMula) : '-')}</td>
+                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.masaTamat ? normTime(row.masaTamat) : '-')}</td>
+                    <td class="px-3 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand/10 text-brand border border-brand/20 inline-block">${escapeHtml(row.kategori || '-')}</span></td>
+                    <td class="px-3 py-3 text-ink font-medium whitespace-nowrap">${escapeHtml(row.surveyor || '-')}</td>
                     <td class="px-3 py-3 min-w-[200px]">${tugasHtml}</td>
-                    <td class="px-3 py-3 text-white font-semibold whitespace-nowrap">${kuantiti}</td>
-                    <td class="px-3 py-3 text-slate-400 whitespace-nowrap">${unit}</td>
+                    <td class="px-3 py-3 text-ink font-semibold whitespace-nowrap">${escapeHtml(row.kuantiti || '-')}</td>
+                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.unit || '-')}</td>
                     <td class="px-3 py-3 whitespace-nowrap">${isuHtml}</td>
-                    <td class="px-3 py-3 text-slate-400 whitespace-nowrap">${asal}</td>
-                    <td class="px-3 py-3 text-slate-400 whitespace-nowrap">${semasa}</td>
-                    <td class="px-3 py-3 text-slate-300 min-w-[180px]">${perancangan}</td>
+                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(formatTarikh(row.jangkaAsal))}</td>
+                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(formatTarikh(row.jangkaSemasa))}</td>
+                    <td class="px-3 py-3 text-slate-600 min-w-[180px]">${escapeHtml(row.perancangan || '-')}</td>
                 `;
-                tbody.appendChild(tr);
+                fragment.appendChild(tr);
             });
+            tbody.appendChild(fragment);
         }
 
         function filterTable() {
-            const searchInput = document.getElementById("searchInput");
-            const filterCategory = document.getElementById("filterCategory");
-            const query = searchInput ? searchInput.value.toLowerCase() : "";
-            const cat = filterCategory ? filterCategory.value : "";
+            const query = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+            const cat = document.getElementById("filterCategory")?.value || "";
 
             const filtered = masterData.filter(row => {
-                const noFile = String(row["No File"] || row["noFile"] || "").toLowerCase();
-                const surveyor = String(row["Surveyor"] || row["surveyor"] || "").toLowerCase();
-                const kategori = String(row["Kategori"] || row["kategori"] || "");
-
-                const matchQuery = noFile.includes(query) || surveyor.includes(query);
-                const matchCat = !cat || kategori === cat;
-
+                const matchQuery = !query || row.noFile.toLowerCase().includes(query) || row.surveyor.toLowerCase().includes(query);
+                const matchCat = !cat || row.kategori.toLowerCase() === cat.toLowerCase();
                 return matchQuery && matchCat;
             });
 
@@ -631,48 +811,44 @@
         }
 
         function renderCharts(data) {
+            if (typeof Chart === 'undefined') return;
+
             const catCount = {};
             const statusCount = { "Tiada Isu": 0, "Ada Isu": 0 };
 
             data.forEach(d => {
-                const cat = d["Kategori"] || d["kategori"] || "Lain-lain";
+                const cat = d.kategori || "Lain-lain";
                 catCount[cat] = (catCount[cat] || 0) + 1;
-
-                const isu = String(d["Status Isu"] || d["statusIsu"] || "").trim().toLowerCase();
-                if (!isu || isu === '-' || isu === 'tiada' || isu === '0') {
-                    statusCount["Tiada Isu"]++;
-                } else {
-                    statusCount["Ada Isu"]++;
-                }
+                if (hasIssue(d.statusIsu)) statusCount["Ada Isu"]++;
+                else statusCount["Tiada Isu"]++;
             });
 
+            const labels = Object.keys(catCount);
             const canvasCat = document.getElementById("categoryChart");
             if (canvasCat) {
-                const ctxCat = canvasCat.getContext("2d");
                 if (categoryChartInstance) categoryChartInstance.destroy();
-                categoryChartInstance = new Chart(ctxCat, {
+                categoryChartInstance = new Chart(canvasCat.getContext("2d"), {
                     type: 'doughnut',
                     data: {
-                        labels: Object.keys(catCount),
+                        labels,
                         datasets: [{
                             data: Object.values(catCount),
-                            backgroundColor: ['#00E5FF', '#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'],
+                            backgroundColor: labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
                             borderWidth: 0
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 12 } } }
+                        plugins: { legend: { position: 'bottom', labels: { color: '#64748B', boxWidth: 12 } } }
                     }
                 });
             }
 
             const canvasStatus = document.getElementById("statusChart");
             if (canvasStatus) {
-                const ctxStatus = canvasStatus.getContext("2d");
                 if (statusChartInstance) statusChartInstance.destroy();
-                statusChartInstance = new Chart(ctxStatus, {
+                statusChartInstance = new Chart(canvasStatus.getContext("2d"), {
                     type: 'bar',
                     data: {
                         labels: Object.keys(statusCount),
@@ -687,70 +863,64 @@
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            x: { ticks: { color: '#94A3B8' }, grid: { display: false } },
-                            y: { ticks: { color: '#94A3B8' }, grid: { color: '#1E293B' } }
+                            x: { ticks: { color: '#64748B' }, grid: { display: false } },
+                            y: { beginAtZero: true, ticks: { color: '#64748B', precision: 0 }, grid: { color: '#E5E7EB' } }
                         }
                     }
                 });
             }
         }
 
+        // ---------- Statistik Surveyor ----------
+        function monthKeyOf(d) {
+            const p = parseTarikh(d.tarikh);
+            return p ? `${p.y}-${pad2(p.m)}` : '';
+        }
+
+        function weekOf(d) {
+            const p = parseTarikh(d.tarikh);
+            return p ? Math.ceil(p.d / 7) : 0;
+        }
+
         function initSurveyorFilters() {
             const monthSelect = document.getElementById("filterMonth");
             if (!monthSelect) return;
-            const months = new Set();
+            const prevMonth = monthSelect.value;
 
-            masterData.forEach(d => {
-                const t = d["Tarikh"] || d["tarikh"];
-                if (t) {
-                    let parts = t.split(/[-/]/);
-                    if (parts.length >= 2) {
-                        let m = parts[1].length === 4 ? parts[0] + "-" + parts[1] : parts[1];
-                        months.add(m);
-                    }
-                }
-            });
-
+            const months = new Set(masterData.map(monthKeyOf).filter(Boolean));
             monthSelect.innerHTML = `<option value="">Semua Bulan</option>`;
-            Array.from(months).sort().forEach(m => {
-                let opt = document.createElement("option");
-                opt.value = m;
-                opt.innerText = `Bulan ${m}`;
+            Array.from(months).sort().reverse().forEach(key => {
+                const [y, m] = key.split('-');
+                const opt = document.createElement("option");
+                opt.value = key;
+                opt.innerText = `${NAMA_BULAN[+m - 1]} ${y}`;
                 monthSelect.appendChild(opt);
             });
+            if (prevMonth && months.has(prevMonth)) monthSelect.value = prevMonth;
 
-            onMonthFilterChange();
+            onMonthFilterChange(true);
         }
 
-        function onMonthFilterChange() {
+        function onMonthFilterChange(keepWeek = false) {
             const monthSelect = document.getElementById("filterMonth");
             const weekSelect = document.getElementById("filterWeek");
             if (!monthSelect || !weekSelect) return;
 
             const selectedMonth = monthSelect.value;
+            const prevWeek = keepWeek === true ? weekSelect.value : '';
             weekSelect.innerHTML = `<option value="">Semua Minggu</option>`;
 
-            let weeks = new Set();
-            masterData.forEach(d => {
-                const t = d["Tarikh"] || d["tarikh"];
-                if (t && selectedMonth && t.includes(selectedMonth)) {
-                    let day = parseInt(t.split(/[-/]/)[0]) || 1;
-                    let wNum = Math.ceil(day / 7);
-                    weeks.add(`Minggu ${wNum}`);
-                }
-            });
+            if (selectedMonth) {
+                const weeks = new Set(masterData.filter(d => monthKeyOf(d) === selectedMonth).map(weekOf).filter(Boolean));
+                Array.from(weeks).sort((a, b) => a - b).forEach(w => {
+                    const opt = document.createElement("option");
+                    opt.value = String(w);
+                    opt.innerText = `Minggu ${w}`;
+                    weekSelect.appendChild(opt);
+                });
+                if (prevWeek && weeks.has(+prevWeek)) weekSelect.value = prevWeek;
+            }
 
-            Array.from(weeks).sort().forEach(w => {
-                let opt = document.createElement("option");
-                opt.value = w;
-                opt.innerText = w;
-                weekSelect.appendChild(opt);
-            });
-
-            renderSurveyorStats();
-        }
-
-        function onTimeFilterTypeChange() {
             renderSurveyorStats();
         }
 
@@ -759,88 +929,77 @@
             if (!container) return;
             container.innerHTML = "";
 
-            const monthSelect = document.getElementById("filterMonth");
-            const weekSelect = document.getElementById("filterWeek");
-            const selectedMonth = monthSelect ? monthSelect.value : "";
-            const selectedWeek = weekSelect ? weekSelect.value : "";
+            const selectedMonth = document.getElementById("filterMonth")?.value || "";
+            const selectedWeek = document.getElementById("filterWeek")?.value || "";
 
-            let filtered = masterData.filter(d => {
-                const t = d["Tarikh"] || d["tarikh"] || "";
-                if (selectedMonth && !t.includes(selectedMonth)) return false;
-                if (selectedWeek) {
-                    let day = parseInt(t.split(/[-/]/)[0]) || 1;
-                    let wNum = Math.ceil(day / 7);
-                    if (`Minggu ${wNum}` !== selectedWeek) return false;
-                }
+            const filtered = masterData.filter(d => {
+                if (selectedMonth && monthKeyOf(d) !== selectedMonth) return false;
+                if (selectedWeek && weekOf(d) !== +selectedWeek) return false;
                 return true;
             });
 
             const surveyorMap = {};
             filtered.forEach(d => {
-                const s = d["Surveyor"] || d["surveyor"] || "Tidak Diketahui";
-                if (!surveyorMap[s]) {
-                    surveyorMap[s] = { totalTasks: 0, totalQty: 0, units: {}, issues: 0, categories: {} };
-                }
-                surveyorMap[s].totalTasks++;
-                
-                let qty = parseFloat(d["Kuantiti"] || d["kuantiti"] || 0);
-                let unit = d["Unit"] || d["unit"] || "Unit";
-                if (!isNaN(qty)) {
-                    surveyorMap[s].totalQty += qty;
-                    surveyorMap[s].units[unit] = (surveyorMap[s].units[unit] || 0) + qty;
+                const s = d.surveyor || "Tidak Diketahui";
+                if (!surveyorMap[s]) surveyorMap[s] = { totalTasks: 0, units: {}, issues: 0, categories: {} };
+                const info = surveyorMap[s];
+                info.totalTasks++;
+
+                const qty = parseQty(d.kuantiti);
+                if (qty) {
+                    const unit = d.unit || "Unit";
+                    info.units[unit] = (info.units[unit] || 0) + qty;
                 }
 
-                let cat = d["Kategori"] || d["kategori"] || "Lain-lain";
-                surveyorMap[s].categories[cat] = (surveyorMap[s].categories[cat] || 0) + 1;
+                const cat = d.kategori || "Lain-lain";
+                info.categories[cat] = (info.categories[cat] || 0) + 1;
 
-                let isu = String(d["Status Isu"] || d["statusIsu"] || "").trim().toLowerCase();
-                if (isu && isu !== '-' && isu !== 'tiada' && isu !== '0' && isu !== 'none') {
-                    surveyorMap[s].issues++;
-                }
+                if (hasIssue(d.statusIsu)) info.issues++;
             });
 
-            const surveyors = Object.keys(surveyorMap);
+            const surveyors = Object.keys(surveyorMap).sort((a, b) => a.localeCompare(b));
             if (!surveyors.length) {
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Tiada data statistik surveyor untuk tempoh ini.</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">Tiada data statistik surveyor untuk tempoh ini.</div>`;
                 return;
             }
 
             surveyors.forEach(sName => {
                 const info = surveyorMap[sName];
-                let unitStr = Object.entries(info.units).map(([u, v]) => `${v.toLocaleString(undefined, {maximumFractionDigits: 2})} ${u}`).join(", ");
-                if (!unitStr) unitStr = "0 Unit";
+                const unitStr = Object.entries(info.units).map(([u, v]) => `${fmtNum(v)} ${u}`).join(", ") || "0 Unit";
 
-                let catListHtml = Object.entries(info.categories).map(([c, count]) => `<div class="flex justify-between text-xs text-slate-400 py-0.5"><span>${c}</span><span class="text-white font-medium">${count} tugas</span></div>`).join("");
+                const catListHtml = Object.entries(info.categories).map(([c, count]) =>
+                    `<div class="flex justify-between text-xs text-slate-500 py-0.5"><span>${escapeHtml(c)}</span><span class="text-ink font-medium">${count} tugas</span></div>`
+                ).join("");
 
                 const card = document.createElement("div");
-                card.className = "bg-cardDark border border-borderDark rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-accent/40 transition";
+                card.className = "bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col justify-between hover:border-brand/40 transition";
                 card.innerHTML = `
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent font-bold text-lg">
-                                    ${sName.charAt(0).toUpperCase()}
+                                <div class="w-10 h-10 rounded-md bg-gold flex items-center justify-center text-ink font-display font-extrabold text-lg">
+                                    ${escapeHtml(sName.charAt(0).toUpperCase())}
                                 </div>
                                 <div>
-                                    <h3 class="text-white font-semibold text-base">${sName}</h3>
-                                    <span class="text-xs text-slate-400">Pegawai Ukur</span>
+                                    <h3 class="text-ink font-semibold text-base">${escapeHtml(sName)}</h3>
+                                    <span class="text-xs text-slate-500">Pegawai Ukur</span>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-accent/15 text-accent border border-accent/30">${info.totalTasks} Tugas</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand/15 text-brand border border-brand/30">${info.totalTasks} Tugas</span>
                         </div>
                         <div class="space-y-3 mb-6">
-                            <div class="p-3 rounded-xl bg-darker/50 border border-borderDark flex justify-between items-center">
-                                <span class="text-xs text-slate-400">Jumlah Kuantiti Siap</span>
-                                <span class="text-sm font-bold text-white">${unitStr}</span>
+                            <div class="p-3 rounded-md bg-canvas/50 border border-line flex justify-between items-center gap-3">
+                                <span class="text-xs text-slate-500 shrink-0">Jumlah Kuantiti Siap</span>
+                                <span class="text-sm font-bold text-ink text-right">${escapeHtml(unitStr)}</span>
                             </div>
-                            <div class="p-3 rounded-xl bg-darker/50 border border-borderDark flex justify-between items-center">
-                                <span class="text-xs text-slate-400">Jumlah Isu Dilaporkan</span>
-                                <span class="text-sm font-bold ${info.issues > 0 ? 'text-red-400' : 'text-emerald-400'}">${info.issues} Isu</span>
+                            <div class="p-3 rounded-md bg-canvas/50 border border-line flex justify-between items-center">
+                                <span class="text-xs text-slate-500">Jumlah Isu Dilaporkan</span>
+                                <span class="text-sm font-bold ${info.issues > 0 ? 'text-red-600' : 'text-emerald-600'}">${info.issues} Isu</span>
                             </div>
                         </div>
                         <div>
-                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pecahan Kategori</h4>
-                            <div class="space-y-1 bg-darker/30 p-3 rounded-xl border border-borderDark">
+                            <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Pecahan Kategori</h4>
+                            <div class="space-y-1 bg-canvas/30 p-3 rounded-md border border-line">
                                 ${catListHtml}
                             </div>
                         </div>
@@ -850,54 +1009,99 @@
             });
         }
 
+        // ---------- Borang ----------
+        // POST ke Apps Script dan baca respons JSON {status, message, row}.
+        // text/plain = "simple request", jadi tiada CORS preflight; Apps Script pulangkan header CORS sendiri.
+        async function postToAppsScript(payload) {
+            const res = await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload),
+                redirect: "follow"
+            });
+            if (!res.ok) {
+                const err = new Error(`HTTP ${res.status}`);
+                err.userMessage = `Pelayan membalas ralat (HTTP ${res.status}).`;
+                throw err;
+            }
+            try {
+                return await res.json();
+            } catch (e) {
+                const err = new Error("Respons bukan JSON");
+                err.userMessage = "Respons pelayan tidak sah. Pastikan Apps Script versi baru sudah di-deploy.";
+                throw err;
+            }
+        }
+
         async function handleFormSubmit(event) {
             event.preventDefault();
-            
-            const noFileInput = document.getElementById("f_nofile").value.trim();
-            const noFile = "MGK " + noFileInput;
-            const tarikh = document.getElementById("f_tarikh").value;
+            const submitBtn = document.getElementById("submitBtn");
+            if (submitBtn.disabled) return;
+
+            // Buang "MGK" jika pengguna taip sekali, supaya tak jadi "MGK MGK 001/26"
+            const noFileInput = document.getElementById("f_nofile").value.trim().replace(/^mgk\s*/i, "");
+            if (!noFileInput) {
+                showToast("Sila masukkan No File selepas prefix MGK.", "error");
+                return;
+            }
+
             const masaMula = document.getElementById("f_mula").value;
             const masaTamat = document.getElementById("f_tamat").value;
-            const kategori = document.getElementById("f_kategori").value;
-            const surveyor = document.getElementById("f_surveyor").value.trim();
-            
-            const tugasInputs = document.querySelectorAll("#tugasContainer input");
-            const tugasList = Array.from(tugasInputs).map(i => i.value.trim()).filter(Boolean);
-            const tugas = tugasList.join(", ");
+            if (masaMula && masaTamat && masaTamat <= masaMula) {
+                showToast("Masa Tamat mesti selepas Masa Mula.", "error");
+                return;
+            }
 
-            const kuantiti = document.getElementById("f_kuantiti").value;
-            const unit = document.getElementById("f_unit").value;
-            const statusIsu = document.getElementById("f_status").value.trim();
-            const jangkaAsal = document.getElementById("f_asal").value;
-            const jangkaSemasa = document.getElementById("f_semasa").value;
-            const perancangan = document.getElementById("f_perancangan").value.trim();
+            const tugasList = Array.from(document.querySelectorAll("#tugasContainer input"))
+                .map(i => i.value.trim()).filter(Boolean);
 
             const payload = {
-                noFile, tarikh, masaMula, masaTamat, kategori, surveyor,
-                tugas, kuantiti, unit, statusIsu, jangkaAsal, jangkaSemasa, perancangan
+                noFile: "MGK " + noFileInput,
+                tarikh: document.getElementById("f_tarikh").value,
+                masaMula,
+                masaTamat,
+                kategori: document.getElementById("f_kategori").value,
+                surveyor: document.getElementById("f_surveyor").value.trim(),
+                tugas: tugasList.join(", "),
+                kuantiti: document.getElementById("f_kuantiti").value,
+                unit: document.getElementById("f_unit").value,
+                statusIsu: document.getElementById("f_status").value.trim(),
+                jangkaAsal: document.getElementById("f_asal").value,
+                jangkaSemasa: document.getElementById("f_semasa").value,
+                perancangan: document.getElementById("f_perancangan").value.trim()
             };
 
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Menghantar...";
             showToast("Menghantar laporan ke Google Sheets...", "info");
 
             try {
-                await fetch(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                const result = await postToAppsScript(payload);
+                if (result.status === 'duplicate') {
+                    showToast("Laporan yang sama sudah wujud dalam sheet. Tiada rekod baru disimpan.", "error");
+                    return;
+                }
+                if (result.status !== 'ok') {
+                    showToast(result.message || "Laporan gagal disimpan.", "error");
+                    return;
+                }
 
-                let localSaved = JSON.parse(localStorage.getItem("geo_local_reports") || "[]");
+                const localSaved = readLocalReports();
                 localSaved.unshift(payload);
-                localStorage.setItem("geo_local_reports", JSON.stringify(localSaved));
+                writeLocalReports(localSaved);
 
-                showToast("Laporan berjaya disimpan!", "success");
+                showToast(`Laporan disimpan dalam sheet (baris ${result.row}). Dashboard mungkin ambil beberapa minit untuk kemas kini.`, "success");
                 document.getElementById("dailyReportForm").reset();
+                resetTugasRows();
+                document.getElementById("f_tarikh").value = todayLocalIso();
                 switchTab('dashboard');
                 fetchCSVData();
             } catch (err) {
                 console.error("Ralat hantar:", err);
-                showToast("Gagal menghantar ke pelayan. Sila cuba lagi.", "error");
+                showToast(err.userMessage || "Gagal menghubungi pelayan. Semak internet dan cuba lagi.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Hantar Laporan";
             }
         }
 
@@ -910,14 +1114,33 @@
                 showToast("Pustaka PapaParse tidak dimuatkan.", "error");
                 return;
             }
-            const csv = Papa.unparse(masterData);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            // Lajur standard supaya data tempatan (camelCase) & sheet tak jadi lajur berganda
+            const rows = masterData.map(r => ({
+                "No File": r.noFile,
+                "Tarikh": formatTarikh(r.tarikh),
+                "Masa Mula": r.masaMula ? normTime(r.masaMula) : '',
+                "Masa Tamat": r.masaTamat ? normTime(r.masaTamat) : '',
+                "Kategori": r.kategori,
+                "Surveyor": r.surveyor,
+                "Tugas": r.tugas,
+                "Kuantiti": r.kuantiti,
+                "Unit": r.unit,
+                "Status Isu": r.statusIsu,
+                "Jangka Siap Asal": formatTarikh(r.jangkaAsal),
+                "Jangka Siap Semasa": formatTarikh(r.jangkaSemasa),
+                "Perancangan": r.perancangan
+            }));
+            const csv = Papa.unparse(rows);
+            // BOM supaya Excel baca UTF-8 dengan betul
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `laporan_jurukur_${new Date().toISOString().split('T')[0]}.csv`);
+            link.href = url;
+            link.setAttribute("download", `laporan_jurukur_${todayLocalIso()}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("Fail CSV berjaya dieksport!", "success");
         }
     </script>
