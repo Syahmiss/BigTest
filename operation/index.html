@@ -177,7 +177,7 @@
                     </div>
                 </div>
 
-                <div id="fileCardsContainer" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="fileCardsContainer" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
                     <div class="col-span-full py-12 text-center text-slate-500">
                         <div class="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                         <p class="text-sm">Memuatkan kad progres fail dan peratusan kerja...</p>
@@ -806,7 +806,7 @@
         }
 
         function extractNormalizedRows(rows, sourceType = 'rekod') {
-            let lastContext = { idFile: '', kawasan: '', tarikh: '', surveyor: '', jangkaSiap: '' };
+            let lastContext = { idFile: '', tarikh: '', surveyor: '', jangkaSiap: '' };
             const normalizedList = [];
 
             (rows || []).forEach(row => {
@@ -873,12 +873,12 @@
                     if (!kawasan) kawasan = parts.kawasan;
                 }
 
+                // No File kosong (sel bergabung) warisi No File baris atas.
+                // Kawasan TIDAK diwarisi: kawasan kosong kekal "tidak dinyatakan", jangan diteka.
                 if (idFile) {
                     lastContext.idFile = idFile;
-                    lastContext.kawasan = kawasan;
                 } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
                     idFile = lastContext.idFile;
-                    if (!kawasan) kawasan = lastContext.kawasan;
                 }
 
                 const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
@@ -1218,9 +1218,9 @@
                     const k = kawasanKey(r.kawasan);
                     if (k && !labels.has(k)) labels.set(k, kawasanLabel(r.kawasan));
                 });
-                // Jika fail hanya ada satu kawasan, rekod tanpa kawasan dianggap kawasan itu
-                const singleKey = labels.size === 1 ? Array.from(labels.keys())[0] : null;
-                const keyOf = r => kawasanKey(r.kawasan) || singleKey || '';
+                // Rekod tanpa kawasan TIDAK dicampur ke mana-mana kawasan; ia dikumpul
+                // dalam "Kawasan tidak dinyatakan" supaya progres setiap kawasan tepat.
+                const keyOf = r => kawasanKey(r.kawasan);
                 const keys = Array.from(labels.keys());
                 if (allRows.some(r => keyOf(r) === '')) keys.push('');
 
@@ -1248,6 +1248,8 @@
                         targetQty: catList.length ? sum('targetQty') : prog.targetQty,
                         unit: units.size === 1 ? Array.from(units)[0] : prog.unit,
                         mixedUnits,
+                        // Kawasan tanpa sasaran kuantiti (dan tiada peratus dari sheet) tak boleh dikira peratusnya
+                        hasTarget: catList.some(c => c.targetQty > 0) || prog.percentage > 0,
                         categoryProgressList: prog.categoryProgressList || [],
                         jangkaSiap: jangkaList.length ? jangkaList[jangkaList.length - 1] : '',
                         tugasCount: rekodK.length
@@ -1255,8 +1257,10 @@
                 }).sort((a, b) => (a.key === '') - (b.key === '') || a.label.localeCompare(b.label));
 
                 // Progres fail = purata progres semua kawasan
-                const fileProgress = kawasanProgress.length
-                    ? kawasanProgress.reduce((sum, k) => sum + k.percentage, 0) / kawasanProgress.length
+                // Progres fail = purata kawasan yang ADA sasaran sahaja
+                const counted = kawasanProgress.filter(k => k.hasTarget);
+                const fileProgress = counted.length
+                    ? counted.reduce((sum, k) => sum + k.percentage, 0) / counted.length
                     : 0;
 
                 // Sasaran kuantiti = jumlah sasaran setiap kawasan, ikut unit
@@ -1385,7 +1389,9 @@
                         ? `${kw.categoryProgressList.length} kategori, unit berbeza: lihat pecahan di bawah`
                         : kw.targetQty > 0
                         ? `Siap <strong class="text-emerald-600">${kw.doneQty}</strong> / <strong class="text-slate-700">${kw.targetQty} ${escapeHtml(kw.unit)}</strong>`
-                        : (kw.doneQty > 0 ? `Siap <strong class="text-emerald-600">${kw.doneQty}</strong>` : 'Belum ada laporan');
+                        : (kw.doneQty > 0
+                            ? `Siap <strong class="text-emerald-600">${kw.doneQty}${kw.unit && kw.unit !== 'Unit' ? ' ' + escapeHtml(kw.unit) : ''}</strong> · tiada sasaran dalam rekod kerja`
+                            : 'Belum ada laporan');
                     const kJangka = kw.jangkaSiap ? ` · Jangka siap <strong class="text-slate-700">${escapeHtml(formatTarikh(kw.jangkaSiap))}</strong>` : '';
                     return `
                         <div class="p-3 rounded-md border ${kw.key ? 'border-line bg-canvas/40' : 'border-dashed border-amber-400/60 bg-amber-50/50'}">
@@ -1394,10 +1400,12 @@
                                     <i data-lucide="map-pin" class="w-3.5 h-3.5 ${kw.key ? 'text-brand' : 'text-amber-500'} shrink-0"></i>
                                     <span class="truncate">${escapeHtml(kw.label)}</span>
                                 </span>
-                                <span class="text-sm font-bold text-ink shrink-0">${kPct}%</span>
+                                ${kw.hasTarget
+                                    ? `<span class="text-sm font-bold text-ink shrink-0">${kPct}%</span>`
+                                    : `<span class="text-[11px] font-semibold text-slate-400 shrink-0">Tiada sasaran</span>`}
                             </div>
                             <div class="w-full h-2.5 bg-white border border-line rounded-full overflow-hidden mt-2">
-                                <div class="h-full ${kBarColor} rounded-full transition-all duration-700" style="width: ${kPct > 0 ? Math.max(kPct, 3) : 0}%"></div>
+                                <div class="h-full ${kBarColor} rounded-full transition-all duration-700" style="width: ${kw.hasTarget && kPct > 0 ? Math.max(kPct, 3) : 0}%"></div>
                             </div>
                             <p class="text-[11px] text-slate-500 mt-1.5">${kQty}${kJangka}</p>
                             ${kw.categoryProgressList.length > 1 ? `<div class="mt-2 pt-2 border-t border-line">${categoryBars(kw.categoryProgressList)}</div>` : ''}
@@ -1406,7 +1414,7 @@
                 }).join('');
 
                 return `
-                    <div class="bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col justify-between gap-4 hover:border-brand/40 transition ${highlightClass}">
+                    <div class="bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col gap-4 hover:border-brand/40 transition ${highlightClass}">
                         <div class="space-y-4">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-3 min-w-0">
