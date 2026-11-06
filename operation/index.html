@@ -73,6 +73,8 @@
             50% { border-color: rgb(var(--gold-rgb)); box-shadow: 0 0 0 3px rgba(255, 229, 0, 0.35); }
         }
         .new-card-highlight { animation: pulseAccent 2.5s infinite; }
+        /* Senarai kerja dalam kad: sembunyi penanda lalai <summary> */
+        details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-canvas text-ink selection:bg-brand selection:text-white">
@@ -195,13 +197,18 @@
                             <i data-lucide="file-plus-2" class="w-6 h-6"></i>
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-ink">Borang Tambah Kerja Lapangan</h2>
-                            <p class="text-xs text-slate-500">Data dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik</p>
+                            <h2 id="formTitle" class="text-xl font-bold text-ink">Borang Tambah Kerja Lapangan</h2>
+                            <p id="formSubtitle" class="text-xs text-slate-500">Data dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik</p>
                         </div>
                     </div>
                     <button type="button" onclick="switchTab('dashboard')" class="hidden sm:flex px-4 py-2 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm hover:bg-canvas transition items-center gap-2">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
                     </button>
+                </div>
+
+                <div id="editBanner" class="hidden mb-6 p-3 rounded-md border border-amber-300 bg-amber-50 text-amber-800 text-xs flex items-start gap-2">
+                    <i data-lucide="pencil" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <span id="editBannerText">Mod edit</span>
                 </div>
 
                 <form id="fieldWorkForm" onsubmit="submitForm(event)" class="space-y-6">
@@ -276,7 +283,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-line">
-                        <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm hover:bg-canvas transition">Batal</button>
+                        <button type="button" id="cancelBtn" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm hover:bg-canvas transition">Batal</button>
                         <button type="submit" id="submitBtn" class="px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2">
                             <i data-lucide="send" class="w-4 h-4"></i> <span>Simpan & Jana Kad Progres</span>
                         </button>
@@ -356,6 +363,8 @@
         let selectedKategoriList = [];
         let selectedSurveyorList = [];
         let lastAddedFileId = null;
+        let editingRecord = null;      // { id, updatedAt } bila borang dalam mod edit
+        const localEdits = new Map();  // id -> rekod yang baru diedit (sementara CSV belum dikemas kini)
         let isRefreshing = false;
         let toastTimer = null;
         let toastHideTimer = null;
@@ -481,7 +490,8 @@
             refreshAllData();
         });
 
-        function switchTab(tabName) {
+        function switchTab(tabName, keepEdit = false) {
+            if (editingRecord && !keepEdit) exitEditMode();
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const activeView = document.getElementById(`view-${tabName}`);
             if (activeView) activeView.classList.remove('hidden');
@@ -516,6 +526,16 @@
             const otherId = type === 'kategori' ? 'surveyorDropdownMenu' : 'kategoriDropdownMenu';
             document.getElementById(otherId)?.classList.add('hidden');
             document.getElementById(menuId)?.classList.toggle('hidden');
+        }
+
+        function syncMultiSelectLabels() {
+            const pairs = [['kategoriSelectedText', selectedKategoriList, 'Pilih Kategori...'], ['surveyorSelectedText', selectedSurveyorList, 'Pilih Surveyor...']];
+            pairs.forEach(([id, list, placeholder]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerText = list.length ? list.join(', ') : placeholder;
+                el.className = list.length ? 'text-brand font-medium truncate' : 'text-slate-500 truncate';
+            });
         }
 
         function onMultiSelectChange(type, checkbox) {
@@ -719,9 +739,24 @@
             // Buang rekod tempatan yang dah masuk dalam sheet, supaya tugas tak dikira dua kali
             const rekodKey = r => [normalizeFileId(r.idFile), kawasanKey(r.kawasan), tarikhToIso(r.tarikh), String(r.tugas || '').trim().toLowerCase()].join('|');
             const rekodKeys = new Set(parsedRekod.map(rekodKey));
-            localAddedRecords = localAddedRecords.filter(l => !rekodKeys.has(rekodKey(l)));
+            const sheetIds = new Set(parsedRekod.map(r => r.id).filter(Boolean));
+            localAddedRecords = localAddedRecords.filter(l => !(l.id && sheetIds.has(l.id)) && !rekodKeys.has(rekodKey(l)));
 
-            const combinedRecords = [...localAddedRecords, ...parsedRekod];
+            // Suntingan tempatan dipakai sehingga CSV menunjukkan versi yang sama atau lebih baru
+            const applyEdit = r => {
+                const edit = r.id ? localEdits.get(r.id) : null;
+                if (!edit) return r;
+                if (r.sourceType === 'rekod' && r.updatedAt && r.updatedAt >= edit.updatedAt) {
+                    localEdits.delete(r.id);
+                    return r;
+                }
+                return { ...r, ...edit };
+            };
+            const editedRekod = parsedRekod.map(applyEdit);
+            localAddedRecords = localAddedRecords.map(applyEdit);
+
+            const combinedRecords = [...localAddedRecords, ...editedRekod];
+            window.__rekodById = new Map(combinedRecords.filter(r => r.id).map(r => [r.id, r]));
 
             const allKategoriSet = new Set(DEFAULT_KATEGORI);
             const existingFilesSet = new Set();
@@ -780,7 +815,7 @@
             window.__processedData = {
                 kawasanByFile,
                 combinedRecords,
-                parsedRekod: [...localAddedRecords, ...parsedRekod],
+                parsedRekod: [...localAddedRecords, ...editedRekod],
                 parsedStat,
                 fileSurveyorBackupMap,
                 fileCategoriesFromStatMap,
@@ -948,7 +983,7 @@
                     if (!cleanCell) return;
                     splitMultiValues(cleanCell).forEach(part => {
                         const matchedDefaultKat = isOfficialKategori(part) ? canonicalKategori(part) : null;
-                        if (matchedDefaultKat && !kategoriValues.some(kv => kv.toLowerCase().includes(matchedDefaultKat.toLowerCase()))) {
+                        if (matchedDefaultKat && !kategoriValues.some(kv => canonicalKategori(kv).toLowerCase() === matchedDefaultKat.toLowerCase())) {
                             kategoriValues.push(matchedDefaultKat);
                         }
                     });
@@ -962,7 +997,14 @@
                 }
 
                 let hasMatrixEntries = false;
-                const knownColIndices = new Set([fileColIdx, kawasanColIdx, tarikhColIdx, jangkaColIdx, tugasColIdx, qtyColIdx, unitColIdx, pctColIdx]);
+                // ID rekod & masa dikemaskini (untuk ciri edit). Padanan nama header tepat.
+                const exactIdx = names => hasHeaders ? headers.findIndex(h => names.includes(String(h || '').trim().toLowerCase())) : -1;
+                const idColIdx = exactIdx(['id', 'id rekod']);
+                const updColIdx = exactIdx(['dikemaskini', 'last updated']);
+                const recId = idColIdx !== -1 ? String(vals[idColIdx] || '').trim() : '';
+                const updatedAt = updColIdx !== -1 ? String(vals[updColIdx] || '').trim() : '';
+
+                const knownColIndices = new Set([fileColIdx, kawasanColIdx, tarikhColIdx, jangkaColIdx, tugasColIdx, qtyColIdx, unitColIdx, pctColIdx, idColIdx, updColIdx]);
                 headers.forEach((h, idx) => {
                     const hRaw = String(h || '').trim();
                     const isOfficialKatHeader = isOfficialKategori(hRaw);
@@ -1007,6 +1049,8 @@
 
                 if (!hasMatrixEntries && (idFile || kategoriValues.length > 0 || surveyorValues.length > 0 || kuantiti > 0)) {
                     normalizedList.push({
+                        id: recId,
+                        updatedAt: updatedAt,
                         idFile: idFile,
                         kawasan: kawasan,
                         tarikh: tarikh,
@@ -1375,6 +1419,28 @@
                     .join(' ');
 
                 const latestTask = grp.tasks.length > 0 ? grp.tasks[0].tugas : 'Kerja ukur lapangan direkodkan';
+
+                // Senarai kerja (setiap baris Tambah Kerja) dengan butang Edit
+                const kerjaListHtml = grp.rekodEntries.map(r => {
+                    const meta = [
+                        r.kawasan ? escapeHtml(r.kawasan) : '<span class="text-amber-600">Tiada kawasan</span>',
+                        escapeHtml([...new Set(splitMultiValues(r.kategori))].join(', ') || 'Umum'),
+                        r.kuantiti > 0 ? `${r.kuantiti} ${escapeHtml(r.unit || 'Unit')}` : '',
+                        r.jangkaSiap ? `Siap ${escapeHtml(formatTarikh(r.jangkaSiap))}` : ''
+                    ].filter(Boolean).join(' · ');
+                    const canEdit = /^[A-Za-z0-9-]{6,64}$/.test(r.id || '');
+                    const btn = canEdit
+                        ? `<button type="button" data-id="${escapeHtml(r.id)}" onclick="openEditKerja(this.dataset.id)" class="shrink-0 px-2.5 py-1.5 rounded-md border border-line bg-white text-xs font-semibold text-brand hover:bg-brand/10 transition flex items-center gap-1" aria-label="Edit kerja ${escapeHtml(r.tugas || '')}"><i data-lucide="pencil" class="w-3.5 h-3.5"></i>Edit</button>`
+                        : `<span class="shrink-0 px-2.5 py-1.5 rounded-md border border-dashed border-line text-[10px] text-slate-400" title="Rekod belum ada ID. Jalankan setup() dalam Apps Script Progres, atau tunggu CSV dikemas kini.">Tiada ID</span>`;
+                    return `
+                        <li class="flex items-start justify-between gap-2 py-2">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-ink truncate">${escapeHtml(r.tugas || 'Tanpa tugas')}</p>
+                                <p class="text-[11px] text-slate-500">${meta}</p>
+                            </div>
+                            ${btn}
+                        </li>`;
+                }).join('');
                 const highlightClass = grp.isNewlyAdded ? 'new-card-highlight' : '';
 
                 const categoryBars = list => (list || []).map(catProg => {
@@ -1469,6 +1535,14 @@
                                     <span class="text-slate-400 shrink-0">${grp.tasks.length} Tugas</span>
                                 </div>
                                 ${qtySummary ? `<div class="flex flex-wrap gap-1.5">${qtySummary}</div>` : ''}
+                                ${kerjaListHtml ? `
+                                <details class="group/kerja pt-1">
+                                    <summary class="cursor-pointer select-none text-xs font-semibold text-brand flex items-center gap-1 list-none">
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform group-open/kerja:rotate-90"></i>
+                                        Senarai kerja &amp; edit (${grp.rekodEntries.length})
+                                    </summary>
+                                    <ul class="mt-1 divide-y divide-line">${kerjaListHtml}</ul>
+                                </details>` : ''}
                             </div>
                         </div>
 
@@ -1547,6 +1621,93 @@
             }
         }
 
+        // ---------- Edit kerja ----------
+        function setFormMode(mode) {
+            const isEdit = mode === 'edit';
+            const title = document.getElementById('formTitle');
+            const sub = document.getElementById('formSubtitle');
+            const banner = document.getElementById('editBanner');
+            const cancel = document.getElementById('cancelBtn');
+            const submit = document.getElementById('submitBtn');
+            if (title) title.innerText = isEdit ? 'Edit Kerja Lapangan' : 'Borang Tambah Kerja Lapangan';
+            if (sub) sub.innerText = isEdit
+                ? 'Perubahan disimpan terus pada baris asal dalam Google Sheets.'
+                : 'Data dihantar ke Google Sheets melalui Apps Script dan menjana kad progres secara automatik';
+            if (banner) banner.classList.toggle('hidden', !isEdit);
+            if (cancel) cancel.innerText = isEdit ? 'Batal Edit' : 'Batal';
+            if (submit && !submit.disabled) {
+                submit.innerHTML = isEdit
+                    ? `<i data-lucide="save" class="w-4 h-4"></i> <span>Simpan Perubahan</span>`
+                    : `<i data-lucide="send" class="w-4 h-4"></i> <span>Simpan & Jana Kad Progres</span>`;
+            }
+            refreshIcons();
+        }
+
+        function resetFieldWorkForm() {
+            document.getElementById('fieldWorkForm').reset();
+            document.getElementById('tarikh').value = todayLocalIso();
+            document.getElementById('jangkaSiap').value = todayLocalIso();
+            selectedKategoriList = [];
+            selectedSurveyorList = [];
+            renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
+            syncMultiSelectLabels();
+        }
+
+        function exitEditMode() {
+            editingRecord = null;
+            resetFieldWorkForm();
+            setFormMode('add');
+        }
+
+        function openEditKerja(id) {
+            const rec = window.__rekodById && window.__rekodById.get(id);
+            if (!rec) {
+                showToast('Rekod tidak dijumpai. Tekan Muat Semula dan cuba lagi.', 'error');
+                return;
+            }
+            switchTab('tambah', true);
+            editingRecord = { id: rec.id, updatedAt: rec.updatedAt || '' };
+            resetFieldWorkForm();
+
+            document.getElementById('idFile').value = rec.idFile || '';
+            document.getElementById('kawasan').value = rec.kawasan || '';
+            document.getElementById('tarikh').value = tarikhToIso(rec.tarikh) || '';
+            document.getElementById('jangkaSiap').value = tarikhToIso(rec.jangkaSiap) || '';
+            document.getElementById('tugas').value = rec.tugas || '';
+            document.getElementById('kuantiti').value = rec.kuantiti > 0 ? rec.kuantiti : '';
+            const unitSel = document.getElementById('unit');
+            const unitOpt = Array.from(unitSel.options).find(o => o.value.toLowerCase() === String(rec.unit || '').toLowerCase());
+            unitSel.value = unitOpt ? unitOpt.value : '';
+
+            // Hanya pilihan rasmi boleh dipilih; nilai lama yang tiada dalam senarai dimaklumkan
+            const pick = (raw, options, mapFn) => {
+                const chosen = [], unknown = [];
+                splitMultiValues(raw).forEach(v => {
+                    const val = mapFn ? mapFn(v) : v;
+                    const hit = options.find(o => o.toLowerCase() === String(val).toLowerCase());
+                    if (hit) { if (!chosen.includes(hit)) chosen.push(hit); } else unknown.push(v);
+                });
+                return { chosen, unknown };
+            };
+            const kat = pick(rec.kategori, DEFAULT_KATEGORI, canonicalKategori);
+            const surv = pick(rec.surveyor, DEFAULT_SURVEYORS);
+            selectedKategoriList = kat.chosen;
+            selectedSurveyorList = surv.chosen;
+            renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
+            syncMultiSelectLabels();
+            updateKawasanSuggestions();
+
+            const bannerText = document.getElementById('editBannerText');
+            if (bannerText) {
+                bannerText.innerText = `Mengedit: ${rec.idFile || '-'} · ${rec.kawasan || 'tiada kawasan'} · ${rec.tugas || '-'}.`
+                    + (kat.unknown.length || surv.unknown.length || !unitOpt
+                        ? ` Sila pilih semula: ${[...kat.unknown, ...surv.unknown, ...(!unitOpt && rec.unit ? [rec.unit] : [])].join(', ') || 'Unit'} (tiada dalam senarai).`
+                        : '');
+            }
+            setFormMode('edit');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         async function submitForm(e) {
             e.preventDefault();
             const submitBtnGuard = document.getElementById('submitBtn');
@@ -1588,6 +1749,7 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<span class="w-4 h-4 border-2 border-ink border-t-transparent rounded-full animate-spin"></span> <span>Menghantar...</span>`;
 
+            const isEdit = Boolean(editingRecord);
             const payload = {
                 idFile: fileParts.file,
                 kawasan,
@@ -1599,11 +1761,20 @@
                 unit: document.getElementById('unit').value,
                 jangkaSiap: document.getElementById('jangkaSiap').value
             };
+            if (isEdit) {
+                payload.action = 'update';
+                payload.id = editingRecord.id;
+                payload.updatedAt = editingRecord.updatedAt;
+            }
 
             try {
                 const result = await postToAppsScript(payload);
                 if (result.status === 'duplicate') {
-                    showModal('Rekod Sudah Wujud', 'Kerja yang sama sudah ada dalam sheet. Tiada rekod baru disimpan.', 'error');
+                    showModal('Rekod Sudah Wujud', isEdit ? 'Kerja lain dengan maklumat yang sama sudah ada. Perubahan tidak disimpan.' : 'Kerja yang sama sudah ada dalam sheet. Tiada rekod baru disimpan.', 'error');
+                    return;
+                }
+                if (result.status === 'conflict') {
+                    showModal('Rekod Telah Berubah', result.message || 'Rekod ini telah diubah oleh orang lain. Muat semula dan cuba lagi.', 'error');
                     return;
                 }
                 if (result.status !== 'ok') {
@@ -1612,22 +1783,25 @@
                 }
 
                 lastAddedFileId = payload.idFile;
-                localAddedRecords.unshift({ ...payload, peratus: null, isNewlyAdded: true });
+                const saved = { ...payload, id: result.id || payload.id || '', updatedAt: result.updatedAt || '', peratus: null, isNewlyAdded: true, sourceType: 'rekod' };
+                delete saved.action;
+                if (isEdit) {
+                    localEdits.set(saved.id, saved);
+                } else {
+                    localAddedRecords.unshift(saved);
+                }
 
-                document.getElementById('fieldWorkForm').reset();
-                document.getElementById('tarikh').value = todayLocalIso();
-                document.getElementById('jangkaSiap').value = todayLocalIso();
-                selectedKategoriList = [];
-                selectedSurveyorList = [];
-                document.getElementById('kategoriSelectedText').innerText = 'Pilih Kategori...';
-                document.getElementById('kategoriSelectedText').className = 'text-slate-500 truncate';
-                document.getElementById('surveyorSelectedText').innerText = 'Pilih Surveyor...';
-                document.getElementById('surveyorSelectedText').className = 'text-slate-500 truncate';
-
+                editingRecord = null;
+                resetFieldWorkForm();
+                setFormMode('add');
                 syncDynamicOptionsAndRender();
                 switchTab('dashboard');
 
-                showModal('Kerja Berjaya Ditambah', `Fail "${payload.idFile}" (${payload.kawasan}) disimpan dalam sheet (baris ${result.row}) dan kad progres telah dijana.`, 'success');
+                if (isEdit) {
+                    showModal('Kerja Dikemas Kini', `Perubahan untuk "${payload.idFile}" (${payload.kawasan}) disimpan pada baris ${result.row}.`, 'success');
+                } else {
+                    showModal('Kerja Berjaya Ditambah', `Fail "${payload.idFile}" (${payload.kawasan}) disimpan dalam sheet (baris ${result.row}) dan kad progres telah dijana.`, 'success');
+                }
 
                 setTimeout(() => { refreshAllData(); }, 2500);
             } catch (error) {
@@ -1635,8 +1809,7 @@
                 showModal('Ralat Hantaran', error.userMessage || 'Gagal menghubungi pelayan Google Apps Script. Sila cuba lagi.', 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> <span>Simpan & Jana Kad Progres</span>`;
-                refreshIcons();
+                setFormMode(editingRecord ? 'edit' : 'add');
             }
         }
 
