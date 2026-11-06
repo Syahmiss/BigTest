@@ -208,7 +208,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">No File</label>
-                            <input type="text" id="idFile" required placeholder="Cth: MGK 001/26" list="existingFilesList" autocomplete="off" oninput="updateKawasanSuggestions()" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                            <input type="text" id="idFile" required placeholder="Cth: MCP 001/26" list="existingFilesList" autocomplete="off" oninput="updateKawasanSuggestions()" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
                             <datalist id="existingFilesList"></datalist>
                         </div>
 
@@ -326,7 +326,7 @@
 
     <script>
         // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSiqpRqZfRMgbZdOi8MKAx9Y6YCxyCUR7RyH9DtUcq_WEmGhl4kI7pn5pBT-56n7GxDg/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKnyDkZCRqiE_WR9CzYljRN-r4eCNPM6iPMYH1m4oCyorGHdMhrY808ayyavxJDZC_eQ/exec";
 
         // 2. URL CSV 1: Rekod Kerja Lapangan (Sumber Penjanaan Kad Progres & Sasaran Kuantiti)
         const CSV_REKOD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW5BxrFQw07_bCiTfbARTgXh8qYvbMnLo4Uur7iM6ROw42DMmluHxrxXd3bKxVADyj_dLu_pCoEob8/pub?gid=1800236702&single=true&output=csv";
@@ -344,8 +344,20 @@
             'calibration': 'Kalibrasi', 'kalibrasi': 'Kalibrasi',
             'topography': 'Topografi', 'topografi': 'Topografi',
             'utility mapping': 'Pemetaan Utiliti', 'pemetaan utiliti': 'Pemetaan Utiliti',
-            'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata'
+            'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata',
+            // Nama dari dropdown Dashboard Laporan Harian
+            'ukur semula': 'Kadaster', 'ukur kadaster': 'Kadaster',
+            'ukur topografi': 'Topografi', 'ukur strata': 'Strata', 'ukur kalibrasi': 'Kalibrasi'
         };
+
+        // Hanya No File dengan prefix ini diterima. Rekod prefix lain diabaikan (tak dikira, tak dipaparkan).
+        const FILE_PREFIX = "MCP";
+
+        // Benar jika No File guna FILE_PREFIX atau tiada prefix langsung ("001/26")
+        function isAcceptedFileId(value) {
+            const m = String(value || '').trim().match(/^([A-Za-z]{2,6})\s*\d+\s*\//);
+            return !m || m[1].toUpperCase() === FILE_PREFIX;
+        }
 
         const NAV_ACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand";
         const NAV_INACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand";
@@ -401,12 +413,13 @@
             return raw || '-';
         }
 
-        // "MGK 001/26 Mangkuk" -> { file: "MGK 001/26", kawasan: "Mangkuk" } (sama dengan Apps Script)
+        // "MCP 001/26 Mangkuk" atau "001/26 Mangkuk" -> { file: "MCP 001/26", kawasan: "Mangkuk" }
         function splitFileAndKawasan(value) {
             const s = String(value || '').trim().replace(/\s+/g, ' ');
-            const m = s.match(/^([A-Za-z]{2,6})\s*(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
+            const m = s.match(/^(?:([A-Za-z]{2,6})\s*)?(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
             if (!m) return { file: s, kawasan: '' };
-            return { file: m[1].toUpperCase() + ' ' + m[2] + '/' + m[3], kawasan: m[4].trim() };
+            const prefix = (m[1] || FILE_PREFIX).toUpperCase();
+            return { file: prefix + ' ' + m[2] + '/' + m[3], kawasan: m[4].trim() };
         }
 
         function kawasanKey(value) {
@@ -677,12 +690,12 @@
                 .map(canonicalKategori);
         }
 
-        // "MGK 001/26 Mangkuk" (dari borang laporan harian) dan "MGK 001/26" mesti dianggap fail yang sama
+        // "MCP 001/26 Mangkuk", "MCP001/26" dan "001/26" mesti dianggap fail yang sama
         function normalizeFileId(idStr) {
             if (!idStr) return '';
             const s = String(idStr).toUpperCase().replace(/^["']+|["']+$/g, '').trim();
-            const mgk = s.match(/^MGK\s*(\d+\s*\/\s*\d+)/);
-            if (mgk) return 'MGK' + mgk[1].replace(/\s+/g, '');
+            const m = s.match(/^([A-Z]{2,6})?\s*(\d+\s*\/\s*\d+)/);
+            if (m && (!m[1] || m[1] === FILE_PREFIX)) return FILE_PREFIX + m[2].replace(/\s+/g, '');
             return s.replace(/\s+/g, '');
         }
 
@@ -864,7 +877,7 @@
                     }
                 }
 
-                // Kawasan: lajur Kawasan, atau teks selepas nombor fail (data lama "MGK 001/26 Mangkuk")
+                // Kawasan: lajur Kawasan, atau teks selepas nombor fail ("MCP 001/26 Mangkuk")
                 const kawasanColIdx = findIndexByHeaderKeywords(['kawasan', 'lokasi', 'tapak']);
                 let kawasan = kawasanColIdx !== -1 ? kawasanLabel(vals[kawasanColIdx]) : '';
                 if (idFile) {
@@ -880,6 +893,9 @@
                 } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
                     idFile = lastContext.idFile;
                 }
+
+                // Abaikan rekod yang bukan prefix MCP (termasuk baris bergabung di bawahnya)
+                if (idFile && !isAcceptedFileId(idFile)) return;
 
                 const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
                 const jangkaColIdx = findIndexByHeaderKeywords(['jangka siap', 'tarikh siap', 'jangka', 'siap', 'target', 'due'], ['masa', 'timestamp']);
@@ -1220,7 +1236,11 @@
                 });
                 // Rekod tanpa kawasan TIDAK dicampur ke mana-mana kawasan; ia dikumpul
                 // dalam "Kawasan tidak dinyatakan" supaya progres setiap kawasan tepat.
-                const keyOf = r => kawasanKey(r.kawasan);
+                // Pengecualian: jika fail ada SATU kawasan sahaja dalam rekod kerja, laporan harian
+                // tanpa kawasan pasti milik kawasan itu (borang laporan harian tiada medan kawasan).
+                const rekodKawasanKeys = new Set(grp.rekodEntries.map(r => kawasanKey(r.kawasan)).filter(Boolean));
+                const soleKawasan = rekodKawasanKeys.size === 1 ? Array.from(rekodKawasanKeys)[0] : '';
+                const keyOf = r => kawasanKey(r.kawasan) || (r.sourceType === 'stat' ? soleKawasan : '');
                 const keys = Array.from(labels.keys());
                 if (allRows.some(r => keyOf(r) === '')) keys.push('');
 
@@ -1534,7 +1554,7 @@
                 return;
             }
 
-            // Jika kawasan ditaip dalam No File ("MGK 001/26 Mangkuk"), pindahkan ke medan Kawasan
+            // Jika kawasan ditaip dalam No File ("MCP 001/26 Mangkuk"), pindahkan ke medan Kawasan
             const fileParts = splitFileAndKawasan(document.getElementById('idFile').value);
             let kawasan = kawasanLabel(document.getElementById('kawasan').value);
             if (fileParts.kawasan) {
@@ -1546,6 +1566,10 @@
             }
             if (!fileParts.file) {
                 showModal('No File Kosong', 'Sila isi No File.', 'error');
+                return;
+            }
+            if (!isAcceptedFileId(fileParts.file)) {
+                showModal('No File Tidak Sah', `No File mesti guna prefix ${FILE_PREFIX}, contoh: ${FILE_PREFIX} 001/26.`, 'error');
                 return;
             }
             if (!kawasan) {
