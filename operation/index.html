@@ -326,7 +326,7 @@
 
     <script>
         // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKnyDkZCRqiE_WR9CzYljRN-r4eCNPM6iPMYH1m4oCyorGHdMhrY808ayyavxJDZC_eQ/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjImKeAe2CyiR2EEtUmG89HUo1bEQc0RDGDya6rY9TpR2Ttddcye5Ih1m_dI0wMz8PaA/exec";
 
         // 2. URL CSV 1: Rekod Kerja Lapangan (Sumber Penjanaan Kad Progres & Sasaran Kuantiti)
         const CSV_REKOD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW5BxrFQw07_bCiTfbARTgXh8qYvbMnLo4Uur7iM6ROw42DMmluHxrxXd3bKxVADyj_dLu_pCoEob8/pub?gid=1800236702&single=true&output=csv";
@@ -344,20 +344,8 @@
             'calibration': 'Kalibrasi', 'kalibrasi': 'Kalibrasi',
             'topography': 'Topografi', 'topografi': 'Topografi',
             'utility mapping': 'Pemetaan Utiliti', 'pemetaan utiliti': 'Pemetaan Utiliti',
-            'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata',
-            // Nama dari dropdown Dashboard Laporan Harian
-            'ukur semula': 'Kadaster', 'ukur kadaster': 'Kadaster',
-            'ukur topografi': 'Topografi', 'ukur strata': 'Strata', 'ukur kalibrasi': 'Kalibrasi'
+            'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata'
         };
-
-        // Hanya No File dengan prefix ini diterima. Rekod prefix lain diabaikan (tak dikira, tak dipaparkan).
-        const FILE_PREFIX = "MCP";
-
-        // Benar jika No File guna FILE_PREFIX atau tiada prefix langsung ("001/26")
-        function isAcceptedFileId(value) {
-            const m = String(value || '').trim().match(/^([A-Za-z]{2,6})\s*\d+\s*\//);
-            return !m || m[1].toUpperCase() === FILE_PREFIX;
-        }
 
         const NAV_ACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand";
         const NAV_INACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand";
@@ -413,13 +401,22 @@
             return raw || '-';
         }
 
-        // "MCP 001/26 Mangkuk" atau "001/26 Mangkuk" -> { file: "MCP 001/26", kawasan: "Mangkuk" }
+        // "MCP 001/26 Mangkuk" -> { file: "MCP 001/26", kawasan: "Mangkuk" } (sama dengan Apps Script)
+        // Prefix No File. Data lama dengan prefix LEGACY_PREFIXES dibaca sebagai MCP.
+        const FILE_PREFIX = 'MCP';
+        const LEGACY_PREFIXES = ['MGK'];
+
+        function canonicalPrefix(prefix) {
+            const p = String(prefix || '').toUpperCase();
+            return LEGACY_PREFIXES.includes(p) ? FILE_PREFIX : p;
+        }
+
         function splitFileAndKawasan(value) {
-            const s = String(value || '').trim().replace(/\s+/g, ' ');
-            const m = s.match(/^(?:([A-Za-z]{2,6})\s*)?(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
+            let s = String(value || '').trim().replace(/\s+/g, ' ');
+            if (/^\d+\s*\//.test(s)) s = FILE_PREFIX + ' ' + s; // "001/26" -> "MCP 001/26"
+            const m = s.match(/^([A-Za-z]{2,6})\s*(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
             if (!m) return { file: s, kawasan: '' };
-            const prefix = (m[1] || FILE_PREFIX).toUpperCase();
-            return { file: prefix + ' ' + m[2] + '/' + m[3], kawasan: m[4].trim() };
+            return { file: canonicalPrefix(m[1]) + ' ' + m[2].padStart(3, '0') + '/' + m[3], kawasan: m[4].trim() };
         }
 
         function kawasanKey(value) {
@@ -690,12 +687,13 @@
                 .map(canonicalKategori);
         }
 
-        // "MCP 001/26 Mangkuk", "MCP001/26" dan "001/26" mesti dianggap fail yang sama
+        // "MCP 001/26 Mangkuk", "MGK 001/26" (lama) dan "MCP 1/26" dianggap fail yang sama
         function normalizeFileId(idStr) {
             if (!idStr) return '';
             const s = String(idStr).toUpperCase().replace(/^["']+|["']+$/g, '').trim();
-            const m = s.match(/^([A-Z]{2,6})?\s*(\d+\s*\/\s*\d+)/);
-            if (m && (!m[1] || m[1] === FILE_PREFIX)) return FILE_PREFIX + m[2].replace(/\s+/g, '');
+            // Kunci perbandingan: buang sifar di depan supaya "MCP 13/26" == "MCP 013/26"
+            const m = s.match(/^([A-Z]{2,6})\s*(\d+)\s*\/\s*(\d+)/);
+            if (m) return canonicalPrefix(m[1]) + String(parseInt(m[2], 10)) + '/' + String(parseInt(m[3], 10));
             return s.replace(/\s+/g, '');
         }
 
@@ -877,7 +875,7 @@
                     }
                 }
 
-                // Kawasan: lajur Kawasan, atau teks selepas nombor fail ("MCP 001/26 Mangkuk")
+                // Kawasan: lajur Kawasan, atau teks selepas nombor fail (data lama "MCP 001/26 Mangkuk")
                 const kawasanColIdx = findIndexByHeaderKeywords(['kawasan', 'lokasi', 'tapak']);
                 let kawasan = kawasanColIdx !== -1 ? kawasanLabel(vals[kawasanColIdx]) : '';
                 if (idFile) {
@@ -893,9 +891,6 @@
                 } else if (!idFile && lastContext.idFile && sourceType === 'rekod') {
                     idFile = lastContext.idFile;
                 }
-
-                // Abaikan rekod yang bukan prefix MCP (termasuk baris bergabung di bawahnya)
-                if (idFile && !isAcceptedFileId(idFile)) return;
 
                 const tarikhColIdx = findIndexByHeaderKeywords(['tarikh mula', 'tarikh kerja', 'tarikh', 'date'], ['siap', 'jangka', 'target', 'due', 'masa', 'timestamp']);
                 const jangkaColIdx = findIndexByHeaderKeywords(['jangka siap', 'tarikh siap', 'jangka', 'siap', 'target', 'due'], ['masa', 'timestamp']);
@@ -1023,6 +1018,15 @@
             return normalizedList;
         }
 
+        // Laporan dikira untuk kategori jika kategori laporan SAMA (selepas tukar nama lama ke BM).
+        // Teks Tugas hanya digunakan jika laporan langsung tiada kategori (data lama).
+        function statMatchesCategory(st, catName) {
+            const target = canonicalKategori(catName).toLowerCase().trim();
+            const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
+            if (stCats.length) return stCats.includes(target);
+            return canonicalKategori(st.tugas).toLowerCase().trim() === target;
+        }
+
         // statFilter (pilihan): hadkan laporan statistik kepada satu kawasan
         function resolveProgressDetailsForFile(fileKey, kategoriList, rekodTasksForFile, statFilter) {
             const { parsedStat } = window.__processedData || {};
@@ -1056,17 +1060,14 @@
                     totalFileExplicitPcts.push(st.peratus);
                 }
 
-                const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
-                const stTugas = canonicalKategori(st.tugas).toLowerCase().trim();
-
-                const matchesAnyCardCat = effectiveCategories.some(ec => {
-                    const ecLow = ec.toLowerCase().trim();
-                    return stCats.some(sc => sc === ecLow || sc.includes(ecLow) || ecLow.includes(sc)) ||
-                           (stTugas && (stTugas === ecLow || stTugas.includes(ecLow) || ecLow.includes(stTugas)));
-                });
+                const matchesAnyCardCat = effectiveCategories.some(ec => statMatchesCategory(st, ec));
 
                 if (!matchesAnyCardCat) uncategorizedStatDoneQty += validQty;
             });
+
+            // Sasaran fail hanya dipinjam oleh kategori jika rekod kerja langsung tiada kategori.
+            // Jika tidak, kategori yang cuma ada dalam laporan (tak dirancang) tak dapat sasaran palsu.
+            const rekodHasCategories = (rekodTasksForFile || []).some(t => splitMultiValues(t.kategori).length > 0);
 
             const categoryProgressList = effectiveCategories.map(catName => {
                 const catLower = catName.toLowerCase().trim();
@@ -1075,8 +1076,7 @@
 
                 (rekodTasksForFile || []).forEach(t => {
                     const rowCats = splitMultiValues(t.kategori).map(c => c.toLowerCase().trim());
-                    const isMatch = (catLower === 'umum' && rowCats.length === 0) ||
-                        rowCats.some(rc => rc === catLower || rc.includes(catLower) || catLower.includes(rc));
+                    const isMatch = (catLower === 'umum' && rowCats.length === 0) || rowCats.includes(catLower);
                     if (isMatch) {
                         const q = parseFloat(t.kuantiti);
                         if (!isNaN(q) && q > 0 && catTargetQty === 0) catTargetQty = q;
@@ -1084,17 +1084,14 @@
                     }
                 });
 
-                if (catTargetQty === 0 && fileLevelTargetQty > 0) catTargetQty = fileLevelTargetQty;
+                if (catTargetQty === 0 && fileLevelTargetQty > 0 && !rekodHasCategories) catTargetQty = fileLevelTargetQty;
                 if (!catUnit && fileLevelUnit) catUnit = fileLevelUnit;
 
                 let catDoneQty = 0;
                 const catExplicitPcts = [];
 
                 statRecsForFile.forEach(st => {
-                    const stCats = splitMultiValues(st.kategori).map(c => c.toLowerCase().trim());
-                    const stTugas = canonicalKategori(st.tugas).toLowerCase().trim();
-                    const isDirectCatMatch = stCats.some(sc => sc === catLower || sc.includes(catLower) || catLower.includes(sc)) ||
-                        (stTugas && (stTugas === catLower || stTugas.includes(catLower) || catLower.includes(stTugas)));
+                    const isDirectCatMatch = statMatchesCategory(st, catName);
 
                     if (isDirectCatMatch) {
                         const q = parseFloat(st.kuantiti);
@@ -1104,7 +1101,8 @@
                     }
                 });
 
-                if (catDoneQty === 0 && uncategorizedStatDoneQty > 0) catDoneQty = uncategorizedStatDoneQty;
+                // Laporan tanpa kategori hanya boleh diberi kepada kategori jika fail ada SATU kategori sahaja
+                if (catDoneQty === 0 && uncategorizedStatDoneQty > 0 && effectiveCategories.length === 1) catDoneQty = uncategorizedStatDoneQty;
 
                 let catPct = 0;
                 if (catTargetQty > 0 && catDoneQty > 0) {
@@ -1122,12 +1120,15 @@
                     percentage: Math.round(catPct * 10) / 10,
                     doneQty: Math.round(catDoneQty * 100) / 100,
                     targetQty: Math.round(catTargetQty * 100) / 100,
-                    unit: catUnit || 'Unit'
+                    unit: catUnit || 'Unit',
+                    hasTarget: catTargetQty > 0 || catExplicitPcts.length > 0 || catPct > 0
                 };
             });
 
-            const overallPct = categoryProgressList.length > 0
-                ? categoryProgressList.reduce((sum, item) => sum + item.percentage, 0) / categoryProgressList.length
+            // Purata hanya kategori yang ada sasaran (kategori yang cuma dilaporkan tak cairkan peratus)
+            const countedCats = categoryProgressList.filter(c => c.hasTarget);
+            const overallPct = countedCats.length > 0
+                ? countedCats.reduce((sum, item) => sum + item.percentage, 0) / countedCats.length
                 : 0;
 
             const totalDone = totalFileStatDoneQty > 0
@@ -1236,11 +1237,7 @@
                 });
                 // Rekod tanpa kawasan TIDAK dicampur ke mana-mana kawasan; ia dikumpul
                 // dalam "Kawasan tidak dinyatakan" supaya progres setiap kawasan tepat.
-                // Pengecualian: jika fail ada SATU kawasan sahaja dalam rekod kerja, laporan harian
-                // tanpa kawasan pasti milik kawasan itu (borang laporan harian tiada medan kawasan).
-                const rekodKawasanKeys = new Set(grp.rekodEntries.map(r => kawasanKey(r.kawasan)).filter(Boolean));
-                const soleKawasan = rekodKawasanKeys.size === 1 ? Array.from(rekodKawasanKeys)[0] : '';
-                const keyOf = r => kawasanKey(r.kawasan) || (r.sourceType === 'stat' ? soleKawasan : '');
+                const keyOf = r => kawasanKey(r.kawasan);
                 const keys = Array.from(labels.keys());
                 if (allRows.some(r => keyOf(r) === '')) keys.push('');
 
@@ -1259,7 +1256,10 @@
                     const catList = prog.categoryProgressList || [];
                     const units = new Set(catList.filter(c => c.targetQty > 0 || c.doneQty > 0).map(c => c.unit));
                     const mixedUnits = units.size > 1;
-                    const sum = f => Math.round(catList.reduce((t, c) => t + (c[f] || 0), 0) * 100) / 100;
+                    // "Siap x / y" ikut kategori yang ada sasaran sahaja, supaya sepadan dengan peratus
+                    const targeted = catList.filter(c => c.hasTarget);
+                    const basis = targeted.length ? targeted : catList;
+                    const sum = f => Math.round(basis.reduce((t, c) => t + (c[f] || 0), 0) * 100) / 100;
                     return {
                         key,
                         label: key ? labels.get(key) : 'Kawasan tidak dinyatakan',
@@ -1372,7 +1372,7 @@
 
                 const categoryBars = list => (list || []).map(catProg => {
                     const cPct = Math.min(100, Math.max(0, Math.round(catProg.percentage || 0)));
-                    const cBarWidth = cPct > 0 ? Math.max(cPct, 4) : 0;
+                    const cBarWidth = catProg.hasTarget && cPct > 0 ? Math.max(cPct, 4) : 0;
                     const cBarColor = cPct >= 80
                         ? 'from-emerald-500 to-emerald-400'
                         : cPct >= 40
@@ -1392,7 +1392,7 @@
                                 </span>
                                 <div class="flex items-center gap-2 shrink-0">
                                     ${cFractionText}
-                                    <span class="font-bold text-ink">${cPct}%</span>
+                                    ${catProg.hasTarget ? `<span class="font-bold text-ink">${cPct}%</span>` : `<span class="text-[10px] font-semibold text-slate-400">Tiada sasaran</span>`}
                                 </div>
                             </div>
                             <div class="w-full h-2 bg-canvas rounded-full overflow-hidden">
@@ -1410,7 +1410,7 @@
                         : kw.targetQty > 0
                         ? `Siap <strong class="text-emerald-600">${kw.doneQty}</strong> / <strong class="text-slate-700">${kw.targetQty} ${escapeHtml(kw.unit)}</strong>`
                         : (kw.doneQty > 0
-                            ? `Siap <strong class="text-emerald-600">${kw.doneQty}${kw.unit && kw.unit !== 'Unit' ? ' ' + escapeHtml(kw.unit) : ''}</strong> · tiada sasaran dalam rekod kerja`
+                            ? `Siap <strong class="text-emerald-600">${kw.doneQty}${kw.unit && kw.unit !== 'Unit' ? ' ' + escapeHtml(kw.unit) : ''}</strong> · ${kw.key && kw.tugasCount === 0 ? '<span class="text-amber-600 font-medium">kawasan ini tiada dalam Tambah Kerja, semak ejaan</span>' : 'tiada sasaran dalam rekod kerja'}`
                             : 'Belum ada laporan');
                     const kJangka = kw.jangkaSiap ? ` · Jangka siap <strong class="text-slate-700">${escapeHtml(formatTarikh(kw.jangkaSiap))}</strong>` : '';
                     return `
@@ -1568,8 +1568,8 @@
                 showModal('No File Kosong', 'Sila isi No File.', 'error');
                 return;
             }
-            if (!isAcceptedFileId(fileParts.file)) {
-                showModal('No File Tidak Sah', `No File mesti guna prefix ${FILE_PREFIX}, contoh: ${FILE_PREFIX} 001/26.`, 'error');
+            if (!new RegExp('^' + FILE_PREFIX + ' \\d+/\\d+$').test(fileParts.file)) {
+                showModal('Format No File', `No File mesti dalam format ${FILE_PREFIX} 001/26.`, 'error');
                 return;
             }
             if (!kawasan) {
