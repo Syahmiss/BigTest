@@ -1,1400 +1,1072 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Laporan Harian | JURUKUR MAHABOB</title>
-    <!-- Tailwind CSS (CDN). Untuk production: guna assets/tailwind.css (npm run build:css) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Urbanist', 'Inter', 'sans-serif']
-                    },
-                    colors: {
-                        brand: 'rgb(var(--brand-rgb) / <alpha-value>)',
-                        brand2: 'rgb(var(--brand2-rgb) / <alpha-value>)',
-                        gold: 'rgb(var(--gold-rgb) / <alpha-value>)',
-                        ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
-                        canvas: 'rgb(var(--canvas-rgb) / <alpha-value>)',
-                        line: 'rgb(var(--line-rgb) / <alpha-value>)'
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
-    <!-- PapaParse -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Urbanist:wght@600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* ===== Token warna: tukar di sini sahaja (nilai RGB) ===== */
-        :root {
-            --brand-rgb: 34 34 211;     /* biru royal  #2222D3 */
-            --brand2-rgb: 79 82 232;    /* biru terang #4F52E8 */
-            --gold-rgb: 255 229 0;      /* kuning      #FFE500 */
-            --ink-rgb: 17 24 39;        /* teks utama  #111827 */
-            --canvas-rgb: 245 246 250;  /* latar halaman */
-            --line-rgb: 229 231 235;    /* garisan / border */
-        }
-        body { font-family: 'Inter', sans-serif; background-color: rgb(var(--canvas-rgb)); color: rgb(var(--ink-rgb)); }
-        h1, h2, h3, .font-display { font-family: 'Urbanist', 'Inter', sans-serif; letter-spacing: -0.01em; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: rgb(var(--canvas-rgb)); }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
-        input[type="date"], input[type="time"] { color-scheme: light; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jurukur Mahabob - Progres & Statistik Ukur Tanah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-        /* Hero biru dengan corak grid ukur */
-        .hero {
-            background:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 48px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 48px),
-                linear-gradient(115deg, rgb(var(--brand2-rgb)) 0%, rgb(var(--brand-rgb)) 70%);
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#3B32E6', dark: '#2416D1', light: '#EEF0FF', line: '#C7C9FA' },
+            sun: { DEFAULT: '#FFE500', dark: '#E6CE00' },
+            canvas: '#F3F4F8',
+            ink: '#111827'
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
         }
-        .hero::after {
-            content: ""; position: absolute; right: -80px; top: -80px; width: 360px; height: 360px;
-            border-radius: 9999px; border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 0 0 40px rgba(255,255,255,0.03), 0 0 0 80px rgba(255,255,255,0.03);
-            pointer-events: none;
-        }
-        /* Kad KPI kuning / biru silih ganti */
-        .kpi-gold { background: rgb(var(--gold-rgb)); color: rgb(var(--ink-rgb)); }
-        .kpi-blue { background: linear-gradient(135deg, rgb(var(--brand2-rgb)), rgb(var(--brand-rgb))); color: #fff; }
-        .kpi { transition: transform .2s ease, box-shadow .2s ease; }
-        .kpi:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(17, 24, 39, .35); }
+      }
+    }
+  </script>
 
-    </style>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #F3F4F8; color: #111827; }
+
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type='number'] { -moz-appearance: textfield; }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #F3F4F8; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+    /* Hero: gradient indigo + grid line + bulatan dekorasi */
+    .hero {
+      background:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 40px 40px,
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 40px 40px,
+        linear-gradient(120deg, #4F46E5 0%, #3B32E6 45%, #2416D1 100%);
+    }
+    .hero-ring {
+      position: absolute; border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      pointer-events: none;
+    }
+
+    .kpi-indigo { background: linear-gradient(120deg, #4F46E5 0%, #2416D1 100%); }
+
+    /* Sidebar nav */
+    .side-link {
+      position: relative; width: 100%; display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+      color: #4B5563; text-align: left; border: 1px solid transparent;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .side-link i { width: 1.25rem; text-align: center; color: #9CA3AF; transition: color .2s ease, transform .2s ease; }
+
+    /* Floating bila hover: naik sikit + bayang lembut */
+    .side-link:hover {
+      background: #fff; color: #111827; border-color: #E5E7EB;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px -10px rgba(17,24,39,0.25), 0 2px 6px -2px rgba(17,24,39,0.08);
+    }
+    .side-link:hover i { color: #3B32E6; transform: scale(1.1); }
+    .side-link:active { transform: translateY(-1px); }
+
+    .side-link.active { background: #3B32E6; color: #fff; border-color: #3B32E6; box-shadow: 0 6px 16px -6px rgba(59,50,230,0.55); }
+    .side-link.active i { color: #FFE500; }
+    .side-link.active:hover { background: #3B32E6; color: #fff; box-shadow: 0 14px 26px -10px rgba(59,50,230,0.65); }
+    .side-link.active:hover i { color: #FFE500; }
+
+    .side-link:focus-visible { outline: 2px solid #FFE500; outline-offset: 2px; }
+
+    /* Hormat setting "reduce motion" pengguna */
+    @media (prefers-reduced-motion: reduce) {
+      .side-link, .side-link i { transition: none; }
+      .side-link:hover, .side-link:active, .side-link:hover i { transform: none; }
+    }
+
+    .field {
+      width: 100%; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px;
+      padding: 0.65rem 0.9rem; font-size: 0.8rem; color: #111827; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field::placeholder { color: #9CA3AF; }
+    .field:focus { border-color: #3B32E6; box-shadow: 0 0 0 3px rgba(59,50,230,0.12); background: #fff; }
+
+    .label { display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.4rem; }
+    .eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+
+    td, th { vertical-align: middle; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col bg-canvas text-ink selection:bg-brand selection:text-white">
+<body class="min-h-screen antialiased">
 
-    <!-- Header Navigation Bar -->
-    <header class="bg-white border-b border-line sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
-                <div class="w-12 h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
-                    <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
-                </div>
-                <div class="leading-tight">
-                    <div class="font-display text-base sm:text-xl font-extrabold tracking-tight text-ink whitespace-nowrap">JURUKUR MAHABOB</div>
-                    <div class="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Statistik &amp; Operasi Jurukur Tanah</div>
-                </div>
-            </div>
-            <nav class="flex items-center gap-1 sm:gap-3">
-                <button aria-label="Dashboard" title="Dashboard" id="navDashboard" onclick="switchTab('dashboard')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="hidden sm:inline">Dashboard</span>
-                </button>
-                <button aria-label="Borang Laporan" title="Borang Laporan" id="navForm" onclick="switchTab('form')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
-                    <i data-lucide="file-plus" class="w-4 h-4"></i><span class="hidden sm:inline">Borang Laporan</span>
-                </button>
-                <button aria-label="Statistik Surveyor" title="Statistik Surveyor" id="navSurveyor" onclick="switchTab('surveyor')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
-                    <i data-lucide="users" class="w-4 h-4"></i><span class="hidden sm:inline">Statistik Surveyor</span>
-                </button>
-            </nav>
+  <!-- ================= SIDEBAR ================= -->
+  <div id="sidebar-overlay" onclick="closeSidebar()" class="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm hidden lg:hidden"></div>
+
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+    <div class="h-20 px-6 border-b border-gray-200 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg bg-sun flex items-center justify-center text-ink shrink-0">
+          <i class="fa-solid fa-compass-drafting text-lg"></i>
         </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        <!-- TAB 1: DASHBOARD UTAMA -->
-        <div id="viewDashboard" class="tab-content space-y-8">
-
-            <section class="hero relative overflow-hidden rounded-lg text-white">
-                <div class="relative z-10 p-6 sm:p-10 lg:p-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                    <div class="max-w-2xl">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gold mb-3">Laporan Operasi Harian</p>
-                        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">Statistik &amp; Operasi<br>Jurukur Tanah</h1>
-                        <p class="mt-4 text-sm sm:text-base text-white/85 leading-relaxed">Pantau laporan harian, output kerja dan isu lapangan setiap surveyor terus daripada Google Sheets.</p>
-                    </div>
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="switchTab('form')" class="px-5 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2"><i data-lucide="file-plus" class="w-4 h-4"></i> Hantar Laporan</button>
-                        <button onclick="exportCSV()" class="px-5 py-3 rounded-md bg-white/10 border border-white/30 text-white font-semibold text-sm hover:bg-white/20 transition flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Eksport CSV</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Metric Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="kpi kpi-gold rounded-lg p-6 flex gap-4">
-                    <i data-lucide="file-text" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
-                    <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Jumlah Laporan</p>
-                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalLaporan">0</div>
-                        <p class="text-sm mt-1 opacity-80">Rekod dalam pangkalan data</p>
-                    </div>
-                </div>
-                <div class="kpi kpi-blue rounded-lg p-6 flex gap-4">
-                    <i data-lucide="folder-kanban" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
-                    <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Projek (File)</p>
-                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalProjek">0</div>
-                        <p class="text-sm mt-1 opacity-80">Fail ukur unik</p>
-                    </div>
-                </div>
-                <div class="kpi kpi-gold rounded-lg p-6 flex gap-4">
-                    <i data-lucide="check-circle-2" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
-                    <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Kuantiti Siap</p>
-                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalKuantiti">0</div>
-                        <p class="text-sm mt-1 opacity-80">Output kerja mengikut unit</p>
-                    </div>
-                </div>
-                <div class="kpi kpi-blue rounded-lg p-6 flex gap-4">
-                    <i data-lucide="alert-triangle" class="w-8 h-8 shrink-0 mt-1" stroke-width="1.5"></i>
-                    <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Isu Dilapor</p>
-                        <div class="font-display text-3xl font-extrabold mt-1 break-words" id="totalIsu">0</div>
-                        <p class="text-sm mt-1 opacity-80">Perlu perhatian lapangan</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white border border-line rounded-lg p-6 shadow-sm">
-                    <h3 class="text-base font-semibold text-ink mb-4 flex items-center gap-2">
-                        <i data-lucide="pie-chart" class="w-4 h-4 text-brand"></i> Taburan Kategori Kerja
-                    </h3>
-                    <div class="relative h-72">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-white border border-line rounded-lg p-6 shadow-sm">
-                    <h3 class="text-base font-semibold text-ink mb-4 flex items-center gap-2">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand"></i> Status Isu Lapangan
-                    </h3>
-                    <div class="relative h-72">
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data Table Section -->
-            <div class="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-line flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-ink">Rekod Laporan Operasi Harian</h3>
-                        <p class="text-xs text-slate-500">Senarai penuh data daripada pangkalan Google Sheets &amp; input tempatan</p>
-                    </div>
-                    <div class="flex items-center gap-3 w-full sm:w-auto">
-                        <div class="relative flex-1 sm:w-64">
-                            <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-slate-400"></i>
-                            <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari No File / Kawasan / Surveyor..." class="w-full pl-10 pr-4 py-2 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
-                        </div>
-                        <select id="filterCategory" onchange="filterTable()" class="px-4 py-2 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
-                            <option value="">Semua Kategori</option>
-                            <option value="Kadaster">Kadaster</option>
-                            <option value="Kalibrasi">Kalibrasi</option>
-                            <option value="Lidar">Lidar</option>
-                            <option value="Pemetaan Utiliti">Pemetaan Utiliti</option>
-                            <option value="Strata">Strata</option>
-                            <option value="TLS">TLS</option>
-                            <option value="Topografi">Topografi</option>
-                        </select>
-                        <button onclick="exportCSV()" class="px-4 py-2 rounded-md bg-brand/20 text-brand border border-brand/30 font-medium text-sm hover:bg-brand/30 transition flex items-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4"></i> Eksport
-                        </button>
-                    </div>
-                </div>
-
-                <div class="w-full overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[1200px] text-xs">
-                        <thead>
-                            <tr class="bg-canvas/60 border-b border-line uppercase tracking-wider text-slate-500 font-semibold">
-                                <th class="px-3 py-3">No File</th>
-                                <th class="px-3 py-3">Kawasan</th>
-                                <th class="px-3 py-3">Tarikh</th>
-                                <th class="px-3 py-3">Masa Mula</th>
-                                <th class="px-3 py-3">Masa Tamat</th>
-                                <th class="px-3 py-3">Kategori</th>
-                                <th class="px-3 py-3">Surveyor</th>
-                                <th class="px-3 py-3">Tugas</th>
-                                <th class="px-3 py-3">Kuantiti</th>
-                                <th class="px-3 py-3">Unit</th>
-                                <th class="px-3 py-3">Status Isu</th>
-                                <th class="px-3 py-3">Jangka Asal</th>
-                                <th class="px-3 py-3">Jangka Semasa</th>
-                                <th class="px-3 py-3">Gambar</th>
-                                <th class="px-3 py-3">Perancangan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="divide-y divide-line text-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
+        <div>
+          <h1 class="text-base font-extrabold tracking-tight text-ink leading-tight">JURUKUR MAHABOB</h1>
+          <p class="text-[10px] font-semibold tracking-[0.12em] text-gray-500 uppercase">Progres &amp; Statistik</p>
         </div>
-
-        <!-- TAB 2: BORANG LAPORAN HARIAN -->
-        <div id="viewForm" class="tab-content hidden max-w-3xl mx-auto">
-            <div class="bg-white border border-line rounded-lg shadow-sm p-8">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-line">
-                    <div class="p-3 rounded-md bg-gold text-ink">
-                        <i data-lucide="file-plus-2" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-ink">Borang Laporan Harian Jurukur</h2>
-                        <p class="text-xs text-slate-500">Sila lengkapkan maklumat operasi lapangan dengan teliti</p>
-                    </div>
-                </div>
-
-                <form id="dailyReportForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">No File</label>
-                            <div class="flex rounded-md bg-canvas border border-line overflow-hidden focus-within:border-brand">
-                                <span id="noFilePrefix" class="px-4 py-3 bg-white border-r border-line text-slate-500 font-semibold text-sm flex items-center">MGK</span>
-                                <input type="text" id="f_nofile" placeholder="001/26" list="noFileList" autocomplete="off" oninput="updateKawasanSuggestions()" class="flex-1 px-4 py-3 bg-transparent text-ink focus:outline-none text-sm" required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Kawasan Lapangan</label>
-                            <input type="text" id="f_kawasan" list="kawasanList" autocomplete="off" maxlength="100" placeholder="Cth: Mangkuk" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
-                            <datalist id="kawasanList"></datalist>
-                            <datalist id="noFileList"></datalist>
-                            <p class="mt-1.5 text-[11px] text-slate-400">Satu No File boleh ada beberapa kawasan. Pilih dari cadangan supaya ejaan sama.</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tarikh</label>
-                            <input type="date" id="f_tarikh" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Surveyor</label>
-                            <select id="f_surveyor" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                                <option value="">Pilih Surveyor...</option>
-                                <option value="Badrul">Badrul</option>
-                                <option value="Riduwan">Riduwan</option>
-                                <option value="Ridhzuan">Ridhzuan</option>
-                                <option value="Helmi">Helmi</option>
-                                <option value="Syahmi">Syahmi</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Masa Mula</label>
-                            <input type="time" id="f_mula" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Masa Tamat</label>
-                            <input type="time" id="f_tamat" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                        </div>
-
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Kategori</label>
-                            <select id="f_kategori" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                                <option value="">Pilih Kategori...</option>
-                                <option value="Kadaster">Kadaster</option>
-                                <option value="Kalibrasi">Kalibrasi</option>
-                                <option value="Lidar">Lidar</option>
-                                <option value="Pemetaan Utiliti">Pemetaan Utiliti</option>
-                                <option value="Strata">Strata</option>
-                                <option value="TLS">TLS</option>
-                                <option value="Topografi">Topografi</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Tugas (Skop Kerja)</label>
-                            <button type="button" onclick="addTugasRow()" class="text-xs text-brand hover:underline flex items-center gap-1 font-medium">
-                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tugas
-                            </button>
-                        </div>
-                        <div id="tugasContainer" class="space-y-2"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Kuantiti</label>
-                            <input type="number" step="any" min="0" id="f_kuantiti" placeholder="0.00" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required style="-moz-appearance: textfield;">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Unit</label>
-                            <select id="f_unit" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                                <option value="">Pilih Unit...</option>
-                                <option value="Lot">Lot</option>
-                                <option value="Meter">Meter</option>
-                                <option value="Ekar">Ekar</option>
-                                <option value="Point">Point</option>
-                                <option value="Stesen">Stesen</option>
-                                <option value="Kawasan">Kawasan</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Status Isu (Pilihan)</label>
-                        <input type="text" id="f_status" placeholder="Cth: Cuaca hujan lebat / Tiada isu" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Jangka Siap Asal</label>
-                            <input type="date" id="f_asal" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Jangka Siap Semasa</label>
-                            <input type="date" id="f_semasa" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Gambar Lapangan (Pilihan)</label>
-                        <div class="flex flex-col gap-3">
-                            <input type="file" id="f_gambar" accept="image/*" onchange="handleImagePreview(event)" class="w-full px-4 py-2.5 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer">
-                            <div id="imagePreviewContainer" class="hidden relative w-40 h-40 rounded-md overflow-hidden border border-line bg-canvas">
-                                <img id="imagePreview" src="" alt="Pratonton Gambar" class="w-full h-full object-cover">
-                                <button type="button" onclick="clearImageSelection()" class="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-600 text-white hover:bg-red-700 transition shadow">
-                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Perancangan Seterusnya</label>
-                        <textarea id="f_perancangan" rows="3" placeholder="Nyatakan perancangan kerja..." class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-line">
-                        <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm hover:bg-canvas transition">Batal</button>
-                        <button type="submit" id="submitBtn" class="px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed">Hantar Laporan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- TAB 3: STATISTIK SURVEYOR -->
-        <div id="viewSurveyor" class="tab-content hidden space-y-6">
-            <div class="bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-ink">Analisis Prestasi Mengikut Surveyor</h3>
-                    <p class="text-xs text-slate-500">Prestasi produktiviti pegawai ukur berasaskan tempoh masa</p>
-                </div>
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <select id="filterMonth" onchange="onMonthFilterChange()" class="px-4 py-2.5 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
-                        <option value="">Semua Bulan</option>
-                    </select>
-                    <select id="filterWeek" onchange="renderSurveyorStats()" class="px-4 py-2.5 rounded-md bg-canvas border border-line text-sm text-ink focus:outline-none focus:border-brand">
-                        <option value="">Semua Minggu</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="surveyorStatsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </div>
-
-    </main>
-
-    <footer class="mt-12 bg-ink text-white/70">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between gap-2 text-xs">
-            <span>&copy; <span id="footerYear"></span> JURUKUR MAHABOB &middot; Sistem Statistik Jurukur Tanah</span>
-            <span>Data diselaraskan daripada Google Sheets</span>
-        </div>
-        <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
-    </footer>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-20 right-6 z-50 px-4 py-3 rounded-md shadow-sm border text-sm flex items-center gap-3 transition-all transform translate-y-2 opacity-0 hidden max-w-sm">
-        <i id="toastIcon" class="w-5 h-5 shrink-0"></i>
-        <span id="toastMsg">Mesej notifikasi...</span>
+      </div>
+      <button onclick="closeSidebar()" class="lg:hidden p-2 text-gray-400 hover:text-ink" aria-label="Tutup menu">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loader" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
-        <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-sm font-medium text-slate-600">Memuatkan data operasi...</p>
-        </div>
+    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+      <button onclick="goToMainPage()" class="side-link !text-ink bg-sun/90 hover:!bg-sun mb-5">
+        <i class="fa-solid fa-arrow-left !text-ink"></i><span>Kembali ke Main Page</span>
+      </button>
+
+      <p class="eyebrow text-gray-400 px-4 mb-3">Menu Utama</p>
+      <button onclick="switchTab('ringkasan')" id="nav-ringkasan" class="side-link active">
+        <i class="fa-solid fa-chart-pie"></i><span>Ringkasan</span>
+      </button>
+      <button onclick="switchTab('analisis')" id="nav-analisis" class="side-link">
+        <i class="fa-solid fa-chart-line"></i><span>Analisis</span>
+      </button>
+      <button onclick="switchTab('progres')" id="nav-progres" class="side-link">
+        <i class="fa-solid fa-bars-progress"></i><span>Progres</span>
+      </button>
+      <button onclick="switchTab('laporan')" id="nav-laporan" class="side-link">
+        <i class="fa-solid fa-file-pen"></i><span>Laporan Harian</span>
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-gray-200 bg-gray-50">
+      <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+        <span>Status Data</span>
+        <span id="sync-status" class="flex items-center gap-1.5 font-semibold text-emerald-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+        </span>
+      </div>
+      <button onclick="refreshData()" class="w-full py-2.5 bg-white hover:bg-brand-light border border-gray-200 hover:border-brand-line text-ink rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
+        <i class="fa-solid fa-rotate text-brand"></i><span>Muat Semula Data</span>
+      </button>
     </div>
+  </aside>
 
-    <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgs-HiUhIbxDcmHksHEMSvk0HgwcRAx3TIqVmqXWLNxc2udhFt5wSN0jtvTXo67GFw/exec";
+  <!-- ================= MAIN WRAPPER ================= -->
+  <div class="lg:ml-72 min-h-screen flex flex-col">
 
-        const LOCAL_KEY = "geo_local_reports";
-        // Nilai yang dianggap "tiada isu" (termasuk "Tiada isu" seperti contoh placeholder borang)
-        const NO_ISSUE_VALUES = new Set(['', '-', '0', 'tiada', 'tiada isu', 'tiada masalah', 'tak ada', 'takde', 'none', 'no', 'nil', 'n/a', 'na']);
-        const CHART_COLORS = ['#2222D3', '#FFE500', '#4F52E8', '#111827', '#10B981', '#F59E0B', '#EC4899', '#14B8A6'];
-        const NAMA_BULAN = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+  <!-- Top bar -->
+  <header class="h-16 lg:h-20 bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div class="h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <button onclick="openSidebar()" class="lg:hidden p-2 -ml-2 text-ink" aria-label="Buka menu">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+        <button onclick="goToMainPage()" class="lg:hidden w-9 h-9 rounded-md bg-sun hover:bg-sun-dark text-ink flex items-center justify-center shrink-0 transition-colors" aria-label="Kembali ke Main Page" title="Kembali ke Main Page">
+          <i class="fa-solid fa-arrow-left text-sm"></i>
+        </button>
+        <div class="min-w-0">
+          <h2 id="page-title" class="text-base lg:text-lg font-bold text-ink truncate">Ringkasan</h2>
+          <p class="hidden sm:block text-xs text-gray-500">JURUKUR MAHABOB · Sistem Statistik Jurukur Tanah</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs font-medium text-ink shrink-0">
+        <i class="fa-solid fa-calendar-days text-brand"></i>
+        <span id="current-date-display">--/--/----</span>
+      </div>
+    </div>
+  </header>
 
-        // Prefix No File. Tukar di sini sahaja (dan dalam Apps Script: FILE_PREFIXES)
-        const FILE_PREFIX = "MGK";
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8">
 
-        // Nama kategori lama (English) dipetakan ke nama BM baru supaya data lama & baru dikira sama
-        const KATEGORI_ALIASES = {
-            'cadastral': 'Kadaster', 'kadastral': 'Kadaster', 'kadaster': 'Kadaster',
-            'calibration': 'Kalibrasi', 'kalibrasi': 'Kalibrasi',
-            'topography': 'Topografi', 'topografi': 'Topografi',
-            'utility mapping': 'Pemetaan Utiliti', 'pemetaan utiliti': 'Pemetaan Utiliti',
-            'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata'
-        };
+    <!-- ================= HERO ================= -->
+    <section class="hero relative overflow-hidden rounded-xl text-white px-6 py-10 md:px-12 md:py-12">
+      <div class="hero-ring" style="width:620px;height:620px;right:-180px;top:-260px;"></div>
+      <div class="hero-ring" style="width:420px;height:420px;right:-60px;top:-160px;"></div>
 
-        // Had gambar selepas dimampatkan (perlu sama atau lebih kecil daripada had Apps Script)
-        const IMAGE_MAX_DIM = 1280;
-        const IMAGE_QUALITY = 0.75;
-        const IMAGE_MAX_BYTES = 3 * 1024 * 1024;
+      <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+        <div class="max-w-2xl">
+          <p id="hero-eyebrow" class="eyebrow text-sun">Integrasi Google Sheets &amp; Apps Script</p>
+          <h2 id="hero-title" class="text-3xl md:text-5xl font-extrabold tracking-tight leading-[1.1] mt-4">Ringkasan Operasi Ukur Tanah</h2>
+          <p id="hero-desc" class="text-sm md:text-base text-indigo-100 mt-5 leading-relaxed">Pemantauan prestasi dan statistik operasi ukur tanah terkini, terus daripada laporan harian surveyor.</p>
+        </div>
 
-        // Peta nama lajur Google Sheets / key tempatan -> medan standard
-        const FIELD_ALIASES = {
-            noFile: ['no file', 'nofile', 'no fail'],
-            kawasan: ['kawasan', 'kawasan lapangan', 'lokasi', 'tapak'],
-            tarikh: ['tarikh', 'date'],
-            masaMula: ['masa mula', 'masamula'],
-            masaTamat: ['masa tamat', 'masatamat'],
-            kategori: ['kategori', 'category'],
-            surveyor: ['surveyor', 'juruukur'],
-            tugas: ['tugas', 'skop kerja'],
-            kuantiti: ['kuantiti', 'qty'],
-            unit: ['unit'],
-            statusIsu: ['status isu', 'statusisu', 'isu'],
-            jangkaAsal: ['jangka siap asal', 'jangka asal', 'jangkaasal'],
-            jangkaSemasa: ['jangka siap semasa', 'jangka semasa', 'jangkasemasa'],
-            gambar: ['gambar', 'imej', 'image', 'photo', 'url gambar'],
-            perancangan: ['perancangan', 'perancangan seterusnya']
-        };
+        <div class="flex flex-wrap gap-3 shrink-0">
+          <button onclick="refreshData()" class="px-6 py-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/40 text-sm font-semibold transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-rotate"></i><span>Muat Semula</span>
+          </button>
+          <button onclick="switchTab('laporan')" class="px-6 py-3 rounded-md bg-sun hover:bg-sun-dark text-ink text-sm font-bold transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i><span>Tambah Laporan</span>
+          </button>
+        </div>
+      </div>
+    </section>
 
-        let masterData = [];
-        let selectedImageBase64 = "";
-        let selectedImageName = "";
-        let selectedImageMime = "";
-        let imageProcessing = null;   // Promise semasa gambar sedang dimampatkan
-        let imageToken = 0;           // elak hasil gambar lama tertimpa gambar baru
-        let categoryChartInstance = null;
-        let statusChartInstance = null;
-        let toastTimer = null;
-        let toastHideTimer = null;
+    <!-- ================= KPI ================= -->
+    <section id="kpi-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <div class="rounded-lg bg-sun text-ink px-7 py-6">
+        <p class="eyebrow text-ink/80">No File Aktif</p>
+        <h3 id="kpi-total-files" class="text-3xl font-extrabold mt-2">0</h3>
+        <p class="text-sm mt-2 text-ink/80">Rekod projek unik</p>
+      </div>
+      <div class="rounded-lg kpi-indigo text-white px-7 py-6">
+        <p class="eyebrow text-indigo-100">Isu Dilaporkan</p>
+        <h3 id="kpi-total-issues" class="text-3xl font-extrabold mt-2">0</h3>
+        <p class="text-sm mt-2 text-indigo-100">Memerlukan perhatian</p>
+      </div>
+      <div class="rounded-lg bg-sun text-ink px-7 py-6">
+        <p class="eyebrow text-ink/80">Surveyor Aktif</p>
+        <h3 id="kpi-total-surveyors" class="text-3xl font-extrabold mt-2">0</h3>
+        <p class="text-sm mt-2 text-ink/80">Petugas lapangan</p>
+      </div>
+      <div class="rounded-lg kpi-indigo text-white px-7 py-6">
+        <p class="eyebrow text-indigo-100">Jumlah Laporan</p>
+        <h3 id="kpi-total-records" class="text-3xl font-extrabold mt-2">0</h3>
+        <p class="text-sm mt-2 text-indigo-100">Sumber: Google Sheets</p>
+      </div>
+    </section>
 
-        // ---------- Helper ----------
-        function refreshIcons() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+    <!-- ================= TAB 1: RINGKASAN ================= -->
+    <section id="tab-ringkasan" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold text-ink">Aktiviti &amp; Log Lapangan Terkini</h3>
+          <p class="text-xs text-brand mt-1">Rekod laporan harian yang diselaraskan daripada Google Sheets</p>
+        </div>
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input type="text" id="search-log" oninput="filterLogs()" placeholder="Cari No File / Surveyor / Kategori" class="field pl-9">
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-gray-50 text-gray-500 uppercase tracking-wider border-b border-gray-200 font-semibold">
+              <th class="px-5 py-3.5">No File</th>
+              <th class="px-5 py-3.5">Tarikh &amp; Masa</th>
+              <th class="px-5 py-3.5">Kategori</th>
+              <th class="px-5 py-3.5">Surveyor</th>
+              <th class="px-5 py-3.5">Tugas</th>
+              <th class="px-5 py-3.5">Kuantiti</th>
+              <th class="px-5 py-3.5">Status Isu</th>
+              <th class="px-5 py-3.5">Jangka Siap</th>
+              <th class="px-5 py-3.5">Perancangan</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body" class="divide-y divide-gray-100 text-gray-700">
+            <tr><td colspan="9" class="p-8 text-center text-gray-400">Memuatkan data dari Google Sheets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: ANALISIS ================= -->
+    <section id="tab-analisis" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h3 class="text-base font-bold text-ink">Taburan Kategori Kerja</h3>
+          <p class="text-xs text-brand mt-1 mb-5">Pecahan rekod mengikut kategori ukur</p>
+          <div class="relative h-72"><canvas id="categoryChart"></canvas></div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h3 class="text-base font-bold text-ink">Produktiviti Mengikut Surveyor</h3>
+          <p class="text-xs text-brand mt-1 mb-5">Jumlah laporan harian oleh setiap surveyor</p>
+          <div class="relative h-72"><canvas id="surveyorChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: PROGRES ================= -->
+    <section id="tab-progres" class="hidden bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold text-ink">Kad Progres Mengikut Fail</h3>
+          <p class="text-xs text-brand mt-1">Surveyor, kategori dan kuantiti terkumpul bagi setiap No File</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div class="relative sm:w-64">
+            <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+            <input type="text" id="search-progres" oninput="renderProgresList()" placeholder="Cari No File / Surveyor" class="field pl-9">
+          </div>
+          <select id="filter-kategori" onchange="renderProgresList()" class="field sm:w-44">
+            <option value="">Semua Kategori</option>
+          </select>
+        </div>
+      </div>
+      <div id="progres-container" class="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <p class="col-span-full text-center text-gray-400 py-8 text-sm">Memuatkan data progres...</p>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: FORM LAPORAN HARIAN ================= -->
+    <section id="tab-laporan" class="hidden">
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-3xl mx-auto overflow-hidden">
+        <div class="px-6 md:px-8 py-5 border-b border-gray-200 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-md bg-sun flex items-center justify-center text-ink">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-ink">Borang Laporan Harian Jurukur</h3>
+            <p class="text-xs text-brand mt-0.5">Data akan disimpan terus ke Google Sheets</p>
+          </div>
+        </div>
+
+        <form id="laporanForm" onsubmit="handleFormSubmit(event)" class="px-6 md:px-8 py-6 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="no_file">No File <span class="text-brand">*</span></label>
+              <div class="flex rounded-[10px] overflow-hidden border border-gray-200 bg-gray-50 focus-within:border-brand focus-within:ring-[3px] focus-within:ring-brand/10">
+                <span class="bg-sun text-ink font-bold px-3 text-xs flex items-center">MCP</span>
+                <input type="text" id="no_file" required placeholder="001/26" class="w-full bg-transparent px-3 py-2.5 text-xs text-ink placeholder-gray-400 focus:outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="label" for="tarikh">Tarikh <span class="text-brand">*</span></label>
+              <input type="date" id="tarikh" required class="field">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="masa_mula">Masa Mula</label>
+              <input type="time" id="masa_mula" class="field">
+            </div>
+            <div>
+              <label class="label" for="masa_tamat">Masa Tamat</label>
+              <input type="time" id="masa_tamat" class="field">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="kategori">Kategori Kerja <span class="text-brand">*</span></label>
+              <select id="kategori" class="field">
+                <option value="Ukur Semula">Ukur Semula</option>
+                <option value="Ukur Strata">Ukur Strata</option>
+                <option value="Ukur Topografi">Ukur Topografi</option>
+                <option value="Ukur Kejuruteraan">Ukur Kejuruteraan</option>
+                <option value="Utility Mapping">Utility Mapping</option>
+                <option value="TLS">TLS</option>
+                <option value="Lidar">Lidar</option>
+                <option value="Lain-lain">Lain-lain</option>
+              </select>
+            </div>
+            <div>
+              <label class="label" for="surveyor">Nama Surveyor <span class="text-brand">*</span></label>
+              <select id="surveyor" required class="field">
+                <option value="">Pilih Surveyor...</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="label !mb-0">Butiran Tugas Lapangan (Point) <span class="text-brand">*</span></span>
+              <button type="button" onclick="addTaskPoint()" class="px-3 py-1.5 bg-brand-light hover:bg-indigo-100 text-brand border border-brand-line rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Point</span>
+              </button>
+            </div>
+            <div id="task-points-container" class="space-y-2"></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="kuantiti">Kuantiti <span class="text-brand">*</span></label>
+              <input type="number" step="any" min="0" id="kuantiti" required placeholder="0.00" class="field">
+            </div>
+            <div>
+              <label class="label" for="unit">Unit <span class="text-brand">*</span></label>
+              <select id="unit" class="field">
+                <option value="Lot">Lot</option>
+                <option value="Stesen">Stesen</option>
+                <option value="Meter(m)">Meter(m)</option>
+                <option value="Point">Point</option>
+                <option value="Ekar">Ekar</option>
+                <option value="Unit">Unit</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="status_isu">Status Isu</label>
+            <input type="text" id="status_isu" placeholder="Contoh: Tiada Isu / Cuaca hujan / Sempadan terhalang" class="field">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="jangka_siap_asal">Jangka Siap Asal</label>
+              <input type="date" id="jangka_siap_asal" class="field">
+            </div>
+            <div>
+              <label class="label" for="jangka_siap_semasa">Jangka Siap Semasa</label>
+              <input type="date" id="jangka_siap_semasa" class="field">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label" for="perancangan">Perancangan</label>
+              <input type="text" id="perancangan" placeholder="Rancangan kerja seterusnya..." class="field">
+            </div>
+            <div>
+              <label class="label" for="lampiran_gambar">Attach Gambar (Opsional)</label>
+              <input type="file" id="lampiran_gambar" accept="image/*" class="field !py-2 text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-sun file:text-ink hover:file:bg-sun-dark">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="submit-btn" class="w-full py-3.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-md text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+              <i class="fa-solid fa-paper-plane"></i><span>Hantar Laporan Harian</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-[#111827] text-gray-300 mt-10">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+      <p>© <span id="footer-year">2026</span> JURUKUR MAHABOB · Sistem Statistik Jurukur Tanah</p>
+      <p>Data diselaraskan daripada Google Sheets</p>
+    </div>
+  </footer>
+
+  </div><!-- /main wrapper -->
+
+  <!-- ================= NOTIFICATION MODAL ================= -->
+  <div id="notification-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-xl border border-gray-200 max-w-sm w-full mx-4 p-6 text-center shadow-2xl">
+      <div id="notif-icon" class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-4 text-xl">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h4 id="notif-title" class="text-base font-bold text-ink mb-1">Berjaya</h4>
+      <p id="notif-message" class="text-xs text-gray-500 mb-5">Data laporan harian telah berjaya dihantar.</p>
+      <button onclick="closeNotification()" class="w-full py-2.5 bg-brand hover:bg-brand-dark text-white rounded-md text-xs font-semibold transition-colors">Tutup</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config (URL kekal dalam index untuk push ke GitHub) =====
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV0RD7ICWKzpBp1nKuLphLrICxjKn7uFSy6hQVZCCIQO3Na_P4w2sYq7RMsTl9-m6GbOpe1n5yA6UC/pub?gid=965744340&single=true&output=csv";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSwMURhO6SesSKBZ7PrTBDtR9qP08K47NkdQXWm_W8gzbHN-ms6bxpBHhyUgPwouSo/exec";
+
+    // URL main page. Kosongkan ("") kalau nak butang Back bawa ke tab Ringkasan sahaja.
+    const MAIN_PAGE_URL = "";
+
+    // Hanya No File dengan prefix ini diterima. Rekod prefix lain diabaikan (tak dikira, tak dipaparkan).
+    const FILE_PREFIX = "MCP";
+    const PRIORITY_SURVEYORS = ["Badrul", "Riduwan", "Ridhzuan", "Helmi", "Syahmi"];
+    const CHART_COLORS = ['#3B32E6', '#FFD600', '#10B981', '#06B6D4', '#8B5CF6', '#F43F5E', '#F59E0B', '#64748B'];
+
+    let globalLogs = [];
+    let categoryChartInstance = null;
+    let surveyorChartInstance = null;
+
+    // ===== Helpers =====
+    // Escape semua data dari Sheet sebelum masuk innerHTML (elak XSS dari isi sel)
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function getField(row, ...keys) {
+      for (const k of keys) {
+        if (row[k] !== undefined && String(row[k]).trim() !== '') return String(row[k]).trim();
+      }
+      return '';
+    }
+
+    // Tarikh tempatan (GMT+8). toISOString() guna UTC, jadi sebelum 8 pagi ia bagi tarikh semalam.
+    function todayLocal() {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+
+    // YYYY-MM-DD -> DD/MM/YYYY. Format lain dipaparkan seperti asal.
+    function formatDate(v) {
+      if (!v) return '-';
+      const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : v;
+    }
+
+    // "MCP 001/26", "mcp001/26", "001/26" -> "MCP 001/26". Prefix lain -> null (ditolak).
+    function normalizeNoFile(v) {
+      const raw = String(v || '').trim();
+      if (!raw) return '';
+      const m = raw.match(/^([A-Za-z]{2,6})(?=[\s\-]*\d)/);
+      if (m && m[1].toUpperCase() !== FILE_PREFIX) return null;
+      const body = raw.replace(new RegExp(`^${FILE_PREFIX}[\\s\\-]*`, 'i'), '').trim();
+      return body ? `${FILE_PREFIX} ${body}` : raw;
+    }
+
+    function isIssue(status) {
+      const s = String(status || '').trim().toLowerCase();
+      return !!s && !['-', 'tiada', 'tiada isu', 'none', '0'].includes(s);
+    }
+
+    function unitLabel(u) {
+      const l = String(u || '').toLowerCase();
+      return (l === 'meter(m)' || l === 'meter') ? 'm' : u;
+    }
+
+    function fmtNum(n) {
+      return Number(n).toLocaleString('ms-MY', { maximumFractionDigits: 2 });
+    }
+
+    function splitTasks(tugas) {
+      return String(tugas || '').replace(/;/g, '').split(/•|,/).map(p => p.trim()).filter(Boolean);
+    }
+
+    // ===== Init =====
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('tarikh').value = todayLocal();
+      const d = new Date();
+      document.getElementById('current-date-display').innerText = formatDate(todayLocal());
+      document.getElementById('footer-year').innerText = d.getFullYear();
+      resetTaskPoints();
+
+      Chart.defaults.font.family = 'Inter';
+      Chart.defaults.color = '#6B7280';
+
+      refreshData();
+    });
+
+    // ===== Tabs =====
+    const TAB_META = {
+      ringkasan: ['Integrasi Google Sheets & Apps Script', 'Ringkasan Operasi Ukur Tanah', 'Pemantauan prestasi dan statistik operasi ukur tanah terkini, terus daripada laporan harian surveyor.'],
+      analisis: ['Statistik Pasukan', 'Analisis & Statistik Kerja Ukur', 'Graf taburan kategori kerja dan produktiviti setiap surveyor berdasarkan laporan yang dihantar.'],
+      progres: ['Pemantauan Projek', 'Progres Kerja Ukur Mengikut Fail', 'Kad progres dijana daripada rekod kerja lapangan, dikumpul mengikut No File projek.'],
+      laporan: ['Borang Rasmi', 'Laporan Harian Kerja Lapangan', 'Isi maklumat kerja lapangan hari ini. Rekod akan masuk terus ke Google Sheets.']
+    };
+
+    function switchTab(tabId) {
+      Object.keys(TAB_META).forEach(id => {
+        document.getElementById(`tab-${id}`).classList.toggle('hidden', id !== tabId);
+        document.getElementById(`nav-${id}`).classList.toggle('active', id === tabId);
+      });
+      const [eyebrow, title, desc] = TAB_META[tabId];
+      document.getElementById('hero-eyebrow').innerText = eyebrow;
+      document.getElementById('hero-title').innerText = title;
+      document.getElementById('hero-desc').innerText = desc;
+      document.getElementById('page-title').innerText = document.querySelector(`#nav-${tabId} span`).innerText;
+
+      // Kad ringkasan (KPI) tak dipaparkan dalam borang laporan harian
+      document.getElementById('kpi-section').classList.toggle('hidden', tabId === 'laporan');
+
+      closeSidebar();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Chart.js perlu resize bila canvas keluar dari hidden
+      if (tabId === 'analisis') {
+        categoryChartInstance?.resize();
+        surveyorChartInstance?.resize();
+      }
+    }
+
+    // ===== Butang Back =====
+    function goToMainPage() {
+      if (MAIN_PAGE_URL) {
+        window.location.href = MAIN_PAGE_URL;
+      } else {
+        switchTab('ringkasan');
+      }
+    }
+
+    // ===== Sidebar (mobile) =====
+    function openSidebar() {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('sidebar-overlay').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeSidebar() {
+      // Di desktop (lg ke atas) sidebar sentiasa terbuka, class ini tak memberi kesan
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('sidebar-overlay').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+    // ===== Data =====
+    function setSyncStatus(state) {
+      const el = document.getElementById('sync-status');
+      const map = {
+        loading: ['text-amber-600', '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Memuatkan...'],
+        ok: ['text-emerald-600', '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Aktif'],
+        error: ['text-rose-600', '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Ralat']
+      };
+      el.className = `flex items-center gap-1.5 font-semibold ${map[state][0]}`;
+      el.innerHTML = map[state][1];
+    }
+
+    function refreshData() {
+      setSyncStatus('loading');
+      // Cache-buster supaya data terbaru Sheet tak tersekat di cache browser
+      const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+      Papa.parse(url, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          // Seragamkan No File ke format MCP, dan abaikan rekod prefix lain
+          globalLogs = results.data.filter(row => {
+            const nf = getField(row, "No File", "nofile");
+            if (!nf) return true;
+            const norm = normalizeNoFile(nf);
+            if (norm === null) return false;
+            row["No File"] = norm;
+            return true;
+          });
+          setSyncStatus('ok');
+          processData(globalLogs);
+        },
+        error: (err) => {
+          console.error("CSV Load Error:", err);
+          setSyncStatus('error');
+          showNotification("Ralat", "Gagal memuat turun data CSV daripada Google Sheets.", "error");
+        }
+      });
+    }
+
+    function processData(data) {
+      const uniqueFiles = new Set();
+      const uniqueSurveyors = new Set();
+      let totalIssues = 0;
+
+      data.forEach(row => {
+        const noFile = getField(row, "No File", "nofile");
+        if (noFile) uniqueFiles.add(noFile);
+        const surveyor = getField(row, "Surveyor", "surveyor");
+        if (surveyor && surveyor !== "Tidak Diketahui") uniqueSurveyors.add(surveyor);
+        if (isIssue(getField(row, "Status Isu", "status_isu"))) totalIssues++;
+      });
+
+      document.getElementById('kpi-total-files').innerText = uniqueFiles.size;
+      document.getElementById('kpi-total-issues').innerText = totalIssues;
+      document.getElementById('kpi-total-surveyors').innerText = uniqueSurveyors.size;
+      document.getElementById('kpi-total-records').innerText = data.length;
+
+      populateSurveyorDropdown(data);
+      populateCategoryFilter(data);
+      renderLogsTable(data);
+      renderProgresList();
+      renderCharts(data);
+    }
+
+    function populateSurveyorDropdown(data) {
+      const set = new Set(PRIORITY_SURVEYORS);
+      data.forEach(row => {
+        const s = getField(row, "Surveyor", "surveyor");
+        if (s && s !== "Tidak Diketahui") set.add(s);
+      });
+
+      const sorted = Array.from(set).sort((a, b) => {
+        const ia = PRIORITY_SURVEYORS.indexOf(a), ib = PRIORITY_SURVEYORS.indexOf(b);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        if (ia !== -1) return -1;
+        if (ib !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      const select = document.getElementById('surveyor');
+      const current = select.value;
+      select.innerHTML = '<option value="">Pilih Surveyor...</option>';
+      sorted.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+      if (current) select.value = current;
+    }
+
+    function populateCategoryFilter(data) {
+      const set = new Set();
+      data.forEach(row => { const c = getField(row, "Kategori", "kategori"); if (c) set.add(c); });
+      const select = document.getElementById('filter-kategori');
+      const current = select.value;
+      select.innerHTML = '<option value="">Semua Kategori</option>';
+      Array.from(set).sort().forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+      if (current && set.has(current)) select.value = current;
+    }
+
+    // ===== Ringkasan: jadual log =====
+    function renderLogsTable(data) {
+      const tbody = document.getElementById('logs-table-body');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400">Tiada rekod ditemui.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = [...data].reverse().map(row => {
+        const noFile = getField(row, "No File", "nofile") || "-";
+        const tarikh = formatDate(getField(row, "Tarikh", "tarikh"));
+        const masaMula = getField(row, "Masa Mula", "masamula");
+        const masaTamat = getField(row, "Masa Tamat", "masatamat");
+        const kategori = getField(row, "Kategori", "kategori") || "-";
+        const surveyor = getField(row, "Surveyor", "surveyor") || "-";
+        const points = splitTasks(getField(row, "Tugas", "tugas"));
+        const kuantiti = getField(row, "Kuantiti", "kuantiti") || "0";
+        const unit = unitLabel(getField(row, "Unit", "unit"));
+        const statusIsu = getField(row, "Status Isu", "status_isu");
+        const jangkaSiap = formatDate(getField(row, "Jangka Siap Semasa", "jangkasiapsemasa", "Jangka Siap Asal", "jangkasiapasal"));
+        const perancangan = getField(row, "Perancangan", "perancangan") || "-";
+
+        const tugasHtml = points.length
+          ? points.map(pt => `<div class="flex items-start gap-1.5"><span class="text-brand font-bold">•</span><span>${esc(pt)}</span></div>`).join('')
+          : '<span class="text-gray-400">-</span>';
+
+        const statusBadge = isIssue(statusIsu)
+          ? `<span class="inline-block px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-semibold text-[11px]">${esc(statusIsu)}</span>`
+          : `<span class="inline-block px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 font-semibold text-[11px]">Tiada Isu</span>`;
+
+        const masa = (masaMula || masaTamat) ? `${esc(masaMula || '--')} - ${esc(masaTamat || '--')}` : '';
+
+        return `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-5 py-4 font-bold text-ink whitespace-nowrap">${esc(noFile)}</td>
+            <td class="px-5 py-4 whitespace-nowrap">
+              <div class="font-semibold text-ink">${esc(tarikh)}</div>
+              <div class="text-[10px] text-gray-400">${masa}</div>
+            </td>
+            <td class="px-5 py-4"><span class="inline-block px-2 py-0.5 rounded bg-brand-light border border-brand-line text-brand font-semibold text-[10px] whitespace-nowrap">${esc(kategori)}</span></td>
+            <td class="px-5 py-4 font-medium text-ink whitespace-nowrap">${esc(surveyor)}</td>
+            <td class="px-5 py-4 space-y-1 max-w-xs">${tugasHtml}</td>
+            <td class="px-5 py-4 font-semibold whitespace-nowrap"><span class="text-ink">${esc(kuantiti)}</span> <span class="text-brand">${esc(unit)}</span></td>
+            <td class="px-5 py-4">${statusBadge}</td>
+            <td class="px-5 py-4 whitespace-nowrap">${esc(jangkaSiap)}</td>
+            <td class="px-5 py-4">${esc(perancangan)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function filterLogs() {
+      const q = document.getElementById('search-log').value.toLowerCase();
+      renderLogsTable(globalLogs.filter(row =>
+        getField(row, "No File", "nofile").toLowerCase().includes(q) ||
+        getField(row, "Surveyor", "surveyor").toLowerCase().includes(q) ||
+        getField(row, "Kategori", "kategori").toLowerCase().includes(q)
+      ));
+    }
+
+    // ===== Progres: kad mengikut fail =====
+    function renderProgresList() {
+      const container = document.getElementById('progres-container');
+      const q = (document.getElementById('search-progres').value || '').toLowerCase();
+      const kat = document.getElementById('filter-kategori').value;
+
+      const fileMap = {};
+      globalLogs.forEach(row => {
+        const noFile = getField(row, "No File", "nofile") || "Tanpa No File";
+        if (!fileMap[noFile]) fileMap[noFile] = { records: [], surveyors: new Set(), categories: new Set(), qty: {} };
+        const f = fileMap[noFile];
+        f.records.push(row);
+
+        const s = getField(row, "Surveyor", "surveyor");
+        if (s && s !== "Tidak Diketahui") f.surveyors.add(s);
+        const c = getField(row, "Kategori", "kategori");
+        if (c) f.categories.add(c);
+
+        const n = parseFloat(getField(row, "Kuantiti", "kuantiti"));
+        const u = unitLabel(getField(row, "Unit", "unit")) || 'Unit';
+        if (!isNaN(n)) f.qty[u] = (f.qty[u] || 0) + n;
+      });
+
+      // Fail terbaru dikemaskini di atas
+      const keys = Object.keys(fileMap).reverse().filter(noFile => {
+        const f = fileMap[noFile];
+        const matchText = noFile.toLowerCase().includes(q) ||
+          Array.from(f.surveyors).some(s => s.toLowerCase().includes(q));
+        const matchKat = !kat || f.categories.has(kat);
+        return matchText && matchKat;
+      });
+
+      if (keys.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-8 text-sm">Tiada rekod progres dijumpai.</p>`;
+        return;
+      }
+
+      container.innerHTML = keys.map(noFile => {
+        const f = fileMap[noFile];
+        const first = f.records[0];
+        const latest = f.records[f.records.length - 1];
+
+        const latestIssue = getField(latest, "Status Isu", "status_isu");
+        const badge = isIssue(latestIssue)
+          ? `<span class="px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[11px] font-semibold whitespace-nowrap">Ada Isu</span>`
+          : `<span class="px-3 py-1 rounded-full bg-brand-light border border-brand-line text-brand text-[11px] font-semibold whitespace-nowrap">Dalam Progres</span>`;
+
+        // Jangka siap: ambil nilai terkini yang ada (semasa dahulu, kalau kosong guna asal)
+        let jangkaSiap = '';
+        for (let i = f.records.length - 1; i >= 0 && !jangkaSiap; i--) {
+          jangkaSiap = getField(f.records[i], "Jangka Siap Semasa", "jangkasiapsemasa", "Jangka Siap Asal", "jangkasiapasal");
         }
 
-        function pad2(n) { return String(n).padStart(2, '0'); }
+        const latestTask = splitTasks(getField(latest, "Tugas", "tugas"))[0] || '-';
+        const catChips = Array.from(f.categories).map(c =>
+          `<span class="px-2 py-0.5 rounded bg-brand-light border border-brand-line text-brand text-[10px] font-semibold">${esc(c)}</span>`).join('');
+        const survChips = Array.from(f.surveyors).map(s =>
+          `<span class="px-3 py-1 rounded-md border border-gray-200 bg-white text-xs text-ink flex items-center gap-1.5"><i class="fa-solid fa-user text-[9px] text-gray-400"></i>${esc(s)}</span>`).join('')
+          || '<span class="text-xs text-gray-400">Tiada surveyor</span>';
+        const qtyChips = Object.entries(f.qty).map(([u, n]) =>
+          `<span class="px-3 py-1 rounded-md border border-gray-200 bg-white text-xs font-semibold text-ink">${fmtNum(n)} <span class="text-brand">${esc(u)}</span></span>`).join('')
+          || '<span class="text-xs text-gray-400">-</span>';
 
-        // Tarikh hari ini ikut waktu tempatan (toISOString guna UTC, salah sebelum 8 pagi di Malaysia)
-        function todayLocalIso() {
-            const d = new Date();
-            return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        return `
+          <div class="rounded-lg border border-gray-200 bg-white shadow-sm p-5 flex flex-col">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-md bg-sun shrink-0 flex items-center justify-center text-ink"><i class="fa-solid fa-folder-open text-sm"></i></div>
+                <div class="min-w-0">
+                  <h4 class="text-base font-bold text-ink truncate">${esc(noFile)}</h4>
+                  <p class="text-xs text-gray-500 mt-0.5">No. Fail Projek</p>
+                </div>
+              </div>
+              ${badge}
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 mt-4">${catChips}</div>
+
+            <p class="eyebrow text-gray-500 mt-5 mb-2">Surveyor Bertugas</p>
+            <div class="flex flex-wrap gap-2">${survChips}</div>
+
+            <div class="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
+              <div class="flex items-start justify-between gap-3 text-xs">
+                <span class="text-ink line-clamp-2">${esc(latestTask)}</span>
+                <span class="text-gray-400 whitespace-nowrap">${f.records.length} Kemaskini</span>
+              </div>
+              <p class="text-[10px] uppercase tracking-wider text-gray-400 mt-3 mb-1.5">Kuantiti Terkumpul</p>
+              <div class="flex flex-wrap gap-2">${qtyChips}</div>
+            </div>
+
+            <div class="mt-auto pt-4">
+              <div class="border-t border-gray-200 pt-4 flex items-center justify-between text-xs text-gray-500">
+                <span>Mula: <strong class="text-ink">${esc(formatDate(getField(first, "Tarikh", "tarikh")))}</strong></span>
+                <span>Siap: <strong class="text-ink">${esc(formatDate(jangkaSiap))}</strong></span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ===== Analisis: chart =====
+    function renderCharts(data) {
+      const catCounts = {};
+      const survCounts = {};
+      data.forEach(row => {
+        const cat = getField(row, "Kategori", "kategori") || "Lain-lain";
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+        const s = getField(row, "Surveyor", "surveyor");
+        if (s && s !== "Tidak Diketahui") survCounts[s] = (survCounts[s] || 0) + 1;
+      });
+
+      if (categoryChartInstance) categoryChartInstance.destroy();
+      categoryChartInstance = new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(catCounts),
+          datasets: [{ data: Object.values(catCounts), backgroundColor: CHART_COLORS, borderColor: '#fff', borderWidth: 3 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
         }
+      });
 
-        // Sokong YYYY-MM-DD (input borang) dan DD/MM/YYYY (format Google Sheets Malaysia)
-        function parseTarikh(value) {
-            const s = String(value || '').trim();
-            let y, m, d;
-            let match = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-            if (match) {
-                y = +match[1]; m = +match[2]; d = +match[3];
-            } else {
-                match = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
-                if (!match) return null;
-                d = +match[1]; m = +match[2]; y = +match[3];
-                if (y < 100) y += 2000;
-            }
-            if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-            return { y, m, d };
+      if (surveyorChartInstance) surveyorChartInstance.destroy();
+      surveyorChartInstance = new Chart(document.getElementById('surveyorChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(survCounts),
+          datasets: [{ label: 'Jumlah Laporan', data: Object.values(survCounts), backgroundColor: '#3B32E6', hoverBackgroundColor: '#FFD600', borderRadius: 6, maxBarThickness: 48 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } }, grid: { color: '#EEF0F4' } }
+          },
+          plugins: { legend: { display: false } }
         }
+      });
+    }
 
-        function tarikhToIso(value) {
-            const p = parseTarikh(value);
-            return p ? `${p.y}-${pad2(p.m)}-${pad2(p.d)}` : '';
-        }
+    // ===== Form: task points =====
+    function taskRowHTML(placeholder) {
+      return `
+        <div class="flex items-center gap-2 task-row">
+          <span class="text-brand font-bold text-sm">•</span>
+          <input type="text" required placeholder="${placeholder}" class="field flex-1">
+          <button type="button" onclick="removeTaskPoint(this)" class="p-2 text-gray-400 hover:text-rose-500 transition-colors" title="Buang">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </div>`;
+    }
 
-        function formatTarikh(value) {
-            const p = parseTarikh(value);
-            if (p) return `${pad2(p.d)}/${pad2(p.m)}/${p.y}`;
-            const raw = String(value || '').trim();
-            return raw || '-';
-        }
+    function resetTaskPoints() {
+      document.getElementById('task-points-container').innerHTML = taskRowHTML('Contoh: Kerja-kerja pemasangan stub mark P1 - P10');
+    }
 
-        // Seragamkan masa: "8:00:00", "08:00", "8:00 PM" -> "HH:MM"
-        function normTime(value) {
-            const s = String(value || '').trim();
-            const m = s.match(/^(\d{1,2}):(\d{2})/);
-            if (!m) return s;
-            let h = +m[1];
-            if (/pm/i.test(s) && h < 12) h += 12;
-            if (/am/i.test(s) && h === 12) h = 0;
-            return `${pad2(h)}:${m[2]}`;
-        }
+    function addTaskPoint() {
+      document.getElementById('task-points-container')
+        .insertAdjacentHTML('beforeend', taskRowHTML('Contoh: Kerja-kerja semakan sempadan lot'));
+    }
 
-        function parseQty(value) {
-            const n = parseFloat(String(value || '').replace(/,/g, ''));
-            return isNaN(n) ? 0 : n;
-        }
+    function removeTaskPoint(btn) {
+      const container = document.getElementById('task-points-container');
+      if (container.children.length > 1) {
+        btn.closest('.task-row').remove();
+      } else {
+        showNotification("Perhatian", "Sekurang-kurangnya satu point tugas diperlukan.", "error");
+      }
+    }
 
-        function fmtNum(n) {
-            return n.toLocaleString('en-MY', { maximumFractionDigits: 2 });
-        }
+    // ===== Form: gambar =====
+    const MAX_IMAGE_DIM = 1600;              // px, sisi paling panjang
+    const MAX_IMAGE_INPUT_BYTES = 15 * 1024 * 1024;
 
-        function hasIssue(value) {
-            return !NO_ISSUE_VALUES.has(String(value || '').trim().toLowerCase());
-        }
+    function userError(msg) {
+      const err = new Error(msg);
+      err.userMessage = msg;
+      return err;
+    }
 
-        function stripFilePrefix(value) {
-            return String(value || "").trim().replace(new RegExp("^" + FILE_PREFIX + "\\s*", "i"), "").trim();
-        }
+    // Kecilkan gambar ke 1600px JPEG 80% sebelum hantar (gambar telefon 4-8MB jadi ~300-600KB)
+    async function readImagePayload(file) {
+      if (!file) return null;
+      if (!file.type.startsWith('image/')) throw userError('Lampiran mesti fail gambar.');
+      if (file.size > MAX_IMAGE_INPUT_BYTES) throw userError('Gambar terlalu besar (maksimum 15MB).');
 
-        // Ambil nombor asas No File (cth: "MGK 001/26 Mangkuk" -> "MGK 001/26")
-        function normalizeNoFile(rawNoFile) {
-            if (!rawNoFile) return "";
-            const cleaned = stripFilePrefix(rawNoFile);
-            const baseNum = cleaned.split(/\s+/)[0] || cleaned;
-            return baseNum ? FILE_PREFIX + " " + baseNum.toUpperCase() : "";
-        }
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch (e) {
+        throw userError('Format gambar tidak disokong. Sila guna JPG atau PNG.');
+      }
+      const scale = Math.min(1, MAX_IMAGE_DIM / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      if (bitmap.close) bitmap.close();
 
-        // "MGK 001/26 Mangkuk" -> { file: "MGK 001/26", kawasan: "Mangkuk" } (sama dengan Apps Script)
-        function splitFileAndKawasan(value) {
-            const s = String(value || "").trim().replace(/\s+/g, " ");
-            const m = s.match(/^([A-Za-z]{2,6})\s*(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
-            if (!m) return { file: s, kawasan: "" };
-            return { file: m[1].toUpperCase() + " " + m[2] + "/" + m[3], kawasan: m[4].trim() };
-        }
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      return { name: file.name, mimeType: 'image/jpeg', data: dataUrl.split(',')[1] };
+    }
 
-        function kawasanKey(value) {
-            return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
-        }
-
-        function canonicalKategori(value) {
-            const s = String(value || "").trim();
-            return KATEGORI_ALIASES[s.toLowerCase()] || s;
-        }
-
-        function escapeHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // Tukar baris (CSV atau localStorage) kepada objek standard
-        function normalizeRow(raw, isLocal = false) {
-            const lookup = {};
-            Object.keys(raw || {}).forEach(k => { lookup[String(k).trim().toLowerCase()] = raw[k]; });
-            const row = {};
-            Object.entries(FIELD_ALIASES).forEach(([field, aliases]) => {
-                let value = '';
-                for (const alias of [field.toLowerCase(), ...aliases]) {
-                    const v = lookup[alias];
-                    if (v !== undefined && v !== null && String(v).trim() !== '') {
-                        value = String(v).trim();
-                        break;
-                    }
-                }
-                row[field] = value;
-            });
-            row.kategori = canonicalKategori(row.kategori);
-            // Data lama: kawasan ditaip dalam No File
-            const parts = splitFileAndKawasan(row.noFile);
-            row.noFile = parts.file;
-            row.kawasan = (row.kawasan || parts.kawasan).replace(/\s+/g, " ");
-            row._local = isLocal;
-            return row;
-        }
-
-        function isEmptyRow(row) {
-            return Object.keys(FIELD_ALIASES).every(f => !row[f]);
-        }
-
-        function reportKey(r) {
-            return [normalizeNoFile(r.noFile), kawasanKey(r.kawasan), tarikhToIso(r.tarikh), normTime(r.masaMula), String(r.surveyor).trim().toLowerCase()].join('|');
-        }
-
-        function readLocalReports() {
-            try {
-                const v = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
-                return Array.isArray(v) ? v : [];
-            } catch (e) {
-                return [];
-            }
-        }
-
-        function writeLocalReports(list) {
-            try {
-                localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
-            } catch (e) {
-                console.warn("Gagal simpan localStorage:", e);
-            }
-        }
-
-        // Gabung data sheet + tempatan; rekod tempatan yang sudah wujud dalam sheet dibuang supaya tiada duplikasi
-        function mergeData(remoteRaw) {
-            const remote = (remoteRaw || []).map(r => normalizeRow(r, false)).filter(r => !isEmptyRow(r));
-            const remoteKeys = new Set(remote.map(reportKey));
-            const localRaw = readLocalReports();
-            const pending = localRaw.filter(l => !remoteKeys.has(reportKey(normalizeRow(l, true))));
-            if (pending.length !== localRaw.length) writeLocalReports(pending);
-            return [...pending.map(l => normalizeRow(l, true)), ...remote];
-        }
-
-        function localOnlyData() {
-            return readLocalReports().map(l => normalizeRow(l, true)).filter(r => !isEmptyRow(r));
-        }
-
-        // ---------- Init ----------
-        document.addEventListener("DOMContentLoaded", () => {
-            resetTugasRows();
-            const tarikhInput = document.getElementById("f_tarikh");
-            if (tarikhInput) tarikhInput.value = todayLocalIso();
-            const prefixEl = document.getElementById("noFilePrefix");
-            if (prefixEl) prefixEl.textContent = FILE_PREFIX;
-            refreshIcons();
-            switchTab('dashboard');
-            fetchCSVData();
+    // ===== Form: hantar ke Apps Script =====
+    // text/plain = "simple request", tiada CORS preflight. Apps Script balas JSON {status, message, row}.
+    async function postToAppsScript(payload) {
+      let res;
+      try {
+        res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          redirect: 'follow'
         });
+      } catch (e) {
+        throw userError('Gagal menghubungi pelayan Apps Script. Semak sambungan internet.');
+      }
+      if (!res.ok) throw userError(`Pelayan membalas ralat (HTTP ${res.status}).`);
+      try {
+        return await res.json();
+      } catch (e) {
+        throw userError('Respons pelayan tidak sah. Pastikan Apps Script versi terbaru sudah di-deploy.');
+      }
+    }
 
-        function showToast(msg, type = "success") {
-            const toast = document.getElementById("toast");
-            const toastMsg = document.getElementById("toastMsg");
-            const toastIcon = document.getElementById("toastIcon");
-            if (!toast || !toastMsg || !toastIcon) return;
+    // ===== Form: submit =====
+    async function handleFormSubmit(e) {
+      e.preventDefault();
 
-            // Batalkan timer toast sebelum ini supaya toast baru tak hilang awal
-            clearTimeout(toastTimer);
-            clearTimeout(toastHideTimer);
+      const noFileFormatted = normalizeNoFile(document.getElementById('no_file').value);
+      if (!noFileFormatted) {
+        showNotification("No File Tidak Sah", `No File mesti guna prefix ${FILE_PREFIX}, contoh: ${FILE_PREFIX} 001/26.`, "error");
+        return;
+      }
 
-            toastMsg.innerText = msg;
-            toast.className = "fixed top-20 right-6 z-50 px-4 py-3 rounded-md shadow-sm border text-sm flex items-center gap-3 transition-all transform translate-y-0 opacity-100 max-w-sm";
+      const tasks = Array.from(document.querySelectorAll('#task-points-container input'))
+        .map(i => i.value.trim()).filter(Boolean);
 
-            if (type === "success") {
-                toast.classList.add("bg-emerald-50", "border-emerald-500/30", "text-emerald-800");
-                toastIcon.setAttribute("data-lucide", "check-circle");
-            } else if (type === "error") {
-                toast.classList.add("bg-red-50", "border-red-500/30", "text-red-800");
-                toastIcon.setAttribute("data-lucide", "alert-circle");
-            } else {
-                toast.classList.add("bg-white", "border-line", "text-slate-700");
-                toastIcon.setAttribute("data-lucide", "info");
-            }
-            refreshIcons();
+      const payload = {
+        "No File": noFileFormatted,
+        "Tarikh": document.getElementById('tarikh').value,
+        "Masa Mula": document.getElementById('masa_mula').value,
+        "Masa Tamat": document.getElementById('masa_tamat').value,
+        "Kategori": document.getElementById('kategori').value,
+        "Surveyor": document.getElementById('surveyor').value,
+        "Tugas": tasks.join(', '),
+        "Kuantiti": document.getElementById('kuantiti').value,
+        "Unit": document.getElementById('unit').value,
+        "Status Isu": document.getElementById('status_isu').value.trim() || "Tiada Isu",
+        "Jangka Siap Asal": document.getElementById('jangka_siap_asal').value,
+        "Jangka Siap Semasa": document.getElementById('jangka_siap_semasa').value,
+        "Perancangan": document.getElementById('perancangan').value
+      };
 
-            toastTimer = setTimeout(() => {
-                toast.classList.add("translate-y-2", "opacity-0");
-                toastHideTimer = setTimeout(() => toast.classList.add("hidden"), 300);
-            }, 3500);
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Menghantar ke Google Sheets...</span>`;
+
+      try {
+        const gambar = await readImagePayload(document.getElementById('lampiran_gambar').files[0]);
+        if (gambar) payload["Gambar"] = gambar;
+
+        const result = await postToAppsScript(payload);
+        if (result.status === 'duplicate') {
+          showNotification("Rekod Sudah Wujud", result.message || "Laporan yang sama sudah ada dalam sheet.", "error");
+          return;
+        }
+        if (result.status !== 'ok') {
+          showNotification("Gagal Disimpan", result.message || "Laporan gagal disimpan.", "error");
+          return;
         }
 
-        function switchTab(tabName) {
-            document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-            document.querySelectorAll(".nav-btn").forEach(el => {
-                el.classList.remove("text-brand", "border-brand");
-                el.classList.add("text-ink", "border-transparent", "hover:text-brand");
-            });
-
-            const map = {
-                dashboard: ["viewDashboard", "navDashboard"],
-                form: ["viewForm", "navForm"],
-                surveyor: ["viewSurveyor", "navSurveyor"]
-            };
-            const [viewId, navId] = map[tabName] || map.dashboard;
-            const view = document.getElementById(viewId);
-            const nav = document.getElementById(navId);
-            if (view) view.classList.remove("hidden");
-            if (nav) {
-                nav.classList.add("text-brand", "border-brand");
-                nav.classList.remove("text-ink", "border-transparent");
-            }
-            if (tabName === 'surveyor') initSurveyorFilters();
-            refreshIcons();
-        }
-
-        function isSurveyorTabOpen() {
-            const v = document.getElementById("viewSurveyor");
-            return v && !v.classList.contains("hidden");
-        }
-
-        // ---------- Tugas rows ----------
-        function tugasRowHtml() {
-            return `
-                <input type="text" placeholder="Masukkan skop tugas..." class="flex-1 px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm" required>
-                <button type="button" onclick="removeTugasRow(this)" class="p-3 rounded-md bg-red-50 text-red-600 border border-red-500/30 hover:bg-red-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            `;
-        }
-
-        function addTugasRow() {
-            const container = document.getElementById("tugasContainer");
-            if (!container) return;
-            const div = document.createElement("div");
-            div.className = "flex items-center gap-2";
-            div.innerHTML = tugasRowHtml();
-            container.appendChild(div);
-            refreshIcons();
-        }
-
-        function resetTugasRows() {
-            const container = document.getElementById("tugasContainer");
-            if (!container) return;
-            container.innerHTML = "";
-            addTugasRow();
-        }
-
-        function removeTugasRow(btn) {
-            const container = document.getElementById("tugasContainer");
-            if (!container) return;
-            if (container.children.length > 1) {
-                btn.closest("div").remove();
-            } else {
-                showToast("Sekurang-kurangnya satu tugas diperlukan.", "error");
-            }
-        }
-
-        // ---------- Gambar Preview & Compress ----------
-        // Gambar diubah saiz & ditukar ke JPEG dalam browser supaya upload kecil dan laju
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const url = URL.createObjectURL(file);
-                const img = new Image();
-                img.onload = () => {
-                    URL.revokeObjectURL(url);
-                    const scale = Math.min(1, IMAGE_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
-                    const width = Math.max(1, Math.round(img.naturalWidth * scale));
-                    const height = Math.max(1, Math.round(img.naturalHeight * scale));
-                    const canvas = document.createElement("canvas");
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext("2d");
-                    // Latar putih: PNG lutsinar tak jadi hitam bila ditukar ke JPEG
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL("image/jpeg", IMAGE_QUALITY));
-                };
-                img.onerror = () => {
-                    URL.revokeObjectURL(url);
-                    reject(new Error("Format gambar tidak disokong"));
-                };
-                img.src = url;
-            });
-        }
-
-        function handleImagePreview(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) {
-                clearImageSelection();
-                return;
-            }
-            if (!file.type.startsWith("image/")) {
-                showToast("Sila pilih fail gambar yang sah.", "error");
-                clearImageSelection();
-                return;
-            }
-
-            const token = ++imageToken;
-            selectedImageBase64 = "";
-            const baseName = file.name.replace(/\.[^.]+$/, "") || "gambar";
-
-            imageProcessing = compressImage(file)
-                .then(dataUrl => {
-                    if (token !== imageToken) return; // pengguna dah pilih gambar lain
-                    const approxBytes = Math.ceil((dataUrl.length - dataUrl.indexOf(",") - 1) * 3 / 4);
-                    if (approxBytes > IMAGE_MAX_BYTES) {
-                        showToast("Gambar terlalu besar walaupun selepas dimampatkan. Sila pilih gambar lain.", "error");
-                        clearImageSelection();
-                        return;
-                    }
-                    selectedImageBase64 = dataUrl;
-                    selectedImageName = baseName + ".jpg";
-                    selectedImageMime = "image/jpeg";
-                    const preview = document.getElementById("imagePreview");
-                    const container = document.getElementById("imagePreviewContainer");
-                    if (preview && container) {
-                        preview.src = dataUrl;
-                        container.classList.remove("hidden");
-                    }
-                    refreshIcons();
-                })
-                .catch(() => {
-                    if (token !== imageToken) return;
-                    // Cth: HEIC dari iPhone pada browser desktop yang tak boleh baca HEIC
-                    showToast("Gambar tidak dapat dibaca. Guna format JPG atau PNG.", "error");
-                    clearImageSelection();
-                })
-                .finally(() => {
-                    if (token === imageToken) imageProcessing = null;
-                });
-        }
-
-        function clearImageSelection() {
-            imageToken++;
-            imageProcessing = null;
-            selectedImageBase64 = "";
-            selectedImageName = "";
-            selectedImageMime = "";
-            const input = document.getElementById("f_gambar");
-            if (input) input.value = "";
-            const preview = document.getElementById("imagePreview");
-            const container = document.getElementById("imagePreviewContainer");
-            if (preview) preview.src = "";
-            if (container) container.classList.add("hidden");
-        }
-
-        // ---------- Data ----------
-        // Cadangan: senarai No File, dan kawasan yang pernah direkod untuk No File yang ditaip
-        function updateKawasanSuggestions() {
-            const fileList = document.getElementById("noFileList");
-            const kawasanList = document.getElementById("kawasanList");
-            if (!fileList || !kawasanList) return;
-
-            const files = new Set(masterData.map(r => stripFilePrefix(normalizeNoFile(r.noFile))).filter(Boolean));
-            fileList.innerHTML = Array.from(files).sort().map(f => `<option value="${escapeHtml(f)}">`).join("");
-
-            const typed = document.getElementById("f_nofile")?.value || "";
-            const target = typed.trim() ? normalizeNoFile(FILE_PREFIX + " " + stripFilePrefix(typed)) : "";
-            const seen = new Map();
-            masterData.forEach(r => {
-                if (!r.kawasan) return;
-                if (target && normalizeNoFile(r.noFile) !== target) return;
-                const k = kawasanKey(r.kawasan);
-                if (!seen.has(k)) seen.set(k, r.kawasan);
-            });
-            kawasanList.innerHTML = Array.from(seen.values()).sort((a, b) => a.localeCompare(b))
-                .map(k => `<option value="${escapeHtml(k)}">`).join("");
-        }
-
-        function applyData() {
-            updateKawasanSuggestions();
-            updateStats();
-            filterTable();
-            renderCharts(masterData);
-            if (isSurveyorTabOpen()) initSurveyorFilters();
-        }
-
-        function fetchCSVData() {
-            const loader = document.getElementById("loader");
-            if (loader) loader.style.display = "flex";
-
-            if (typeof Papa === 'undefined') {
-                if (loader) loader.style.display = "none";
-                masterData = localOnlyData();
-                applyData();
-                showToast("PapaParse gagal dimuatkan, hanya data tempatan dipaparkan.", "error");
-                return;
-            }
-
-            // Cache-buster supaya CSV terbitan Google tidak dipulangkan dari cache browser
-            Papa.parse(`${CSV_URL}&_t=${Date.now()}`, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    if (loader) loader.style.display = "none";
-                    masterData = mergeData(results.data || []);
-                    applyData();
-                },
-                error: function(err) {
-                    if (loader) loader.style.display = "none";
-                    console.error("CSV Parse Error:", err);
-                    masterData = localOnlyData();
-                    applyData();
-                    showToast("Gagal memuat CSV jauh, menggunakan data tempatan.", "error");
-                }
-            });
-        }
-
-        function updateStats() {
-            const elTotal = document.getElementById("totalLaporan");
-            const elProjek = document.getElementById("totalProjek");
-            const elKuantiti = document.getElementById("totalKuantiti");
-            const elIsu = document.getElementById("totalIsu");
-
-            if (elTotal) elTotal.innerText = masterData.length;
-
-            const uniqueFiles = new Set(masterData.map(d => normalizeNoFile(d.noFile)).filter(Boolean));
-            if (elProjek) elProjek.innerText = uniqueFiles.size;
-
-            // Kuantiti dijumlah ikut unit; Lot + Meter tidak boleh dicampur jadi satu nombor
-            const unitTotals = {};
-            masterData.forEach(d => {
-                const q = parseQty(d.kuantiti);
-                if (q) {
-                    const u = d.unit || 'Unit';
-                    unitTotals[u] = (unitTotals[u] || 0) + q;
-                }
-            });
-            const entries = Object.entries(unitTotals);
-            if (elKuantiti) {
-                elKuantiti.innerText = entries.length ? entries.map(([u, v]) => `${fmtNum(v)} ${u}`).join(' · ') : '0';
-                elKuantiti.classList.toggle('text-3xl', entries.length <= 1);
-                elKuantiti.classList.toggle('text-lg', entries.length > 1);
-            }
-
-            if (elIsu) elIsu.innerText = masterData.filter(d => hasIssue(d.statusIsu)).length;
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById("tableBody");
-            if (!tbody) return;
-            tbody.innerHTML = "";
-
-            if (!data.length) {
-                tbody.innerHTML = `<tr><td colspan="15" class="text-center py-8 text-slate-400">Tiada rekod data dijumpai.</td></tr>`;
-                return;
-            }
-
-            const fragment = document.createDocumentFragment();
-            data.forEach(row => {
-                const rawTugas = row.tugas || "-";
-                let tugasHtml;
-                if (rawTugas.includes(",")) {
-                    const parts = rawTugas.split(",").map(p => p.trim()).filter(Boolean);
-                    tugasHtml = `<ul class="list-disc list-inside space-y-0.5 text-slate-600">` + parts.map(p => `<li>${escapeHtml(p)}</li>`).join("") + `</ul>`;
-                } else {
-                    tugasHtml = `<span class="text-slate-600 block">${escapeHtml(rawTugas)}</span>`;
-                }
-
-                const isuHtml = hasIssue(row.statusIsu)
-                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/15 text-red-600 border border-red-500/30 inline-block">${escapeHtml(row.statusIsu)}</span>`
-                    : `<span class="text-slate-400">${row.statusIsu ? escapeHtml(row.statusIsu) : '-'}</span>`;
-
-                const localBadge = row._local
-                    ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/30" title="Belum muncul dalam Google Sheets">Tempatan</span>`
-                    : '';
-
-                let gambarHtml = `<span class="text-slate-400">-</span>`;
-                if (row.gambar) {
-                    if (row.gambar.startsWith("http") || row.gambar.startsWith("data:image")) {
-                        gambarHtml = `<a href="${escapeHtml(row.gambar)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-brand/10 text-brand hover:bg-brand/20 font-medium text-[11px] transition"><i data-lucide="image" class="w-3.5 h-3.5"></i> Lihat</a>`;
-                    } else {
-                        gambarHtml = `<span class="text-slate-600">${escapeHtml(row.gambar)}</span>`;
-                    }
-                }
-
-                const tr = document.createElement("tr");
-                tr.className = "border-b border-line hover:bg-canvas transition text-xs";
-                tr.innerHTML = `
-                    <td class="px-3 py-3 font-medium text-ink whitespace-nowrap">${escapeHtml(row.noFile || '-')}${localBadge}</td>
-                    <td class="px-3 py-3 whitespace-nowrap">${row.kawasan ? `<span class="inline-flex items-center gap-1 text-ink font-medium"><i data-lucide="map-pin" class="w-3 h-3 text-brand"></i>${escapeHtml(row.kawasan)}</span>` : '<span class="text-slate-400">-</span>'}</td>
-                    <td class="px-3 py-3 text-slate-600 whitespace-nowrap">${escapeHtml(formatTarikh(row.tarikh))}</td>
-                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.masaMula ? normTime(row.masaMula) : '-')}</td>
-                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.masaTamat ? normTime(row.masaTamat) : '-')}</td>
-                    <td class="px-3 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand/10 text-brand border border-brand/20 inline-block">${escapeHtml(row.kategori || '-')}</span></td>
-                    <td class="px-3 py-3 text-ink font-medium whitespace-nowrap">${escapeHtml(row.surveyor || '-')}</td>
-                    <td class="px-3 py-3 min-w-[200px]">${tugasHtml}</td>
-                    <td class="px-3 py-3 text-ink font-semibold whitespace-nowrap">${escapeHtml(row.kuantiti || '-')}</td>
-                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(row.unit || '-')}</td>
-                    <td class="px-3 py-3 whitespace-nowrap">${isuHtml}</td>
-                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(formatTarikh(row.jangkaAsal))}</td>
-                    <td class="px-3 py-3 text-slate-500 whitespace-nowrap">${escapeHtml(formatTarikh(row.jangkaSemasa))}</td>
-                    <td class="px-3 py-3 whitespace-nowrap">${gambarHtml}</td>
-                    <td class="px-3 py-3 text-slate-600 min-w-[180px]">${escapeHtml(row.perancangan || '-')}</td>
-                `;
-                fragment.appendChild(tr);
-            });
-            tbody.appendChild(fragment);
-            refreshIcons();
-        }
-
-        function filterTable() {
-            const query = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
-            const cat = document.getElementById("filterCategory")?.value || "";
-
-            const filtered = masterData.filter(row => {
-                const matchQuery = !query || row.noFile.toLowerCase().includes(query) || row.kawasan.toLowerCase().includes(query) || row.surveyor.toLowerCase().includes(query);
-                const matchCat = !cat || row.kategori.toLowerCase() === cat.toLowerCase();
-                return matchQuery && matchCat;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderCharts(data) {
-            if (typeof Chart === 'undefined') return;
-
-            const catCount = {};
-            const statusCount = { "Tiada Isu": 0, "Ada Isu": 0 };
-
-            data.forEach(d => {
-                const cat = d.kategori || "Lain-lain";
-                catCount[cat] = (catCount[cat] || 0) + 1;
-                if (hasIssue(d.statusIsu)) statusCount["Ada Isu"]++;
-                else statusCount["Tiada Isu"]++;
-            });
-
-            const labels = Object.keys(catCount);
-            const canvasCat = document.getElementById("categoryChart");
-            if (canvasCat) {
-                if (categoryChartInstance) categoryChartInstance.destroy();
-                categoryChartInstance = new Chart(canvasCat.getContext("2d"), {
-                    type: 'doughnut',
-                    data: {
-                        labels,
-                        datasets: [{
-                            data: Object.values(catCount),
-                            backgroundColor: labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { color: '#64748B', boxWidth: 12 } } }
-                    }
-                });
-            }
-
-            const canvasStatus = document.getElementById("statusChart");
-            if (canvasStatus) {
-                if (statusChartInstance) statusChartInstance.destroy();
-                statusChartInstance = new Chart(canvasStatus.getContext("2d"), {
-                    type: 'bar',
-                    data: {
-                        labels: Object.keys(statusCount),
-                        datasets: [{
-                            data: Object.values(statusCount),
-                            backgroundColor: ['#10B981', '#EF4444'],
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { ticks: { color: '#64748B' }, grid: { display: false } },
-                            y: { beginAtZero: true, ticks: { color: '#64748B', precision: 0 }, grid: { color: '#E5E7EB' } }
-                        }
-                    }
-                });
-            }
-        }
-
-        // ---------- Statistik Surveyor ----------
-        function monthKeyOf(d) {
-            const p = parseTarikh(d.tarikh);
-            return p ? `${p.y}-${pad2(p.m)}` : '';
-        }
-
-        function weekOf(d) {
-            const p = parseTarikh(d.tarikh);
-            return p ? Math.ceil(p.d / 7) : 0;
-        }
-
-        function initSurveyorFilters() {
-            const monthSelect = document.getElementById("filterMonth");
-            if (!monthSelect) return;
-            const prevMonth = monthSelect.value;
-
-            const months = new Set(masterData.map(monthKeyOf).filter(Boolean));
-            monthSelect.innerHTML = `<option value="">Semua Bulan</option>`;
-            Array.from(months).sort().reverse().forEach(key => {
-                const [y, m] = key.split('-');
-                const opt = document.createElement("option");
-                opt.value = key;
-                opt.innerText = `${NAMA_BULAN[+m - 1]} ${y}`;
-                monthSelect.appendChild(opt);
-            });
-            if (prevMonth && months.has(prevMonth)) monthSelect.value = prevMonth;
-
-            onMonthFilterChange(true);
-        }
-
-        function onMonthFilterChange(keepWeek = false) {
-            const monthSelect = document.getElementById("filterMonth");
-            const weekSelect = document.getElementById("filterWeek");
-            if (!monthSelect || !weekSelect) return;
-
-            const selectedMonth = monthSelect.value;
-            const prevWeek = keepWeek === true ? weekSelect.value : '';
-            weekSelect.innerHTML = `<option value="">Semua Minggu</option>`;
-
-            if (selectedMonth) {
-                const weeks = new Set(masterData.filter(d => monthKeyOf(d) === selectedMonth).map(weekOf).filter(Boolean));
-                Array.from(weeks).sort((a, b) => a - b).forEach(w => {
-                    const opt = document.createElement("option");
-                    opt.value = String(w);
-                    opt.innerText = `Minggu ${w}`;
-                    weekSelect.appendChild(opt);
-                });
-                if (prevWeek && weeks.has(+prevWeek)) weekSelect.value = prevWeek;
-            }
-
-            renderSurveyorStats();
-        }
-
-        function renderSurveyorStats() {
-            const container = document.getElementById("surveyorStatsContainer");
-            if (!container) return;
-            container.innerHTML = "";
-
-            const selectedMonth = document.getElementById("filterMonth")?.value || "";
-            const selectedWeek = document.getElementById("filterWeek")?.value || "";
-
-            const filtered = masterData.filter(d => {
-                if (selectedMonth && monthKeyOf(d) !== selectedMonth) return false;
-                if (selectedWeek && weekOf(d) !== +selectedWeek) return false;
-                return true;
-            });
-
-            const surveyorMap = {};
-            filtered.forEach(d => {
-                const s = d.surveyor || "Tidak Diketahui";
-                if (!surveyorMap[s]) surveyorMap[s] = { totalTasks: 0, units: {}, issues: 0, categories: {} };
-                const info = surveyorMap[s];
-                info.totalTasks++;
-
-                const qty = parseQty(d.kuantiti);
-                if (qty) {
-                    const unit = d.unit || "Unit";
-                    info.units[unit] = (info.units[unit] || 0) + qty;
-                }
-
-                const cat = d.kategori || "Lain-lain";
-                info.categories[cat] = (info.categories[cat] || 0) + 1;
-
-                if (hasIssue(d.statusIsu)) info.issues++;
-            });
-
-            const surveyors = Object.keys(surveyorMap).sort((a, b) => a.localeCompare(b));
-            if (!surveyors.length) {
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">Tiada data statistik surveyor untuk tempoh ini.</div>`;
-                return;
-            }
-
-            surveyors.forEach(sName => {
-                const info = surveyorMap[sName];
-                const unitStr = Object.entries(info.units).map(([u, v]) => `${fmtNum(v)} ${u}`).join(", ") || "0 Unit";
-
-                const catListHtml = Object.entries(info.categories).map(([c, count]) =>
-                    `<div class="flex justify-between text-xs text-slate-500 py-0.5"><span>${escapeHtml(c)}</span><span class="text-ink font-medium">${count} tugas</span></div>`
-                ).join("");
-
-                const card = document.createElement("div");
-                card.className = "bg-white border border-line rounded-lg p-6 shadow-sm flex flex-col justify-between hover:border-brand/40 transition";
-                card.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-md bg-gold flex items-center justify-center text-ink font-display font-extrabold text-lg">
-                                    ${escapeHtml(sName.charAt(0).toUpperCase())}
-                                </div>
-                                <div>
-                                    <h3 class="text-ink font-semibold text-base">${escapeHtml(sName)}</h3>
-                                    <span class="text-xs text-slate-500">Pegawai Ukur</span>
-                                </div>
-                            </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand/15 text-brand border border-brand/30">${info.totalTasks} Tugas</span>
-                        </div>
-                        <div class="space-y-3 mb-6">
-                            <div class="p-3 rounded-md bg-canvas/50 border border-line flex justify-between items-center gap-3">
-                                <span class="text-xs text-slate-500 shrink-0">Jumlah Kuantiti Siap</span>
-                                <span class="text-sm font-bold text-ink text-right">${escapeHtml(unitStr)}</span>
-                            </div>
-                            <div class="p-3 rounded-md bg-canvas/50 border border-line flex justify-between items-center">
-                                <span class="text-xs text-slate-500">Jumlah Isu Dilaporkan</span>
-                                <span class="text-sm font-bold ${info.issues > 0 ? 'text-red-600' : 'text-emerald-600'}">${info.issues} Isu</span>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Pecahan Kategori</h4>
-                            <div class="space-y-1 bg-canvas/30 p-3 rounded-md border border-line">
-                                ${catListHtml}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // ---------- Borang ----------
-        // POST ke Apps Script dan baca respons JSON {status, message, row}.
-        // text/plain = "simple request", jadi tiada CORS preflight; Apps Script pulangkan header CORS sendiri.
-        async function postToAppsScript(payload) {
-            const res = await fetch(APPS_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload),
-                redirect: "follow"
-            });
-            if (!res.ok) {
-                const err = new Error(`HTTP ${res.status}`);
-                err.userMessage = `Pelayan membalas ralat (HTTP ${res.status}).`;
-                throw err;
-            }
-            try {
-                return await res.json();
-            } catch (e) {
-                const err = new Error("Respons bukan JSON");
-                err.userMessage = "Respons pelayan tidak sah. Pastikan Apps Script versi baru sudah di-deploy.";
-                throw err;
-            }
-        }
-
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById("submitBtn");
-            if (submitBtn.disabled) return;
-
-            // Buang prefix jika pengguna taip sekali, supaya tak jadi "MGK MGK 001/26"
-            const rawNoFile = stripFilePrefix(document.getElementById("f_nofile").value);
-            if (!rawNoFile) {
-                showToast(`Sila masukkan No File selepas prefix ${FILE_PREFIX}.`, "error");
-                return;
-            }
-            // Jika kawasan ditaip dalam No File ("001/26 Mangkuk"), pindahkan ke medan Kawasan
-            const fileParts = splitFileAndKawasan(FILE_PREFIX + " " + rawNoFile);
-            const noFileInput = stripFilePrefix(fileParts.file);
-            let kawasan = document.getElementById("f_kawasan").value.trim().replace(/\s+/g, " ");
-            if (fileParts.kawasan) {
-                if (kawasan && kawasanKey(kawasan) !== kawasanKey(fileParts.kawasan)) {
-                    showToast("Kawasan ditulis dalam No File dan medan Kawasan, tapi tak sama. Tulis kawasan dalam medan Kawasan sahaja.", "error");
-                    return;
-                }
-                kawasan = kawasan || fileParts.kawasan;
-            }
-            if (!kawasan) {
-                showToast("Sila isi Kawasan Lapangan.", "error");
-                return;
-            }
-
-            // Tunggu gambar habis dimampatkan, jika tidak gambar tercicir tanpa disedari
-            if (imageProcessing) {
-                submitBtn.disabled = true;
-                submitBtn.innerText = "Memproses gambar...";
-                try { await imageProcessing; } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Hantar Laporan";
-                }
-            }
-
-            const masaMula = document.getElementById("f_mula").value;
-            const masaTamat = document.getElementById("f_tamat").value;
-            if (masaMula && masaTamat && masaTamat <= masaMula) {
-                showToast("Masa Tamat mesti selepas Masa Mula.", "error");
-                return;
-            }
-
-            const tugasList = Array.from(document.querySelectorAll("#tugasContainer input"))
-                .map(i => i.value.trim()).filter(Boolean);
-
-            const payload = {
-                noFile: FILE_PREFIX + " " + noFileInput,
-                kawasan,
-                tarikh: document.getElementById("f_tarikh").value,
-                masaMula,
-                masaTamat,
-                kategori: document.getElementById("f_kategori").value,
-                surveyor: document.getElementById("f_surveyor").value.trim(),
-                tugas: tugasList.join(", "),
-                kuantiti: document.getElementById("f_kuantiti").value,
-                unit: document.getElementById("f_unit").value,
-                statusIsu: document.getElementById("f_status").value.trim(),
-                jangkaAsal: document.getElementById("f_asal").value,
-                jangkaSemasa: document.getElementById("f_semasa").value,
-                perancangan: document.getElementById("f_perancangan").value.trim()
-            };
-            // Gambar dihantar sekali sahaja (dulu dihantar 2 kali: gambar + gambarBase64)
-            const hasImage = Boolean(selectedImageBase64);
-            if (hasImage) {
-                payload.gambarBase64 = selectedImageBase64;
-                payload.gambarName = selectedImageName;
-                payload.gambarMime = selectedImageMime;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Menghantar...";
-            showToast(hasImage ? "Memuat naik gambar & menghantar laporan..." : "Menghantar laporan ke Google Sheets...", "info");
-
-            try {
-                const result = await postToAppsScript(payload);
-                if (result.status === 'duplicate') {
-                    showToast("Laporan yang sama sudah wujud dalam sheet. Tiada rekod baru disimpan.", "error");
-                    return;
-                }
-                if (result.status !== 'ok') {
-                    showToast(result.message || "Laporan gagal disimpan.", "error");
-                    return;
-                }
-
-                // Simpan URL Drive sahaja dalam localStorage, jangan base64 (had localStorage ~5MB)
-                const localCopy = { ...payload, gambar: result.imageUrl || "" };
-                delete localCopy.gambarBase64;
-                delete localCopy.gambarName;
-                delete localCopy.gambarMime;
-
-                const localSaved = readLocalReports();
-                localSaved.unshift(localCopy);
-                writeLocalReports(localSaved);
-
-                if (hasImage && !result.imageUrl) {
-                    showToast(`Laporan disimpan (baris ${result.row}) TETAPI gambar tidak dimuat naik. Semak Apps Script menyokong gambar.`, "error");
-                } else {
-                    showToast(`Laporan disimpan dalam sheet (baris ${result.row}). Dashboard mungkin ambil beberapa minit untuk kemas kini.`, "success");
-                }
-                document.getElementById("dailyReportForm").reset();
-                clearImageSelection();
-                resetTugasRows();
-                document.getElementById("f_tarikh").value = todayLocalIso();
-                switchTab('dashboard');
-                fetchCSVData();
-            } catch (err) {
-                console.error("Ralat hantar:", err);
-                showToast(err.userMessage || "Gagal menghubungi pelayan. Semak internet dan cuba lagi.", "error");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Hantar Laporan";
-            }
-        }
-
-        function exportCSV() {
-            if (!masterData.length) {
-                showToast("Tiada data untuk dieksport.", "error");
-                return;
-            }
-            if (typeof Papa === 'undefined') {
-                showToast("Pustaka PapaParse tidak dimuatkan.", "error");
-                return;
-            }
-            // Lajur standard supaya data tempatan (camelCase) & sheet tak jadi lajur berganda
-            const rows = masterData.map(r => ({
-                "No File": r.noFile,
-                "Kawasan": r.kawasan,
-                "Tarikh": formatTarikh(r.tarikh),
-                "Masa Mula": r.masaMula ? normTime(r.masaMula) : '',
-                "Masa Tamat": r.masaTamat ? normTime(r.masaTamat) : '',
-                "Kategori": r.kategori,
-                "Surveyor": r.surveyor,
-                "Tugas": r.tugas,
-                "Kuantiti": r.kuantiti,
-                "Unit": r.unit,
-                "Status Isu": r.statusIsu,
-                "Jangka Siap Asal": formatTarikh(r.jangkaAsal),
-                "Jangka Siap Semasa": formatTarikh(r.jangkaSemasa),
-                "Gambar": r.gambar || '',
-                "Perancangan": r.perancangan
-            }));
-            const csv = Papa.unparse(rows);
-            // BOM supaya Excel baca UTF-8 dengan betul
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", `laporan_jurukur_${todayLocalIso()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            showToast("Fail CSV berjaya dieksport!", "success");
-        }
-    </script>
+        showNotification("Berjaya!", `Laporan ${payload["No File"]} disimpan dalam Google Sheets (baris ${result.row}).`, "success");
+        document.getElementById('laporanForm').reset();
+        document.getElementById('tarikh').value = todayLocal();
+        resetTaskPoints();
+        setTimeout(refreshData, 2000);
+      } catch (err) {
+        console.error("Submission Error:", err);
+        showNotification("Ralat", err.userMessage || "Gagal menghantar laporan ke pelayan Apps Script.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Hantar Laporan Harian</span>`;
+      }
+    }
+
+    // ===== Notification =====
+    function showNotification(title, message, type = "success") {
+      const icon = document.getElementById('notif-icon');
+      document.getElementById('notif-title').innerText = title;
+      document.getElementById('notif-message').innerText = message;
+      if (type === "success") {
+        icon.className = "w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-4 text-xl";
+        icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+      } else {
+        icon.className = "w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4 text-xl";
+        icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+      }
+      document.getElementById('notification-modal').classList.remove('hidden');
+    }
+
+    function closeNotification() {
+      document.getElementById('notification-modal').classList.add('hidden');
+    }
+  </script>
 </body>
 </html>
