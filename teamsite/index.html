@@ -558,6 +558,13 @@
             return String(value || "").trim().replace(new RegExp("^(" + prefixes + ")\\s*", "i"), "").trim();
         }
 
+        // Tahun No File diseragamkan 2 digit: "2026" -> "26" (format MCP 001/26)
+        function shortYear(y) {
+            const n = parseInt(y, 10);
+            if (String(y).length === 4 && n >= 2000 && n <= 2099) return String(n - 2000).padStart(2, "0");
+            return String(y);
+        }
+
         // Prefix lama (MGK) ditukar ke MCP
         function canonicalPrefix(prefix) {
             const p = String(prefix || "").toUpperCase();
@@ -577,7 +584,7 @@
             const s = String(value || "").trim().replace(/\s+/g, " ");
             const m = s.match(/^([A-Za-z]{2,6})\s*(\d+)\s*\/\s*(\d+)\s*[-–·,:|]?\s*(.*)$/);
             if (!m) return { file: s, kawasan: "" };
-            return { file: canonicalPrefix(m[1]) + " " + m[2].padStart(3, "0") + "/" + m[3], kawasan: m[4].trim() };
+            return { file: canonicalPrefix(m[1]) + " " + m[2].padStart(3, "0") + "/" + shortYear(m[3]), kawasan: m[4].trim() };
         }
 
         function kawasanKey(value) {
@@ -588,7 +595,7 @@
         function fileKey(value) {
             const n = normalizeNoFile(value);
             const m = n.match(/^(\S+)\s+(\d+)\/(\d+)/);
-            return m ? m[1] + " " + parseInt(m[2], 10) + "/" + parseInt(m[3], 10) : n;
+            return m ? canonicalPrefix(m[1]) + " " + parseInt(m[2], 10) + "/" + parseInt(shortYear(m[3]), 10) : n;
         }
 
         function canonicalKategori(value) {
