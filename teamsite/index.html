@@ -80,13 +80,20 @@
     <!-- Header Navigation Bar -->
     <header class="bg-white border-b border-line sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
-                <div class="w-12 h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
-                    <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
-                </div>
-                <div class="leading-tight">
-                    <div class="font-display text-base sm:text-xl font-extrabold tracking-tight text-ink whitespace-nowrap">JURUKUR MAHABOB</div>
-                    <div class="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Statistik &amp; Operasi Jurukur Tanah</div>
+            <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+                <!-- Kembali ke Portal Utama (index.html di root repo) -->
+                <a href="../index.html" class="shrink-0 inline-flex items-center gap-1.5 h-10 px-2.5 sm:px-3 rounded-md border border-line bg-white text-sm font-semibold text-ink hover:border-brand hover:text-brand transition" aria-label="Kembali ke Portal Utama" title="Kembali ke Portal Utama">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden sm:inline">Utama</span>
+                </a>
+                <span class="hidden sm:block w-px h-8 bg-line" aria-hidden="true"></span>
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
+                        <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
+                    </div>
+                    <div class="leading-tight">
+                        <div class="font-display text-base sm:text-xl font-extrabold tracking-tight text-ink whitespace-nowrap">JURUKUR MAHABOB</div>
+                        <div class="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Statistik &amp; Operasi Jurukur Tanah</div>
+                    </div>
                 </div>
             </div>
             <nav class="flex items-center gap-1 sm:gap-3">
