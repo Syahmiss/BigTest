@@ -229,6 +229,15 @@
                 </div>
             </section>
 
+            <!-- Amaran sumber statistik (contoh: tab statistik tak dijumpai) -->
+            <div id="statAmaranBanner" class="hidden p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm flex items-start gap-3" role="alert">
+                <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                <div class="min-w-0">
+                    <p class="font-semibold">Data statistik tidak dapat dimuat, jadi peratus progres dipapar 0%.</p>
+                    <p id="statAmaranText" class="text-xs mt-1 break-words"></p>
+                </div>
+            </div>
+
             <!-- Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="kpi kpi-gold rounded-lg p-6 flex gap-4">
@@ -856,6 +865,8 @@
             lastAddedFileId = null;
             window.__processedData = null;
             window.__rekodById = null;
+            statAmaran = '';
+            document.getElementById('statAmaranBanner')?.classList.add('hidden');
             ['fileCardsContainer', 'statsTableContainer', 'recordsTableContainer', 'usersListContainer'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '';
@@ -1149,8 +1160,9 @@
                 }
                 rawRekodRows = tableToRows(res.rekod);
                 rawStatRows = tableToRows(res.stat);
+                statAmaran = res.amaran || '';
                 syncDynamicOptionsAndRender();
-                if (res.amaran) showToast(res.amaran, 'error');
+                paparAmaranStat();
             } catch (err) {
                 if (err.handled) return;
                 console.error("Ralat memuat data:", err);
@@ -1159,6 +1171,18 @@
                 if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
                 isRefreshing = false;
             }
+        }
+
+        let statAmaran = '';
+        function paparAmaranStat() {
+            const banner = document.getElementById('statAmaranBanner');
+            if (!banner) return;
+            // Butiran teknikal (nama tab/gid) untuk admin; pengguna lain dapat mesej ringkas
+            document.getElementById('statAmaranText').innerText = isAdmin()
+                ? statAmaran
+                : 'Sila maklumkan kepada admin sistem.';
+            banner.classList.toggle('hidden', !statAmaran);
+            refreshIcons();
         }
 
         // Tukar jadual 2D daripada Apps Script (getDisplayValues) kepada senarai objek baris
@@ -2097,7 +2121,10 @@
                 const container = document.getElementById(containerId);
                 if (!container) return;
                 if (!rows || rows.length === 0) {
-                    container.innerHTML = `<p class="text-slate-400 text-sm py-8 text-center">Tiada data dijumpai dalam pautan CSV ini.</p>`;
+                    const msg = containerId === 'statsTableContainer' && statAmaran
+                        ? (isAdmin() ? statAmaran : 'Data statistik tidak dapat dimuat. Sila maklumkan kepada admin sistem.')
+                        : 'Tiada data dijumpai dalam sheet ini.';
+                    container.innerHTML = `<p class="${containerId === 'statsTableContainer' && statAmaran ? 'text-amber-700' : 'text-slate-400'} text-sm py-8 px-6 text-center break-words">${escapeHtml(msg)}</p>`;
                     return;
                 }
                 const headers = rows[0].__headers || Object.keys(rows[0]).filter(k => !k.startsWith('__'));
