@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
     <title>Dashboard Progres Kerja Ukur | JURUKUR MAHABOB</title>
     <!-- Tailwind CSS (CDN). Untuk production: guna assets/tailwind.css (npm run build:css) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -79,41 +81,136 @@
 </head>
 <body class="min-h-screen flex flex-col bg-canvas text-ink selection:bg-brand selection:text-white">
 
+    <!-- ===== SKRIN LOG MASUK / TUKAR PASSWORD ===== -->
+    <section id="authScreen" class="hero relative overflow-hidden flex-1 min-h-screen flex items-center justify-center px-4 py-10">
+        <div class="relative z-10 w-full max-w-md">
+            <div class="flex items-center gap-3 mb-6 text-white">
+                <div class="w-12 h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
+                    <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
+                </div>
+                <div class="leading-tight">
+                    <div class="font-display text-xl font-extrabold tracking-tight">JURUKUR MAHABOB</div>
+                    <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">Progres &amp; Statistik Ukur Tanah</div>
+                </div>
+            </div>
+
+            <!-- Memeriksa sesi -->
+            <div id="authLoading" class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div class="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p class="text-sm text-slate-500">Memeriksa sesi...</p>
+            </div>
+
+            <!-- Borang log masuk -->
+            <form id="loginForm" onsubmit="hantarLogin(event)" class="hidden bg-white rounded-lg shadow-sm p-6 sm:p-8 space-y-5" autocomplete="on">
+                <div>
+                    <h1 class="font-display text-2xl font-extrabold text-ink">Log Masuk</h1>
+                    <p class="text-xs text-slate-500 mt-1">Guna emel dan password yang diberi oleh admin.</p>
+                </div>
+                <div>
+                    <label for="loginEmel" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Emel</label>
+                    <input type="email" id="loginEmel" required maxlength="254" autocomplete="username" placeholder="nama@syarikat.com" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+                    <input type="password" id="loginPassword" required maxlength="128" autocomplete="current-password" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                </div>
+                <div class="p-3 rounded-md bg-canvas border border-line text-[11px] text-slate-600 leading-relaxed space-y-2">
+                    <p class="font-semibold text-ink flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand"></i>Notis Privasi (PDPA 2010)</p>
+                    <p>Sistem ini menyimpan emel, nama, role akaun dan rekod log masuk anda untuk kawalan akses dan keselamatan sahaja. Rekod log masuk disimpan selama 180 hari, sesi log masuk tamat selepas 12 jam. Tiada data sensitif (No. IC, kesihatan) dikumpul. Untuk semak, betulkan atau padam data akaun, hubungi admin sistem.</p>
+                    <label class="flex items-start gap-2 cursor-pointer pt-1">
+                        <input type="checkbox" id="setujuPdpa" required class="w-4 h-4 mt-0.5 rounded accent-brand shrink-0">
+                        <span class="text-ink font-medium">Saya faham dan bersetuju dengan notis privasi ini.</span>
+                    </label>
+                </div>
+                <p id="loginError" class="hidden text-xs text-red-700 bg-red-50 border border-red-500/30 rounded-md px-3 py-2" role="alert"></p>
+                <button type="submit" id="loginBtn" class="w-full px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i> <span>Log Masuk</span>
+                </button>
+                <p class="text-[11px] text-slate-400 text-center">Lupa password? Minta admin reset password anda.</p>
+            </form>
+
+            <!-- Borang tukar password -->
+            <form id="tukarPasswordForm" onsubmit="hantarTukarPassword(event)" class="hidden bg-white rounded-lg shadow-sm p-6 sm:p-8 space-y-5" autocomplete="off">
+                <div>
+                    <h1 class="font-display text-2xl font-extrabold text-ink">Tukar Password</h1>
+                    <p id="tukarPasswordInfo" class="text-xs text-slate-500 mt-1">Anda mesti tukar password sementara sebelum boleh guna sistem.</p>
+                </div>
+                <input type="text" id="tukarEmelHidden" autocomplete="username" class="hidden" tabindex="-1" aria-hidden="true">
+                <div>
+                    <label for="passwordLama" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Password Semasa</label>
+                    <input type="password" id="passwordLama" required maxlength="128" autocomplete="current-password" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                </div>
+                <div>
+                    <label for="passwordBaru" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Password Baru</label>
+                    <input type="password" id="passwordBaru" required minlength="10" maxlength="128" autocomplete="new-password" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                    <p class="mt-1.5 text-[11px] text-slate-400">Min 10 aksara, ada huruf dan nombor, tak boleh mengandungi emel.</p>
+                </div>
+                <div>
+                    <label for="passwordSahkan" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Sahkan Password Baru</label>
+                    <input type="password" id="passwordSahkan" required maxlength="128" autocomplete="new-password" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                </div>
+                <p id="tukarError" class="hidden text-xs text-red-700 bg-red-50 border border-red-500/30 rounded-md px-3 py-2" role="alert"></p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit" id="tukarBtn" class="flex-1 px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center justify-center gap-2">
+                        <i data-lucide="key-round" class="w-4 h-4"></i> <span>Simpan Password</span>
+                    </button>
+                    <button type="button" id="tukarBatalBtn" onclick="batalTukarPassword()" class="hidden px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm transition">Batal</button>
+                    <button type="button" onclick="logKeluar()" class="px-6 py-3 rounded-md bg-canvas border border-line text-slate-600 font-medium text-sm transition">Log Keluar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
     <!-- Header Navigation Bar -->
-    <header class="bg-white border-b border-line sticky top-0 z-40">
+    <header id="appHeader" class="hidden bg-white border-b border-line sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
             <div class="flex items-center gap-2 sm:gap-4 min-w-0">
                 <!-- Kembali ke Portal Utama (index.html di root repo) -->
                 <a href="../index.html" class="shrink-0 inline-flex items-center gap-1.5 h-10 px-2.5 sm:px-3 rounded-md border border-line bg-white text-sm font-semibold text-ink hover:border-brand hover:text-brand transition" aria-label="Kembali ke Portal Utama" title="Kembali ke Portal Utama">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden sm:inline">Utama</span>
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden xl:inline">Utama</span>
                 </a>
                 <span class="hidden sm:block w-px h-8 bg-line" aria-hidden="true"></span>
                 <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-gold flex items-center justify-center shrink-0">
                         <i data-lucide="compass" class="w-6 h-6 text-ink"></i>
                     </div>
-                    <div class="leading-tight">
+                    <div class="leading-tight hidden sm:block">
                         <div class="font-display text-base sm:text-xl font-extrabold tracking-tight text-ink whitespace-nowrap">JURUKUR MAHABOB</div>
                         <div class="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Progres &amp; Statistik Ukur Tanah</div>
                     </div>
                 </div>
             </div>
             <nav class="flex items-center gap-1 sm:gap-3">
-                <button aria-label="Dashboard" title="Dashboard" id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="hidden sm:inline">Dashboard</span>
+                <button aria-label="Dashboard" title="Dashboard" id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="hidden xl:inline">Dashboard</span>
                 </button>
-                <button aria-label="Tambah Kerja" title="Tambah Kerja" id="nav-tambah" onclick="switchTab('tambah')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
-                    <i data-lucide="file-plus" class="w-4 h-4"></i><span class="hidden sm:inline">Tambah Kerja</span>
+                <button aria-label="Tambah Kerja" title="Tambah Kerja" id="nav-tambah" onclick="switchTab('tambah')" class="nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
+                    <i data-lucide="file-plus" class="w-4 h-4"></i><span class="hidden xl:inline">Tambah Kerja</span>
                 </button>
-                <button aria-label="Data Sheet" title="Data Sheet" id="nav-statistik" onclick="switchTab('statistik')" class="nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
-                    <i data-lucide="table" class="w-4 h-4"></i><span class="hidden sm:inline">Data Sheet</span>
+                <button aria-label="Data Sheet" title="Data Sheet" id="nav-statistik" onclick="switchTab('statistik')" class="nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
+                    <i data-lucide="table" class="w-4 h-4"></i><span class="hidden xl:inline">Data Sheet</span>
+                </button>
+                <button aria-label="Pengguna" title="Pengguna" id="nav-pengguna" onclick="switchTab('pengguna')" class="hidden nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i><span class="hidden xl:inline">Pengguna</span>
+                </button>
+                <span class="hidden sm:block w-px h-8 bg-line mx-1" aria-hidden="true"></span>
+                <button type="button" id="userChip" onclick="paparTukarPassword(false)" title="Tukar password" class="hidden xl:flex items-center gap-2 h-10 px-3 rounded-md border border-line bg-white text-sm text-ink hover:border-brand transition max-w-[220px]">
+                    <i data-lucide="user-round" class="w-4 h-4 text-brand shrink-0"></i>
+                    <span id="userChipNama" class="truncate font-semibold"></span>
+                    <span id="userChipRole" class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-gold text-ink"></span>
+                </button>
+                <button type="button" onclick="paparTukarPassword(false)" aria-label="Tukar password" title="Tukar password" class="xl:hidden shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-md border border-line bg-white text-ink hover:border-brand hover:text-brand transition">
+                    <i data-lucide="key-round" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="logKeluar()" aria-label="Log keluar" title="Log keluar" class="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-md border border-line bg-white text-ink hover:border-red-400 hover:text-red-600 transition">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
                 </button>
             </nav>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main id="appMain" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- TAB 1: DASHBOARD -->
         <div id="view-dashboard" class="view-section space-y-8">
@@ -127,7 +224,7 @@
                     </div>
                     <div class="flex flex-wrap gap-3">
                         <button onclick="refreshAllData()" id="btnRefresh" class="px-5 py-3 rounded-md bg-white/10 border border-white/30 text-white font-semibold text-sm hover:bg-white/20 transition flex items-center gap-2"><span id="refreshIcon" class="inline-flex"><i data-lucide="refresh-cw" class="w-4 h-4"></i></span> Muat Semula</button>
-                        <button onclick="switchTab('tambah')" class="px-5 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Tambah Kerja Baru</button>
+                        <button id="heroTambahBtn" onclick="switchTab('tambah')" class="px-5 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Tambah Kerja Baru</button>
                     </div>
                 </div>
             </section>
@@ -303,7 +400,7 @@
         <div id="view-statistik" class="view-section hidden space-y-6">
             <div class="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-line">
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">Sumber URL 2 (Peratus Kerja)</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">Sumber: Sheet Statistik (Peratus Kerja)</span>
                     <h3 class="text-lg font-bold text-ink mt-2">Jadual Statistik & Peratusan Progres</h3>
                 </div>
                 <div id="statsTableContainer" class="w-full overflow-x-auto">
@@ -313,7 +410,7 @@
 
             <div class="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-line">
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/30">Sumber URL 1 (Rekod Kerja Lapangan)</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/30">Sumber: Sheet Rekod Kerja Lapangan</span>
                     <h3 class="text-lg font-bold text-ink mt-2">Jadual Rekod Kerja</h3>
                 </div>
                 <div id="recordsTableContainer" class="w-full overflow-x-auto">
@@ -322,9 +419,74 @@
             </div>
         </div>
 
+        <!-- TAB 4: PENGGUNA (ADMIN SAHAJA) -->
+        <div id="view-pengguna" class="view-section hidden space-y-6">
+            <div class="bg-white border border-line rounded-lg shadow-sm p-6 sm:p-8">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-line">
+                    <div class="p-3 rounded-md bg-gold text-ink"><i data-lucide="user-plus" class="w-6 h-6"></i></div>
+                    <div>
+                        <h2 class="text-xl font-bold text-ink">Tambah Pengguna</h2>
+                        <p class="text-xs text-slate-500">Password sementara dijana oleh sistem. Pengguna wajib tukar semasa log masuk pertama.</p>
+                    </div>
+                </div>
+                <form id="userAddForm" onsubmit="hantarTambahUser(event)" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        <div>
+                            <label for="userEmel" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Emel</label>
+                            <input type="email" id="userEmel" required maxlength="254" autocomplete="off" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                        </div>
+                        <div>
+                            <label for="userNama" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nama</label>
+                            <input type="text" id="userNama" required minlength="2" maxlength="100" autocomplete="off" class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                        </div>
+                        <div>
+                            <label for="userRole" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Role</label>
+                            <select id="userRole" required class="w-full px-4 py-3 rounded-md bg-canvas border border-line text-ink focus:outline-none focus:border-brand text-sm">
+                                <option value="VIEWER">VIEWER (lihat sahaja)</option>
+                                <option value="EDITOR">EDITOR (tambah &amp; edit kerja)</option>
+                                <option value="ADMIN">ADMIN (semua + urus pengguna)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="flex items-start gap-2 cursor-pointer text-xs text-slate-600 p-3 rounded-md bg-canvas border border-line">
+                        <input type="checkbox" id="userPersetujuan" required class="w-4 h-4 mt-0.5 rounded accent-brand shrink-0">
+                        <span>Saya sahkan pengguna ini telah dimaklumkan bahawa emel dan nama mereka disimpan untuk kawalan akses sistem sahaja (PDPA), dan tiada data sensitif seperti No. IC dimasukkan.</span>
+                    </label>
+                    <div class="flex justify-end">
+                        <button type="submit" id="userAddBtn" class="px-6 py-3 rounded-md bg-gold text-ink font-semibold text-sm hover:brightness-95 transition flex items-center gap-2">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> <span>Tambah Pengguna</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="tempPasswordBox" class="hidden mt-6 p-4 rounded-md border border-emerald-500/30 bg-emerald-50 text-emerald-900 text-sm space-y-2">
+                    <p class="font-semibold flex items-center gap-1.5"><i data-lucide="key-round" class="w-4 h-4"></i>Password sementara untuk <span id="tempPasswordEmel" class="break-all"></span></p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <code id="tempPasswordValue" class="px-3 py-2 rounded bg-white border border-emerald-500/30 font-mono text-base tracking-wider select-all"></code>
+                        <button type="button" onclick="salinPasswordSementara()" class="px-3 py-2 rounded-md border border-emerald-500/40 bg-white text-xs font-semibold hover:bg-emerald-100 transition flex items-center gap-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i>Salin</button>
+                        <button type="button" onclick="tutupPasswordSementara()" class="px-3 py-2 rounded-md border border-emerald-500/40 bg-white text-xs font-semibold hover:bg-emerald-100 transition">Tutup</button>
+                    </div>
+                    <p class="text-xs">Password ini dipaparkan SEKALI sahaja. Beri kepada pengguna secara peribadi (bukan dalam group chat).</p>
+                </div>
+            </div>
+
+            <div class="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-line flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-ink">Senarai Pengguna</h3>
+                        <p class="text-xs text-slate-500">Nyahaktif akaun staf yang dah berhenti. Sesi mereka terus tamat.</p>
+                    </div>
+                    <button type="button" onclick="muatSenaraiUser()" class="shrink-0 px-3 py-2 rounded-md border border-line bg-white text-xs font-semibold text-ink hover:border-brand hover:text-brand transition flex items-center gap-1.5"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Muat Semula</span></button>
+                </div>
+                <ul id="usersListContainer" class="divide-y divide-line">
+                    <li class="p-6 text-slate-400 text-sm text-center">Memuatkan senarai pengguna...</li>
+                </ul>
+            </div>
+        </div>
+
     </main>
 
-    <footer class="mt-12 bg-ink text-white/70">
+    <footer id="appFooter" class="hidden mt-12 bg-ink text-white/70">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between gap-2 text-xs">
             <span>&copy; <span id="footerYear"></span> JURUKUR MAHABOB &middot; Sistem Statistik Jurukur Tanah</span>
             <span>Data diselaraskan daripada Google Sheets</span>
@@ -339,14 +501,14 @@
     </div>
 
     <script>
-        // 1. URL Google Apps Script Web App (Integrasi Active Sheet)
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjImKeAe2CyiR2EEtUmG89HUo1bEQc0RDGDya6rY9TpR2Ttddcye5Ih1m_dI0wMz8PaA/exec";
+        // ===== TAMPAL URL APPS SCRIPT DI SINI SELEPAS DEPLOY =====
+        const GAS_URL = "GANTI_DENGAN_URL_WEB_APP_ANDA";
 
-        // 2. URL CSV 1: Rekod Kerja Lapangan (Sumber Penjanaan Kad Progres & Sasaran Kuantiti)
-        const CSV_REKOD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSW5BxrFQw07_bCiTfbARTgXh8qYvbMnLo4Uur7iM6ROw42DMmluHxrxXd3bKxVADyj_dLu_pCoEob8/pub?gid=1800236702&single=true&output=csv";
-
-        // 3. URL CSV 2: Laporan Statistik Surveyor (Sumber Kuantiti Siap & Peratus Progres Bar)
-        const CSV_STAT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9K9IiWtk4r4MouH9wGT5DeKJWGXyaKcKgj43dnC48KG_87QE7jO7wOJF6jzKQn2XwsJipuQRRj9MZ/pub?gid=1353013862&single=true&output=csv";
+        // Semua data (rekod kerja + statistik) dibaca melalui GAS_URL dengan session token.
+        // Tiada lagi link "Publish to web" CSV.
+        const TOKEN_KEY = 'jm_progres_sesi';
+        let authToken = '';
+        let currentUser = null; // { emel, nama, role, mestiTukarPassword }
 
         // Senarai sama dengan Dashboard Laporan Harian supaya kategori Engineering/Strata dari sheet statistik tak tercicir
         const DEFAULT_KATEGORI = ["Kadaster", "Kalibrasi", "Lidar", "Pemetaan Utiliti", "Strata", "TLS", "Topografi"];
@@ -361,8 +523,8 @@
             'lidar': 'Lidar', 'tls': 'TLS', 'strata': 'Strata'
         };
 
-        const NAV_ACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand";
-        const NAV_INACTIVE = "nav-btn px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand";
+        const NAV_ACTIVE = "nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-brand text-brand";
+        const NAV_INACTIVE = "nav-btn whitespace-nowrap px-2 sm:px-3 py-2 text-sm sm:text-[15px] font-semibold border-b-2 transition flex items-center gap-2 border-transparent text-ink hover:text-brand";
 
         let rawRekodRows = [];
         let rawStatRows = [];
@@ -494,19 +656,414 @@
 
             renderDropdownMenus(DEFAULT_KATEGORI, DEFAULT_SURVEYORS);
             switchTab('dashboard');
-            refreshAllData();
+            mulaSesi();
         });
 
+        // Paparan sahaja. Kebenaran sebenar disemak oleh Apps Script untuk setiap request.
+        function bolehEdit() { return !!currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'EDITOR'); }
+        function isAdmin() { return !!currentUser && currentUser.role === 'ADMIN'; }
+        function bolehLihatTab(tab) {
+            if (tab === 'tambah') return bolehEdit();
+            if (tab === 'pengguna') return isAdmin();
+            return true;
+        }
+
         function switchTab(tabName, keepEdit = false) {
+            if (!bolehLihatTab(tabName)) tabName = 'dashboard';
             if (editingRecord && !keepEdit) exitEditMode();
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const activeView = document.getElementById(`view-${tabName}`);
             if (activeView) activeView.classList.remove('hidden');
 
-            ['dashboard', 'tambah', 'statistik'].forEach(id => {
+            ['dashboard', 'tambah', 'statistik', 'pengguna'].forEach(id => {
                 const btn = document.getElementById(`nav-${id}`);
-                if (btn) btn.className = id === tabName ? NAV_ACTIVE : NAV_INACTIVE;
+                if (btn) btn.className = (id === tabName ? NAV_ACTIVE : NAV_INACTIVE) + (bolehLihatTab(id) ? '' : ' hidden');
             });
+            document.getElementById('heroTambahBtn')?.classList.toggle('hidden', !bolehEdit());
+            if (tabName === 'pengguna') muatSenaraiUser();
+        }
+
+        // =====================================================================
+        //  SAMBUNGAN KE APPS SCRIPT (satu-satunya pintu ke data)
+        // =====================================================================
+        function bacaToken() {
+            try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; }
+        }
+        function simpanToken(t) {
+            try { sessionStorage.setItem(TOKEN_KEY, t); } catch (e) { /* abaikan */ }
+        }
+        function buangToken() {
+            try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* abaikan */ }
+        }
+
+        function gasUrlSedia() {
+            return /^https:\/\/script\.google\.com\/(a\/macros\/[\w.-]+|macros)\/s\/[\w-]+\/exec$/.test(GAS_URL);
+        }
+
+        // SEMUA panggilan: POST + text/plain (simple request, tiada CORS preflight)
+        async function api(action, data = {}) {
+            if (!gasUrlSedia()) {
+                const err = new Error('GAS_URL');
+                err.userMessage = 'GAS_URL belum diisi dengan betul dalam index.html (mesti berakhir dengan /exec).';
+                throw err;
+            }
+            const body = Object.assign({}, data, { action });
+            if (action !== 'LOGIN') body.token = authToken;
+
+            let res;
+            try {
+                res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(body),
+                    redirect: 'follow',
+                    credentials: 'omit',
+                    cache: 'no-store'
+                });
+            } catch (e) {
+                const err = new Error('network');
+                err.userMessage = 'Gagal menghubungi pelayan. Semak sambungan internet.';
+                throw err;
+            }
+            if (!res.ok) {
+                const err = new Error(`HTTP ${res.status}`);
+                err.userMessage = `Pelayan membalas ralat (HTTP ${res.status}).`;
+                throw err;
+            }
+            let json;
+            try {
+                json = await res.json();
+            } catch (e) {
+                const err = new Error('Respons bukan JSON');
+                err.userMessage = 'Respons pelayan tidak sah. Pastikan Apps Script versi terbaru sudah di-deploy (New version).';
+                throw err;
+            }
+            if (json && json.code === 'SESI_TAMAT' && action !== 'LOGIN') {
+                tamatkanSesiTempatan(json.message || 'Sesi tamat. Sila log masuk semula.');
+                const err = new Error('SESI_TAMAT');
+                err.handled = true;
+                throw err;
+            }
+            if (json && json.code === 'MESTI_TUKAR_PASSWORD') {
+                if (currentUser) currentUser.mestiTukarPassword = true;
+                paparTukarPassword(true);
+                const err = new Error('MESTI_TUKAR_PASSWORD');
+                err.handled = true;
+                throw err;
+            }
+            return json || {};
+        }
+
+        // =====================================================================
+        //  LOG MASUK / SESI
+        // =====================================================================
+        function paparSkrinAuth(bahagian) {
+            document.getElementById('authScreen').classList.remove('hidden');
+            ['appHeader', 'appMain', 'appFooter'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['authLoading', 'loginForm', 'tukarPasswordForm'].forEach(id => {
+                document.getElementById(id).classList.toggle('hidden', id !== bahagian);
+            });
+            refreshIcons();
+        }
+
+        function setMesejRalat(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerText = msg || '';
+            el.classList.toggle('hidden', !msg);
+        }
+
+        function paparLogin(msg) {
+            paparSkrinAuth('loginForm');
+            setMesejRalat('loginError', msg || '');
+            document.getElementById('loginPassword').value = '';
+            setTimeout(() => document.getElementById('loginEmel')?.focus(), 50);
+        }
+
+        async function mulaSesi() {
+            if (!gasUrlSedia()) {
+                paparLogin('GAS_URL belum diisi dalam index.html. Tampal URL /exec Apps Script dahulu.');
+                return;
+            }
+            authToken = bacaToken();
+            if (!authToken) { paparLogin(); return; }
+            paparSkrinAuth('authLoading');
+            try {
+                const r = await api('SEMAK_SESI');
+                if (r.status === 'ok') masukSistem(r.pengguna);
+                else tamatkanSesiTempatan(r.message || '');
+            } catch (e) {
+                if (!e.handled) paparLogin(e.userMessage || 'Gagal memeriksa sesi.');
+            }
+        }
+
+        async function hantarLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            if (btn.disabled) return;
+            const emel = document.getElementById('loginEmel').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            if (!document.getElementById('setujuPdpa').checked) {
+                setMesejRalat('loginError', 'Sila tandakan persetujuan notis privasi dahulu.');
+                return;
+            }
+            setMesejRalat('loginError', '');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="w-4 h-4 border-2 border-ink border-t-transparent rounded-full animate-spin"></span> <span>Menyemak...</span>`;
+            try {
+                const r = await api('LOGIN', { emel, password, setuju: true });
+                if (r.status !== 'ok' || !r.token) {
+                    setMesejRalat('loginError', r.message || 'Log masuk gagal.');
+                    return;
+                }
+                authToken = r.token;
+                simpanToken(r.token);
+                document.getElementById('loginPassword').value = '';
+                masukSistem(r.pengguna);
+            } catch (err) {
+                if (!err.handled) setMesejRalat('loginError', err.userMessage || 'Log masuk gagal.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> <span>Log Masuk</span>`;
+                refreshIcons();
+            }
+        }
+
+        function masukSistem(pengguna) {
+            currentUser = pengguna || null;
+            if (!currentUser) { tamatkanSesiTempatan(''); return; }
+            if (currentUser.mestiTukarPassword) { paparTukarPassword(true); return; }
+
+            document.getElementById('authScreen').classList.add('hidden');
+            ['appHeader', 'appMain', 'appFooter'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                        document.getElementById('userChipNama').innerText = currentUser.nama || currentUser.emel;
+            document.getElementById('userChipRole').innerText = currentUser.role;
+            document.getElementById('userChip').title = `${currentUser.emel} · klik untuk tukar password`;
+            switchTab('dashboard');
+            refreshAllData();
+        }
+
+        // Buang token dan SEMUA data dari memori/paparan
+        function tamatkanSesiTempatan(msg) {
+            authToken = '';
+            currentUser = null;
+            buangToken();
+            rawRekodRows = [];
+            rawStatRows = [];
+            localAddedRecords = [];
+            localEdits.clear();
+            editingRecord = null;
+            lastAddedFileId = null;
+            window.__processedData = null;
+            window.__rekodById = null;
+            ['fileCardsContainer', 'statsTableContainer', 'recordsTableContainer', 'usersListContainer'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+            tutupPasswordSementara();
+            paparLogin(msg);
+        }
+
+        async function logKeluar() {
+            if (authToken) {
+                try { await api('LOGOUT'); } catch (e) { /* tetap log keluar di browser */ }
+            }
+            tamatkanSesiTempatan('Anda telah log keluar.');
+        }
+
+        function paparTukarPassword(wajib) {
+            paparSkrinAuth('tukarPasswordForm');
+            document.getElementById('tukarPasswordForm').reset();
+            document.getElementById('tukarEmelHidden').value = currentUser?.emel || '';
+            document.getElementById('tukarPasswordInfo').innerText = wajib
+                ? 'Anda mesti tukar password sementara sebelum boleh guna sistem.'
+                : 'Tukar password akaun anda. Peranti lain akan dilog keluar.';
+            document.getElementById('tukarBatalBtn').classList.toggle('hidden', !!wajib);
+            setMesejRalat('tukarError', '');
+            setTimeout(() => document.getElementById('passwordLama')?.focus(), 50);
+        }
+
+        function batalTukarPassword() {
+            if (currentUser && !currentUser.mestiTukarPassword) {
+                document.getElementById('authScreen').classList.add('hidden');
+                ['appHeader', 'appMain', 'appFooter'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            }
+        }
+
+        async function hantarTukarPassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('tukarBtn');
+            if (btn.disabled) return;
+            const passwordLama = document.getElementById('passwordLama').value;
+            const passwordBaru = document.getElementById('passwordBaru').value;
+            const sahkan = document.getElementById('passwordSahkan').value;
+            if (passwordBaru !== sahkan) { setMesejRalat('tukarError', 'Password baru dan pengesahan tidak sama.'); return; }
+            if (passwordBaru.length < 10 || !/[A-Za-z]/.test(passwordBaru) || !/\d/.test(passwordBaru)) {
+                setMesejRalat('tukarError', 'Password baru mesti min 10 aksara, ada huruf dan nombor.');
+                return;
+            }
+            setMesejRalat('tukarError', '');
+            btn.disabled = true;
+            try {
+                const r = await api('TUKAR_PASSWORD', { passwordLama, passwordBaru });
+                if (r.status !== 'ok') { setMesejRalat('tukarError', r.message || 'Gagal tukar password.'); return; }
+                document.getElementById('tukarPasswordForm').reset();
+                showToast('Password berjaya ditukar.', 'success');
+                masukSistem(r.pengguna);
+            } catch (err) {
+                if (!err.handled) setMesejRalat('tukarError', err.userMessage || 'Gagal tukar password.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // =====================================================================
+        //  URUS PENGGUNA (ADMIN)
+        // =====================================================================
+        let userListLoading = false;
+
+        async function muatSenaraiUser() {
+            if (!isAdmin() || userListLoading) return;
+            userListLoading = true;
+            const box = document.getElementById('usersListContainer');
+            try {
+                const r = await api('USER_SENARAI');
+                if (r.status !== 'ok') { showToast(r.message || 'Gagal memuat pengguna.', 'error'); return; }
+                renderSenaraiUser(r.pengguna || []);
+            } catch (e) {
+                if (!e.handled) showToast(e.userMessage || 'Gagal memuat pengguna.', 'error');
+            } finally {
+                userListLoading = false;
+            }
+        }
+
+        function renderSenaraiUser(list) {
+            const box = document.getElementById('usersListContainer');
+            if (!box) return;
+            if (!list.length) {
+                box.innerHTML = `<li class="p-6 text-slate-400 text-sm text-center">Tiada pengguna.</li>`;
+                return;
+            }
+            const roles = ['ADMIN', 'EDITOR', 'VIEWER'];
+            box.innerHTML = list.map(u => {
+                const self = currentUser && u.emel === currentUser.emel;
+                const aktif = u.status === 'AKTIF';
+                const roleOpts = roles.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
+                const badgeStatus = aktif
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">AKTIF</span>`
+                    : `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-600 border border-line">TIDAK AKTIF</span>`;
+                const badgeTukar = u.mestiTukarPassword
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">Belum tukar password</span>` : '';
+                const actions = self
+                    ? `<span class="text-[11px] text-slate-400 italic">Akaun anda</span>`
+                    : `
+                        <select data-emel="${escapeHtml(u.emel)}" onchange="ubahRoleUser(this)" aria-label="Role ${escapeHtml(u.emel)}" class="px-3 py-2 rounded-md bg-canvas border border-line text-xs text-ink focus:outline-none focus:border-brand">${roleOpts}</select>
+                        <button type="button" data-emel="${escapeHtml(u.emel)}" data-status="${aktif ? 'TIDAK AKTIF' : 'AKTIF'}" onclick="togolStatusUser(this)" class="px-3 py-2 rounded-md border border-line bg-white text-xs font-semibold ${aktif ? 'text-red-600 hover:border-red-400' : 'text-emerald-700 hover:border-emerald-400'} transition">${aktif ? 'Nyahaktif' : 'Aktifkan'}</button>
+                        <button type="button" data-emel="${escapeHtml(u.emel)}" onclick="resetPasswordUser(this)" class="px-3 py-2 rounded-md border border-line bg-white text-xs font-semibold text-brand hover:border-brand transition">Reset Password</button>`;
+                return `
+                    <li class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-sm font-semibold text-ink">${escapeHtml(u.nama || '-')}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gold text-ink">${escapeHtml(u.role)}</span>
+                                ${badgeStatus} ${badgeTukar}
+                            </div>
+                            <p class="text-xs text-slate-500 break-all mt-0.5">${escapeHtml(u.emel)}</p>
+                            <p class="text-[11px] text-slate-400">Daftar: ${escapeHtml(u.tarikhDaftar || '-')}</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">${actions}</div>
+                    </li>`;
+            }).join('');
+        }
+
+        async function hantarTambahUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('userAddBtn');
+            if (btn.disabled) return;
+            const emel = document.getElementById('userEmel').value.trim().toLowerCase();
+            const nama = document.getElementById('userNama').value.trim();
+            const role = document.getElementById('userRole').value;
+            const persetujuan = document.getElementById('userPersetujuan').checked;
+            btn.disabled = true;
+            try {
+                const r = await api('USER_TAMBAH', { emel, nama, role, persetujuan });
+                if (r.status !== 'ok') { showToast(r.message || 'Gagal tambah pengguna.', 'error'); return; }
+                document.getElementById('userAddForm').reset();
+                paparPasswordSementara(r.emel, r.passwordSementara);
+                showToast('Pengguna ditambah.', 'success');
+                muatSenaraiUser();
+            } catch (err) {
+                if (!err.handled) showToast(err.userMessage || 'Gagal tambah pengguna.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function ubahRoleUser(sel) {
+            const emel = sel.dataset.emel;
+            try {
+                const r = await api('USER_KEMASKINI', { emel, role: sel.value });
+                showToast(r.status === 'ok' ? `Role ${emel} ditukar ke ${sel.value}.` : (r.message || 'Gagal tukar role.'), r.status === 'ok' ? 'success' : 'error');
+            } catch (e) {
+                if (!e.handled) showToast(e.userMessage || 'Gagal tukar role.', 'error');
+            }
+            muatSenaraiUser();
+        }
+
+        async function togolStatusUser(btn) {
+            const emel = btn.dataset.emel;
+            const status = btn.dataset.status;
+            if (status === 'TIDAK AKTIF' && !confirm(`Nyahaktif ${emel}? Pengguna ini akan terus dilog keluar.`)) return;
+            btn.disabled = true;
+            try {
+                const r = await api('USER_KEMASKINI', { emel, status });
+                showToast(r.status === 'ok' ? `Status ${emel}: ${status}.` : (r.message || 'Gagal tukar status.'), r.status === 'ok' ? 'success' : 'error');
+            } catch (e) {
+                if (!e.handled) showToast(e.userMessage || 'Gagal tukar status.', 'error');
+            }
+            muatSenaraiUser();
+        }
+
+        async function resetPasswordUser(btn) {
+            const emel = btn.dataset.emel;
+            if (!confirm(`Reset password ${emel}? Password lama tak boleh digunakan lagi dan pengguna akan dilog keluar.`)) return;
+            btn.disabled = true;
+            try {
+                const r = await api('USER_RESET_PASSWORD', { emel });
+                if (r.status !== 'ok') { showToast(r.message || 'Gagal reset password.', 'error'); return; }
+                paparPasswordSementara(r.emel, r.passwordSementara);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                if (!e.handled) showToast(e.userMessage || 'Gagal reset password.', 'error');
+            } finally {
+                btn.disabled = false;
+                muatSenaraiUser();
+            }
+        }
+
+        function paparPasswordSementara(emel, password) {
+            document.getElementById('tempPasswordEmel').innerText = emel || '';
+            document.getElementById('tempPasswordValue').innerText = password || '';
+            document.getElementById('tempPasswordBox').classList.remove('hidden');
+            refreshIcons();
+        }
+
+        function tutupPasswordSementara() {
+            const box = document.getElementById('tempPasswordBox');
+            if (!box) return;
+            document.getElementById('tempPasswordValue').innerText = '';
+            document.getElementById('tempPasswordEmel').innerText = '';
+            box.classList.add('hidden');
+        }
+
+        async function salinPasswordSementara() {
+            const val = document.getElementById('tempPasswordValue').innerText;
+            try {
+                await navigator.clipboard.writeText(val);
+                showToast('Password sementara disalin.', 'success');
+            } catch (e) {
+                showToast('Tak dapat salin automatik. Pilih teks dan salin manual.', 'error');
+            }
         }
 
         function renderDropdownMenus(kategoriOptions, surveyorOptions) {
@@ -578,80 +1135,39 @@
             }
         }
 
-        async function fetchCsvText(url) {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.text();
-        }
-
         async function refreshAllData() {
-            if (isRefreshing) return;
+            if (isRefreshing || !currentUser) return;
             isRefreshing = true;
             const icon = document.getElementById('refreshIcon');
             if (icon) icon.classList.add('animate-spin');
 
             try {
-                const cacheBuster = `&_t=${Date.now()}`;
-                // allSettled: satu sumber gagal tak padam data sumber yang lain
-                const [resRekod, resStat] = await Promise.allSettled([
-                    fetchCsvText(CSV_REKOD_URL + cacheBuster),
-                    fetchCsvText(CSV_STAT_URL + cacheBuster)
-                ]);
-                const failed = [];
-                if (resRekod.status === 'fulfilled') rawRekodRows = parseCSV(resRekod.value);
-                else failed.push('Rekod Kerja');
-                if (resStat.status === 'fulfilled') rawStatRows = parseCSV(resStat.value);
-                else failed.push('Statistik');
-
-                syncDynamicOptionsAndRender();
-                if (failed.length) {
-                    showToast(`Gagal memuat ${failed.join(' & ')}. Data sebelum ini dikekalkan.`, 'error');
+                const res = await api('GET_DATA');
+                if (res.status !== 'ok') {
+                    showToast(res.message || 'Gagal memuat data. Data sebelum ini dikekalkan.', 'error');
+                    return;
                 }
+                rawRekodRows = tableToRows(res.rekod);
+                rawStatRows = tableToRows(res.stat);
+                syncDynamicOptionsAndRender();
+                if (res.amaran) showToast(res.amaran, 'error');
             } catch (err) {
-                console.error("Ralat memproses data CSV:", err);
-                showToast('Ralat memproses data. Sila cuba muat semula.', 'error');
+                if (err.handled) return;
+                console.error("Ralat memuat data:", err);
+                showToast(err.userMessage || 'Ralat memproses data. Sila cuba muat semula.', 'error');
             } finally {
                 if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
                 isRefreshing = false;
             }
         }
 
-        // Parser CSV Pintar (Menyokong koma & baris baharu di dalam tanda petikan "...")
-        function parseCSV(csvText) {
-            if (!csvText || !csvText.trim()) return [];
-            const rows = [];
-            let currentRow = [];
-            let currentCell = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < csvText.length; i++) {
-                const ch = csvText[i];
-                const nextCh = csvText[i + 1];
-
-                if (ch === '"') {
-                    if (inQuotes && nextCh === '"') {
-                        currentCell += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (ch === ',' && !inQuotes) {
-                    currentRow.push(currentCell.trim());
-                    currentCell = '';
-                } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
-                    if (ch === '\r' && nextCh === '\n') i++;
-                    currentRow.push(currentCell.trim());
-                    if (currentRow.some(cell => cell !== '')) rows.push(currentRow);
-                    currentRow = [];
-                    currentCell = '';
-                } else {
-                    currentCell += ch;
-                }
-            }
-            if (currentCell !== '' || currentRow.length > 0) {
-                currentRow.push(currentCell.trim());
-                if (currentRow.some(cell => cell !== '')) rows.push(currentRow);
-            }
+        // Tukar jadual 2D daripada Apps Script (getDisplayValues) kepada senarai objek baris
+        function tableToRows(table) {
+            if (!Array.isArray(table)) return [];
+            const rows = table
+                .filter(Array.isArray)
+                .map(r => r.map(c => String(c ?? '').trim()))
+                .filter(r => r.some(c => c !== ''));
 
             if (rows.length === 0) return [];
 
@@ -1436,9 +1952,9 @@
                         r.jangkaSiap ? `Siap ${escapeHtml(formatTarikh(r.jangkaSiap))}` : ''
                     ].filter(Boolean).join(' · ');
                     const canEdit = /^[A-Za-z0-9-]{6,64}$/.test(r.id || '');
-                    const btn = canEdit
+                    const btn = !bolehEdit() ? '' : canEdit
                         ? `<button type="button" data-id="${escapeHtml(r.id)}" onclick="openEditKerja(this.dataset.id)" class="shrink-0 px-2.5 py-1.5 rounded-md border border-line bg-white text-xs font-semibold text-brand hover:bg-brand/10 transition flex items-center gap-1" aria-label="Edit kerja ${escapeHtml(r.tugas || '')}"><i data-lucide="pencil" class="w-3.5 h-3.5"></i>Edit</button>`
-                        : `<span class="shrink-0 px-2.5 py-1.5 rounded-md border border-dashed border-line text-[10px] text-slate-400" title="Rekod belum ada ID. Jalankan setup() dalam Apps Script Progres, atau tunggu CSV dikemas kini.">Tiada ID</span>`;
+                        : `<span class="shrink-0 px-2.5 py-1.5 rounded-md border border-dashed border-line text-[10px] text-slate-400" title="Rekod belum ada ID. Tekan Muat Semula, atau minta admin jalankan setup() dalam Apps Script.">Tiada ID</span>`;
                     return `
                         <li class="flex items-start justify-between gap-2 py-2">
                             <div class="min-w-0">
@@ -1546,7 +2062,7 @@
                                 <details class="group/kerja pt-1">
                                     <summary class="cursor-pointer select-none text-xs font-semibold text-brand flex items-center gap-1 list-none">
                                         <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform group-open/kerja:rotate-90"></i>
-                                        Senarai kerja &amp; edit (${grp.rekodEntries.length})
+                                        ${bolehEdit() ? 'Senarai kerja &amp; edit' : 'Senarai kerja'} (${grp.rekodEntries.length})
                                     </summary>
                                     <ul class="mt-1 divide-y divide-line">${kerjaListHtml}</ul>
                                 </details>` : ''}
@@ -1605,29 +2121,6 @@
             renderTable(rawRekodRows, 'recordsTableContainer');
         }
 
-        // POST ke Apps Script dan baca respons JSON {status, message, row}.
-        // text/plain = "simple request", jadi tiada CORS preflight; Apps Script pulangkan header CORS sendiri.
-        async function postToAppsScript(payload) {
-            const res = await fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload),
-                redirect: 'follow'
-            });
-            if (!res.ok) {
-                const err = new Error(`HTTP ${res.status}`);
-                err.userMessage = `Pelayan membalas ralat (HTTP ${res.status}).`;
-                throw err;
-            }
-            try {
-                return await res.json();
-            } catch (e) {
-                const err = new Error('Respons bukan JSON');
-                err.userMessage = 'Respons pelayan tidak sah. Pastikan Apps Script versi baru sudah di-deploy.';
-                throw err;
-            }
-        }
-
         // ---------- Edit kerja ----------
         function setFormMode(mode) {
             const isEdit = mode === 'edit';
@@ -1667,6 +2160,10 @@
         }
 
         function openEditKerja(id) {
+            if (!bolehEdit()) {
+                showToast('Akaun anda hanya boleh melihat data.', 'error');
+                return;
+            }
             const rec = window.__rekodById && window.__rekodById.get(id);
             if (!rec) {
                 showToast('Rekod tidak dijumpai. Tekan Muat Semula dan cuba lagi.', 'error');
@@ -1719,6 +2216,10 @@
             e.preventDefault();
             const submitBtnGuard = document.getElementById('submitBtn');
             if (submitBtnGuard && submitBtnGuard.disabled) return;
+            if (!bolehEdit()) {
+                showToast('Akaun anda hanya boleh melihat data.', 'error');
+                return;
+            }
 
             if (selectedKategoriList.length === 0) {
                 showModal('Pilih Kategori', 'Sila pilih sekurang-kurangnya satu Kategori Kerja.', 'error');
@@ -1768,14 +2269,12 @@
                 unit: document.getElementById('unit').value,
                 jangkaSiap: document.getElementById('jangkaSiap').value
             };
-            if (isEdit) {
-                payload.action = 'update';
-                payload.id = editingRecord.id;
-                payload.updatedAt = editingRecord.updatedAt;
-            }
+            const editId = isEdit ? editingRecord.id : '';
 
             try {
-                const result = await postToAppsScript(payload);
+                const result = isEdit
+                    ? await api('REKOD_KEMASKINI', { id: editingRecord.id, updatedAt: editingRecord.updatedAt, data: payload })
+                    : await api('REKOD_TAMBAH', { data: payload });
                 if (result.status === 'duplicate') {
                     showModal('Rekod Sudah Wujud', isEdit ? 'Kerja lain dengan maklumat yang sama sudah ada. Perubahan tidak disimpan.' : 'Kerja yang sama sudah ada dalam sheet. Tiada rekod baru disimpan.', 'error');
                     return;
@@ -1790,8 +2289,7 @@
                 }
 
                 lastAddedFileId = payload.idFile;
-                const saved = { ...payload, id: result.id || payload.id || '', updatedAt: result.updatedAt || '', peratus: null, isNewlyAdded: true, sourceType: 'rekod' };
-                delete saved.action;
+                const saved = { ...payload, id: result.id || editId || '', updatedAt: result.updatedAt || '', peratus: null, isNewlyAdded: true, sourceType: 'rekod' };
                 if (isEdit) {
                     localEdits.set(saved.id, saved);
                 } else {
@@ -1810,8 +2308,9 @@
                     showModal('Kerja Berjaya Ditambah', `Fail "${payload.idFile}" (${payload.kawasan}) disimpan dalam sheet (baris ${result.row}) dan kad progres telah dijana.`, 'success');
                 }
 
-                setTimeout(() => { refreshAllData(); }, 2500);
+                setTimeout(() => { refreshAllData(); }, 800);
             } catch (error) {
+                if (error.handled) return;
                 console.error("Ralat menghantar borang:", error);
                 showModal('Ralat Hantaran', error.userMessage || 'Gagal menghubungi pelayan Google Apps Script. Sila cuba lagi.', 'error');
             } finally {
